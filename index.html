@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>Toddler Smash</title>
+    <!-- Inline so there is no favicon request to 404. Keeps the screenshot
+         harness's "any console error is a real failure" rule honest. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎉</text></svg>"
+    />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #10131c;
+        /* A toddler's palm will drag across the screen. None of that should
+           select text, show a callout, or trigger pull-to-refresh. */
+        touch-action: none;
+        overscroll-behavior: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #game canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="game"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
