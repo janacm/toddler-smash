@@ -8,7 +8,9 @@ get shapes, ripples, or a googly-eyed blob. Tap or click anywhere and the same
 thing happens. Nothing errors, nothing quits, nothing needs precision, and there
 is no way to lose.
 
-**Play it:** [toddler-smash.netlify.app](https://toddler-smash.netlify.app)
+**Play it:** [toddler-smash.netlify.app](https://toddler-smash.netlify.app).
+It works on phones and tablets too: add it to the home screen and it runs
+full screen and offline.
 
 ## Run it
 
@@ -17,8 +19,9 @@ npm install
 npm run dev      # then open http://127.0.0.1:5173
 ```
 
-For actual toddler use, open the grown-up menu (**hold Escape for 3 seconds**)
-and press **F** for fullscreen.
+For actual toddler use, open the grown-up menu (**hold Escape for 3 seconds**,
+or on a touch screen **hold the top-left and bottom-right corners for 3
+seconds**) and choose Full screen.
 
 ## Sub-games and moods
 

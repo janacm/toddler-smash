@@ -7,8 +7,15 @@ import { installInput } from '../input'
 import { isDesktop, keyboardLocked, quitApp } from '../desktop'
 import { currentMood, saveSettings, settings } from '../settings'
 import { ModeSwitcher } from '../switcher'
+import { ParentPanel, type PanelAction, type PanelState } from '../parentPanel'
+import { safeAreaInsets } from '../safeArea'
 import { MODES, findMode, type Mode } from '../modes'
 import { playSmash, type SmashEvent, type ToyContext } from '../toys'
+
+const isTouchScreen = window.matchMedia('(pointer: coarse)').matches
+const isStandalone =
+  window.matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches ||
+  (navigator as Navigator & { standalone?: boolean }).standalone === true
 
 /**
  * The only scene. There is deliberately no menu, no level select, and no game
@@ -24,8 +31,7 @@ export class PlayScene extends Phaser.Scene {
   private text!: TextPool
   private rng!: Phaser.Math.RandomDataGenerator
   private teardownInput?: () => void
-  private parentPanel?: Phaser.GameObjects.Container
-  private parentBody?: Phaser.GameObjects.Text
+  private panel!: ParentPanel
   private lockStatus = ''
   private mode: Mode = MODES[0]
   private leaveMode?: () => void
@@ -41,6 +47,7 @@ export class PlayScene extends Phaser.Scene {
     this.pool = new SpritePool(this)
     this.text = new TextPool(this)
     this.switcher = new ModeSwitcher(this, MODES)
+    this.panel = new ParentPanel(this)
     this.mode = findMode(settings.mode)
 
     this.drawHint()
@@ -51,10 +58,29 @@ export class PlayScene extends Phaser.Scene {
       onParentEscape: () => this.toggleParentPanel(),
     })
 
-    this.scale.on('resize', () => this.refresh())
+    // Panel shortcuts only work while it's open, so during play they're just
+    // ordinary smashes.
+    this.input.keyboard?.on('keydown', (ev: KeyboardEvent) => {
+      if (!this.panel.visible) return
+      const action = this.panelActionForKey(ev.key.toLowerCase())
+      if (action) this.runPanelAction(action, 'key')
+    })
+
+    // iOS only lets audio start from a tap that has ended, which a
+    // pointerdown hasn't yet. Unlocking is idempotent, so listen for good.
+    const unlockAudio = () => this.synth.unlock()
+    window.addEventListener('touchend', unlockAudio)
+    window.addEventListener('click', unlockAudio)
+
+    this.scale.on('resize', () => {
+      this.refresh()
+      this.panel.refresh(this.panelState())
+    })
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.teardownInput?.()
       this.leaveMode?.()
+      window.removeEventListener('touchend', unlockAudio)
+      window.removeEventListener('click', unlockAudio)
     })
   }
 
@@ -62,7 +88,11 @@ export class PlayScene extends Phaser.Scene {
     // Any input dismisses the hint text — the child has worked it out.
     this.hint?.setVisible(false)
 
-    if (this.parentPanel?.visible) return
+    if (this.panel.visible) {
+      const action = e.source === 'pointer' ? this.panel.hit(e.x, e.y) : undefined
+      if (action) this.runPanelAction(action, 'pointer')
+      return
+    }
 
     if (e.source === 'pointer') {
       const picked = this.switcher.hit(e.x, e.y)
@@ -118,6 +148,7 @@ export class PlayScene extends Phaser.Scene {
     this.tweens.timeScale = mood.timeScale
     this.synth.setMood(mood.audio)
     this.hint?.setColor(mood.hintColor)
+    document.body.style.background = '#' + mood.background.top.toString(16).padStart(6, '0')
     this.refresh()
   }
 
@@ -134,8 +165,10 @@ export class PlayScene extends Phaser.Scene {
   }
 
   private layoutSwitcher(): void {
+    const insets = safeAreaInsets()
     this.switcher.layout({
       width: this.scale.width,
+      inset: { top: insets.top, right: insets.right },
       current: this.mode,
       visible: settings.childCanSwitch,
       night: currentMood().night,
@@ -161,7 +194,7 @@ export class PlayScene extends Phaser.Scene {
         g.fillCircle(sky.between(0, width), sky.between(0, height * 0.6), sky.realInRange(0.8, 2.2))
       }
       const r = Math.min(width, height) * 0.06
-      const mx = width * 0.1
+      const mx = width * 0.1 + safeAreaInsets().left
       const my = height * 0.15
       g.fillStyle(0xfff1c1, 0.95)
       g.fillCircle(mx, my, r)
@@ -182,9 +215,9 @@ export class PlayScene extends Phaser.Scene {
   private drawHint(): void {
     const { width, height } = this.scale
     this.hint = this.add
-      .text(width / 2, height * 0.3, 'press anything', {
+      .text(width / 2, height * 0.3, isTouchScreen ? 'touch anything' : 'press anything', {
         fontFamily: 'Verdana, Geneva, sans-serif',
-        fontSize: '38px',
+        fontSize: `${Math.round(Math.min(38, width / 11))}px`,
         color: currentMood().hintColor,
       })
       .setOrigin(0.5)
@@ -201,114 +234,85 @@ export class PlayScene extends Phaser.Scene {
   }
 
   /**
-   * The grown-up panel. Reached by holding Escape for three seconds, which is
-   * well outside what random mashing produces. Picks the sub-game and mood,
-   * and toggles the child's corner buttons.
+   * The grown-up panel. Reached by holding Escape, or the top-left and
+   * bottom-right corners, for three seconds — well outside what random
+   * mashing produces.
    */
   private toggleParentPanel(): void {
-    if (!this.parentPanel) this.buildParentPanel()
-    else this.parentPanel.setVisible(!this.parentPanel.visible)
-
-    if (!this.parentPanel?.visible) return
-    this.parentPanel.setPosition(this.scale.width / 2, this.scale.height / 2)
-    this.refreshParentBody()
+    if (this.panel.visible) {
+      this.panel.hide()
+      return
+    }
+    this.panel.show(this.panelState())
     if (isDesktop) {
       void keyboardLocked().then((on) => {
         this.lockStatus = on
-          ? 'Keyboard lock  ·  on'
+          ? 'Keyboard lock · on'
           : navigator.userAgent.includes('Mac')
-            ? 'Keyboard lock  ·  off: allow Toddler Smash in\nSystem Settings › Privacy & Security › Accessibility'
-            : 'Keyboard lock  ·  off'
-        this.refreshParentBody()
+            ? 'Keyboard lock · off: allow Toddler Smash in\nSystem Settings › Privacy & Security › Accessibility'
+            : 'Keyboard lock · off'
+        this.panel.refresh(this.panelState())
       })
     }
   }
 
-  private buildParentPanel(): void {
-    const { width, height } = this.scale
-    const panel = this.add.container(width / 2, height / 2).setDepth(10_000)
-
-    const bg = this.add.rectangle(0, 0, Math.min(640, width * 0.92), 400, 0x0d1018, 0.96)
-    bg.setStrokeStyle(2, 0x39405c)
-
-    const title = this.add
-      .text(0, -160, 'Grown-up menu', {
-        fontFamily: 'Verdana, Geneva, sans-serif',
-        fontSize: '26px',
-        color: '#e8ecff',
-      })
-      .setOrigin(0.5)
-
-    const body = this.add
-      .text(0, 20, '', {
-        fontFamily: 'Verdana, Geneva, sans-serif',
-        fontSize: '17px',
-        color: '#9aa3c4',
-        align: 'center',
-        lineSpacing: 10,
-      })
-      .setOrigin(0.5)
-
-    panel.add([bg, title, body])
-    this.parentPanel = panel
-    this.parentBody = body
-
-    // Panel keys only work while it's open, so during play they're just
-    // ordinary smashes.
-    this.input.keyboard?.on('keydown', (ev: KeyboardEvent) => {
-      if (!this.parentPanel?.visible) return
-      if (this.handleParentKey(ev.key.toLowerCase())) this.refreshParentBody()
-    })
+  private panelState(): PanelState {
+    return {
+      modes: MODES,
+      mode: this.mode,
+      mood: settings.mood,
+      childCanSwitch: settings.childCanSwitch,
+      isDesktop,
+      canFullscreen: !isDesktop && !isStandalone && this.scale.fullscreen.available,
+      isFullscreen: this.scale.isFullscreen,
+      standalone: isStandalone,
+      lockStatus: this.lockStatus,
+    }
   }
 
-  private handleParentKey(key: string): boolean {
+  private panelActionForKey(key: string): PanelAction | undefined {
     const mode = MODES[Number(key) - 1]
-    if (mode) {
-      this.setMode(mode)
-      return true
-    }
+    if (mode) return { kind: 'mode', mode }
     const mood = (Object.keys(CONFIG.moods) as MoodName[]).find((m) => CONFIG.moods[m].panelKey.toLowerCase() === key)
-    if (mood) {
-      this.setMood(mood)
-      return true
-    }
-    if (key === 'c') {
-      settings.childCanSwitch = !settings.childCanSwitch
-      saveSettings()
-      this.layoutSwitcher()
-      return true
-    }
-    if (key === 'f' && !isDesktop) {
-      if (this.scale.isFullscreen) this.scale.stopFullscreen()
-      else this.scale.startFullscreen()
-      return true
-    }
-    if (key === 'q' && isDesktop) {
-      quitApp()
-      return true
-    }
-    return false
+    if (mood) return { kind: 'mood', mood }
+    if (key === 'c') return { kind: 'toggleChild' }
+    if (key === 'f' && !isDesktop) return { kind: 'fullscreen' }
+    if (key === 'q' && isDesktop) return { kind: 'quit' }
+    return undefined
   }
 
-  private refreshParentBody(): void {
-    const mark = (on: boolean) => (on ? '●' : '○')
-    const games = MODES.map((m, i) => `${mark(m === this.mode)} ${i + 1}  ${m.label}`).join('      ')
-    const moods = (Object.keys(CONFIG.moods) as MoodName[])
-      .map((name) => {
-        const mood = CONFIG.moods[name]
-        return `${mark(name === settings.mood)} ${mood.panelKey}  ${mood.label}`
-      })
-      .join('      ')
-
-    const lines = [
-      `Game      ${games}`,
-      `Mood      ${moods}`,
-      `${mark(settings.childCanSwitch)} C  Corner buttons let the child switch games`,
-      '',
-      isDesktop ? 'Q  Quit' : 'F  Fullscreen      ·      close the tab to quit',
-    ]
-    if (isDesktop && this.lockStatus) lines.push(this.lockStatus)
-    lines.push('', 'Hold Escape again to hide this.')
-    this.parentBody?.setText(lines.join('\n'))
+  private runPanelAction(action: PanelAction, source: 'key' | 'pointer'): void {
+    switch (action.kind) {
+      case 'mode':
+        this.setMode(action.mode)
+        break
+      case 'mood':
+        this.setMood(action.mood)
+        break
+      case 'toggleChild':
+        settings.childCanSwitch = !settings.childCanSwitch
+        saveSettings()
+        this.layoutSwitcher()
+        break
+      case 'fullscreen': {
+        const toggle = () => {
+          if (this.scale.isFullscreen) this.scale.stopFullscreen()
+          else this.scale.startFullscreen()
+          window.setTimeout(() => this.panel.refresh(this.panelState()), 300)
+        }
+        // Browsers only allow full screen from a finished tap, so wait for
+        // the finger to lift.
+        if (source === 'pointer') window.addEventListener('pointerup', toggle, { once: true })
+        else toggle()
+        break
+      }
+      case 'quit':
+        quitApp()
+        return
+      case 'close':
+        this.panel.hide()
+        return
+    }
+    this.panel.refresh(this.panelState())
   }
 }

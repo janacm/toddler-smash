@@ -17,7 +17,9 @@ export const letterPop: Toy = {
 
   play(e, ctx) {
     const color = ctx.color(e.index)
-    const size = ctx.rng.between(140, 230)
+    // Full size on a laptop; scaled down on a phone so letters don't fill it.
+    const fit = Math.min(1, Math.max(0.5, Math.min(ctx.width, ctx.height) / 700))
+    const size = Math.round(ctx.rng.between(140, 230) * fit)
 
     const txt = ctx.text.spawn(e.char, e.x, e.y, size)
     txt.setColor(hex(color))

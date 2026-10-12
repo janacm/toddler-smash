@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import { CONFIG } from '../config'
 import type { Toy, ToyContext } from '../toys/types'
-import { keyIndex } from './pianoLayout'
+import { keyIndex, pianoKeyCount } from './pianoLayout'
 import type { Mode } from './types'
 
 /**
@@ -26,7 +26,10 @@ interface PianoKey {
 let keys: PianoKey[] = []
 
 function buildKeys(ctx: ToyContext): () => void {
-  const { keys: n, heightFrac, gapPx } = CONFIG.piano
+  const { heightFrac, gapPx } = CONFIG.piano
+  const n = pianoKeyCount(ctx.width)
+  // Number labels only mean something when they match the number row.
+  const showLabels = n === CONFIG.piano.keys
   const margin = ctx.width * 0.04
   const keyW = (ctx.width - margin * 2 - gapPx * (n - 1)) / n
   const keyH = ctx.height * heightFrac
@@ -49,6 +52,7 @@ function buildKeys(ctx: ToyContext): () => void {
       .setOrigin(0.5)
       .setAlpha(0.85)
       .setDepth(-99)
+      .setVisible(showLabels)
 
     // Rise into place one after another when the piano appears.
     const drop = keyH * 0.6
@@ -80,7 +84,7 @@ const pianoKey: Toy = {
   match: () => true,
 
   play(e, ctx) {
-    const i = keyIndex(e, ctx.width)
+    const i = keyIndex(e, ctx.width, keys.length)
     const key = keys[i]
     if (!key) return
     const color = ctx.color(i)

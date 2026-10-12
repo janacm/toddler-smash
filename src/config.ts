@@ -50,6 +50,9 @@ export const CONFIG = {
   piano: {
     /** Ten keys so the number row 1..0 maps one-to-one. */
     keys: 10,
+    /** Narrow screens (phones) get fewer keys, so each stays finger-sized. */
+    minKeys: 5,
+    minKeyPx: 60,
     /** Share of screen height the keys take, from the bottom. */
     heightFrac: 0.42,
     gapPx: 10,
