@@ -21,6 +21,8 @@ use objc2_app_kit::{NSApplication, NSApplicationPresentationOptions as Presentat
 use objc2_foundation::MainThreadMarker;
 use tauri::{AppHandle, Manager};
 
+use super::rules::mac::{decide, Verdict, FLAGS_CHANGED, KEY_DOWN, KEY_UP, SYSTEM_DEFINED};
+
 type CGEventRef = *mut c_void;
 type CFMachPortRef = *mut c_void;
 type TapCallback = extern "C" fn(*mut c_void, u32, CGEventRef, *mut c_void) -> CGEventRef;
@@ -63,29 +65,7 @@ extern "C" {
 const SESSION_EVENT_TAP: u32 = 1;
 const HEAD_INSERT: u32 = 0;
 const ACTIVE_FILTER: u32 = 0;
-
-const KEY_DOWN: u32 = 10;
-const KEY_UP: u32 = 11;
-const FLAGS_CHANGED: u32 = 12;
-/// Media, volume, brightness and eject keys arrive as this type.
-const SYSTEM_DEFINED: u32 = 14;
-const TAP_DISABLED_BY_TIMEOUT: u32 = 0xFFFF_FFFE;
-const TAP_DISABLED_BY_USER_INPUT: u32 = 0xFFFF_FFFF;
-
 const KEYCODE_FIELD: u32 = 9;
-
-const FLAG_CONTROL: u64 = 0x0004_0000;
-const FLAG_OPTION: u64 = 0x0008_0000;
-const FLAG_COMMAND: u64 = 0x0010_0000;
-const FLAG_FN: u64 = 0x0080_0000;
-const SYSTEM_MODIFIERS: u64 = FLAG_CONTROL | FLAG_OPTION | FLAG_COMMAND | FLAG_FN;
-
-/// Shift and Caps Lock can't trigger anything on their own, so the game may
-/// as well see them.
-const HARMLESS_MODIFIER_KEYS: [i64; 3] = [56, 57, 60];
-/// Dedicated keys on Apple keyboards: Launchpad, Mission Control, Dictation,
-/// Spotlight, Do Not Disturb, Globe.
-const SYSTEM_KEYS: [i64; 6] = [131, 160, 176, 177, 178, 179];
 
 static TAP: AtomicPtr<c_void> = AtomicPtr::new(ptr::null_mut());
 static RELEASED: AtomicBool = AtomicBool::new(false);
@@ -97,33 +77,25 @@ extern "C" fn on_event(
     _user_info: *mut c_void,
 ) -> CGEventRef {
     unsafe {
-        match kind {
-            // macOS disables a tap whose callback is ever slow; turn it back on.
-            TAP_DISABLED_BY_TIMEOUT | TAP_DISABLED_BY_USER_INPUT => {
+        let (keycode, flags) = if matches!(kind, KEY_DOWN | KEY_UP | FLAGS_CHANGED) {
+            (CGEventGetIntegerValueField(event, KEYCODE_FIELD), CGEventGetFlags(event))
+        } else {
+            (0, 0)
+        };
+        match decide(kind, keycode, flags) {
+            Verdict::Pass => event,
+            Verdict::Rewrite(flags) => {
+                CGEventSetFlags(event, flags);
+                event
+            }
+            Verdict::Swallow => ptr::null_mut(),
+            Verdict::Reenable => {
                 let tap = TAP.load(Ordering::SeqCst);
                 if !tap.is_null() {
                     CGEventTapEnable(tap, true);
                 }
                 event
             }
-            SYSTEM_DEFINED => ptr::null_mut(),
-            FLAGS_CHANGED => {
-                let key = CGEventGetIntegerValueField(event, KEYCODE_FIELD);
-                if HARMLESS_MODIFIER_KEYS.contains(&key) {
-                    event
-                } else {
-                    ptr::null_mut()
-                }
-            }
-            KEY_DOWN | KEY_UP => {
-                let key = CGEventGetIntegerValueField(event, KEYCODE_FIELD);
-                if SYSTEM_KEYS.contains(&key) {
-                    return ptr::null_mut();
-                }
-                CGEventSetFlags(event, CGEventGetFlags(event) & !SYSTEM_MODIFIERS);
-                event
-            }
-            _ => event,
         }
     }
 }

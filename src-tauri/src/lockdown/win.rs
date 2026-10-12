@@ -20,10 +20,9 @@ use windows::Win32::System::Threading::GetCurrentProcessId;
 use windows::Win32::UI::Accessibility::{
     FILTERKEYS, SKF_CONFIRMHOTKEY, SKF_HOTKEYACTIVE, SKF_STICKYKEYSON, STICKYKEYS, TOGGLEKEYS,
 };
-use windows::Win32::UI::Input::KeyboardAndMouse::{
-    GetAsyncKeyState, VK_APPS, VK_BROWSER_BACK, VK_CONTROL, VK_ESCAPE, VK_F4, VK_LAUNCH_APP2,
-    VK_LWIN, VK_RWIN, VK_SLEEP, VK_SPACE, VK_TAB,
-};
+use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_CONTROL};
+
+use super::rules::win as rules;
 use windows::Win32::UI::WindowsAndMessaging::{
     CallNextHookEx, GetForegroundWindow, GetWindowThreadProcessId, SetWindowsHookExW,
     SystemParametersInfoW, UnhookWindowsHookEx, HC_ACTION, HHOOK, KBDLLHOOKSTRUCT, LLKHF_ALTDOWN,
@@ -52,21 +51,9 @@ fn we_are_in_front() -> bool {
 }
 
 fn should_block(key: &KBDLLHOOKSTRUCT) -> bool {
-    let vk = key.vkCode as u16;
     let alt = key.flags.contains(LLKHF_ALTDOWN);
     let ctrl = unsafe { GetAsyncKeyState(VK_CONTROL.0 as i32) } < 0;
-
-    if vk == VK_LWIN.0 || vk == VK_RWIN.0 || vk == VK_APPS.0 || vk == VK_SLEEP.0 {
-        return true;
-    }
-    // Volume, media, browser and "launch mail/app" keys.
-    if (VK_BROWSER_BACK.0..=VK_LAUNCH_APP2.0).contains(&vk) {
-        return true;
-    }
-    if alt && (vk == VK_TAB.0 || vk == VK_ESCAPE.0 || vk == VK_F4.0 || vk == VK_SPACE.0) {
-        return true;
-    }
-    ctrl && vk == VK_ESCAPE.0
+    rules::should_block(key.vkCode as u16, alt, ctrl)
 }
 
 unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {

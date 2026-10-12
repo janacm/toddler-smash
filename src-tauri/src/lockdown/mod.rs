@@ -1,6 +1,9 @@
 //! Per-OS keyboard lockdown. Each platform module exposes the same three
 //! functions: `engage` once at startup, `release` before exit, and `is_active`
 //! for the grown-up panel to report whether the lock is actually working.
+//! The block/allow decisions themselves live in `rules` so they can be tested.
+
+mod rules;
 
 #[cfg(windows)]
 mod win;

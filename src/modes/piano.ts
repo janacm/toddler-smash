@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { CONFIG } from '../config'
-import type { SmashEvent, Toy, ToyContext } from '../toys/types'
+import type { Toy, ToyContext } from '../toys/types'
+import { keyIndex } from './pianoLayout'
 import type { Mode } from './types'
 
 /**
@@ -23,12 +24,6 @@ interface PianoKey {
 }
 
 let keys: PianoKey[] = []
-
-function keyIndex(e: SmashEvent, width: number): number {
-  const n = CONFIG.piano.keys
-  if (e.isDigit) return (Number(e.char) + n - 1) % n
-  return Phaser.Math.Clamp(Math.floor((e.x / width) * n), 0, n - 1)
-}
 
 function buildKeys(ctx: ToyContext): () => void {
   const { keys: n, heightFrac, gapPx } = CONFIG.piano

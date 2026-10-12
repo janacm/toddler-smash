@@ -30,10 +30,22 @@ export function currentMood(): Mood {
 
 function load(): Settings {
   try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')
+    return parseSettings(localStorage.getItem(STORAGE_KEY))
+  } catch {
+    return { ...DEFAULTS }
+  }
+}
+
+/**
+ * Turn whatever is in storage into valid settings. Never throws: each field
+ * that's missing, the wrong type, or no longer exists falls back on its own.
+ */
+export function parseSettings(stored: string | null): Settings {
+  try {
+    const raw = JSON.parse(stored ?? '{}')
     return {
       mode: typeof raw.mode === 'string' ? raw.mode : DEFAULTS.mode,
-      mood: Object.hasOwn(CONFIG.moods, raw.mood) ? raw.mood : DEFAULTS.mood,
+      mood: typeof raw.mood === 'string' && Object.hasOwn(CONFIG.moods, raw.mood) ? (raw.mood as MoodName) : DEFAULTS.mood,
       childCanSwitch: typeof raw.childCanSwitch === 'boolean' ? raw.childCanSwitch : DEFAULTS.childCanSwitch,
     }
   } catch {

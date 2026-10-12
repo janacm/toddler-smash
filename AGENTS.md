@@ -28,6 +28,8 @@ npm run dev        # http://127.0.0.1:5173 — hot reload while iterating
 npm run typecheck  # fast correctness gate
 npm run build      # typecheck + production build
 npm run shot       # build output → headless Chromium → shots/*.png
+npm test           # Vitest unit tests
+npm run test:rust  # desktop keyboard-lock rules (cargo test)
 ```
 
 `npm run shot` mashes Smash in Daytime (`latest.png`), taps the child's piano
@@ -182,12 +184,33 @@ To type-check the Windows code from a Mac:
 
 ## Testing what actually matters
 
-There are no unit tests, and adding them for tween choreography would be low
-value. The meaningful checks are:
+Unit tests cover pure logic only. Testing tween choreography would be low
+value; that's what the screenshots are for. The checks, in order:
 
 1. `npm run build` — types and bundle.
-2. `npm run shot` — renders, and no console errors.
-3. Look at the screenshot.
+2. `npm test` — Vitest: piano key mapping, settings parsing, mood config
+   invariants (panel keys unique, bedtime calmer than daytime, volume below
+   clipping, pentatonic scale).
+3. `npm run test:rust` — the desktop keyboard-lock rules for both macOS and
+   Windows, runnable on any OS.
+4. `npm run shot` — renders, and no console errors.
+5. Look at the screenshots.
+
+Tests live next to the code (`*.test.ts`) and must not import Phaser, which
+needs a browser. If logic worth testing lives in a Phaser file, move it into a
+plain module first, as with `modes/pianoLayout.ts`. Native lock logic belongs
+in `src-tauri/src/lockdown/rules.rs` for the same reason.
+
+CI (`.github/workflows/ci.yml`) runs all of this. Rust tests run on real
+macOS and Windows runners, which is the only place the Windows code gets
+compiled for real. Screenshots are uploaded as an artifact.
 
 If you change mash-tolerance behaviour, raise the key count in
 `scripts/screenshot.mjs` and drop the delay to simulate harder mashing.
+
+## More docs
+
+- [docs/grown-ups.md](docs/grown-ups.md) — the parent guide: menu keys, games,
+  moods, prep before playtime.
+- [docs/desktop.md](docs/desktop.md) — desktop install, what's blocked and
+  what can't be, troubleshooting, building, how the lock works.
