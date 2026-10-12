@@ -15,15 +15,16 @@ export type { SmashEvent, Toy, ToyContext } from './types'
 export const TOYS: Toy[] = [letterPop, shapeBurst, ripple, critter]
 
 /**
- * Route one smash to whichever toy should handle it.
+ * Route one smash to whichever of `toys` should handle it. Each sub-game in
+ * `src/modes/` passes its own list; the Smash game uses `TOYS`.
  *
  * Never throws. A toy that fails is skipped and the game keeps running — a
  * crash-free experience matters more here than any individual effect, because
  * the person holding the keyboard cannot read an error message.
  */
-export function playSmash(e: SmashEvent, ctx: ToyContext): void {
-  const claimed = TOYS.find((t) => t.match?.(e))
-  const toy = claimed ?? pickWeighted(ctx)
+export function playSmash(e: SmashEvent, ctx: ToyContext, toys: Toy[] = TOYS): void {
+  const claimed = toys.find((t) => t.match?.(e))
+  const toy = claimed ?? pickWeighted(toys, ctx)
   if (!toy) return
 
   try {
@@ -33,8 +34,8 @@ export function playSmash(e: SmashEvent, ctx: ToyContext): void {
   }
 }
 
-function pickWeighted(ctx: ToyContext): Toy | undefined {
-  const pool = TOYS.filter((t) => !t.match && (t.weight ?? 0) > 0)
+function pickWeighted(toys: Toy[], ctx: ToyContext): Toy | undefined {
+  const pool = toys.filter((t) => !t.match && (t.weight ?? 0) > 0)
   if (pool.length === 0) return undefined
 
   const total = pool.reduce((sum, t) => sum + (t.weight ?? 1), 0)

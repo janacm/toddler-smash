@@ -1,4 +1,6 @@
 import { CONFIG } from './config'
+import { isDesktop } from './desktop'
+import { currentMood } from './settings'
 import type { SmashEvent } from './toys/types'
 
 export interface InputHooks {
@@ -25,7 +27,7 @@ export function installInput(canvasParent: HTMLElement, hooks: InputHooks): () =
   /** Rate limit. Returns false when we should skip the visual for this event. */
   const allowSpawn = (): boolean => {
     const now = performance.now()
-    if (now - lastSpawn < CONFIG.limits.minSpawnIntervalMs) return false
+    if (now - lastSpawn < currentMood().minSpawnIntervalMs) return false
     lastSpawn = now
     return true
   }
@@ -47,8 +49,9 @@ export function installInput(canvasParent: HTMLElement, hooks: InputHooks): () =
 
     // Swallow browser shortcuts: F5 reload, Tab focus jumps, space scroll,
     // quick-find, print, save. This is most of what makes a browser game
-    // hostile to a toddler.
-    if (!ev.metaKey && !ev.ctrlKey && !ev.altKey) ev.preventDefault()
+    // hostile to a toddler. In a browser, modifier combos pass through so a
+    // grown-up can still close the tab; the desktop app has its own way out.
+    if (isDesktop || (!ev.metaKey && !ev.ctrlKey && !ev.altKey)) ev.preventDefault()
 
     // A held key repeats ~30x/sec at the OS level. Ignoring repeats means a
     // forearm resting on the keyboard produces one burst per key and then

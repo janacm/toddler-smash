@@ -18,6 +18,25 @@ npm run dev      # then open http://127.0.0.1:5173
 For actual toddler use, open the grown-up menu (**hold Escape for 3 seconds**)
 and press **F** for fullscreen.
 
+## Sub-games and moods
+
+- **Smash**: letters, shapes, ripples and critters.
+- **Piano**: ten rainbow keys. The number row plays them 1 to 0, letters play
+  the key under them, and taps play the key they land on.
+
+Each runs in a **Daytime** mood (bright and calm) or a **Bedtime** mood
+(starry navy sky, pastels, slow motion, soft low notes). In the grown-up menu,
+press **1**/**2** to pick a game, **D**/**B** to pick a mood, and **C** to
+show or hide the round corner buttons that let the child switch games
+themselves. Choices are remembered.
+
+## Desktop app
+
+`npm run desktop:build` builds a Mac or Windows app (needs Rust). It fills
+the screen and blocks the Windows key, Alt-Tab, Cmd-Q, Cmd-Tab, Spotlight,
+media keys and so on. On a Mac it asks for the Accessibility permission once.
+Quit from the grown-up menu with **Q**.
+
 ## What makes it mash-proof
 
 - **Nothing to get stuck in.** No menus, no levels, no game over, no dialogs.

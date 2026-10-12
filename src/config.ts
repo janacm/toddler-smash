@@ -16,12 +16,6 @@ export const CONFIG = {
     maxSprites: 140,
     /** Hard ceiling on simultaneous audio voices. Prevents clipping. */
     maxVoices: 8,
-    /**
-     * Minimum ms between spawns. Input faster than this still makes a sound
-     * and still counts, it just reuses the last visual burst. Set to 0 to let
-     * every single event spawn (not recommended on low-end tablets).
-     */
-    minSpawnIntervalMs: 45,
   },
 
   /** How long things live on screen before they fade themselves out. */
@@ -40,9 +34,8 @@ export const CONFIG = {
     bounceDamping: 0.62,
   },
 
+  /** Volume, timbre and note length live per mood, in `moods` below. */
   audio: {
-    /** Master volume, 0..1. */
-    volume: 0.28,
     /**
      * C major pentatonic. There are no dissonant intervals in this set, which
      * is the whole trick: a toddler mashing 30 keys at random still produces
@@ -51,7 +44,15 @@ export const CONFIG = {
     scaleSemitones: [0, 2, 4, 7, 9],
     rootHz: 261.63, // middle C
     octaves: 3,
-    noteMs: 620,
+  },
+
+  /** The piano sub-game. */
+  piano: {
+    /** Ten keys so the number row 1..0 maps one-to-one. */
+    keys: 10,
+    /** Share of screen height the keys take, from the bottom. */
+    heightFrac: 0.42,
+    gapPx: 10,
   },
 
   /**
@@ -63,22 +64,47 @@ export const CONFIG = {
     holdMs: 3000,
   },
 
-  /** High-contrast, high-saturation. Toddler vision prefers bold over subtle. */
-  palette: [
-    0xff4d6d, // red
-    0xff9f1c, // orange
-    0xffd23f, // yellow
-    0x38b000, // green
-    0x00b4d8, // cyan
-    0x4361ee, // blue
-    0x9b5de5, // purple
-    0xff70a6, // pink
-  ],
-
-  background: {
-    top: 0x10131c,
-    bottom: 0x1b2033,
+  /**
+   * A mood restyles whichever sub-game is running; the grown-up panel picks
+   * one with `panelKey`. "Make bedtime calmer" or "brighter daytime colours"
+   * lands here. Every mood must define the same fields.
+   */
+  moods: {
+    /** The default. Bright and clear, but unhurried and never flashing. */
+    daytime: {
+      label: 'Daytime',
+      panelKey: 'D',
+      background: { top: 0xdcefff, bottom: 0xfdf3e1 },
+      hintColor: '#7a86a8',
+      /** Saturated but deep enough to read on a light sky. */
+      palette: [0xe63946, 0xf77f00, 0xe0a800, 0x2a9d8f, 0x43aa52, 0x277da1, 0x7b2cbf, 0xd6336c],
+      /** Multiplies every tween's speed. Below 1 is slower and floatier. */
+      timeScale: 0.9,
+      /**
+       * Minimum ms between spawns. Faster input is dropped, so a mashed
+       * keyboard settles into a steady rhythm instead of a flood.
+       */
+      minSpawnIntervalMs: 45,
+      /** Draw a starry sky and a moon behind everything. */
+      night: false,
+      audio: { volume: 0.24, wave: 'triangle', noteMs: 620, pianoMs: 1400, octaveShift: 0 },
+    },
+    /** Dim, slow, low and quiet. Pastels on navy; nothing fast or loud. */
+    bedtime: {
+      label: 'Bedtime',
+      panelKey: 'B',
+      background: { top: 0x0b1030, bottom: 0x1d1747 },
+      hintColor: '#4b5384',
+      palette: [0xf4a7b9, 0xf6c28b, 0xf3e3a0, 0xa8e6cf, 0x9ad0ec, 0xb8b5ff, 0xd7bde2, 0x8fd3c7],
+      timeScale: 0.5,
+      minSpawnIntervalMs: 160,
+      night: true,
+      audio: { volume: 0.13, wave: 'sine', noteMs: 1200, pianoMs: 2200, octaveShift: -1 },
+    },
   },
 } as const
+
+export type MoodName = keyof typeof CONFIG.moods
+export type Mood = (typeof CONFIG.moods)[MoodName]
 
 export type Config = typeof CONFIG

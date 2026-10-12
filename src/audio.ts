@@ -1,4 +1,17 @@
-import { CONFIG } from './config'
+import { CONFIG, type Mood } from './config'
+
+type MoodAudio = Mood['audio']
+
+/** 'blip' is the default toy sound; 'piano' is a struck, ringing note. */
+export type Voice = 'blip' | 'piano'
+
+/** Harmonic partials of the piano voice and their relative loudness. */
+const PIANO_PARTIALS: [number, number][] = [
+  [1, 1],
+  [2, 0.4],
+  [3, 0.15],
+  [4, 0.06],
+]
 
 /**
  * A tiny WebAudio synth. No audio files — every sound is generated, so the repo
@@ -17,6 +30,7 @@ export class Synth {
   private master: GainNode | null = null
   private voices = 0
   private noteTable: number[] = []
+  private mood: MoodAudio = CONFIG.moods.daytime.audio
 
   constructor() {
     const { scaleSemitones, rootHz, octaves } = CONFIG.audio
@@ -45,7 +59,7 @@ export class Synth {
         if (!Ctor) return
         this.ctx = new Ctor()
         this.master = this.ctx.createGain()
-        this.master.gain.value = CONFIG.audio.volume
+        this.master.gain.value = this.mood.volume
         this.master.connect(this.ctx.destination)
       }
       if (this.ctx.state === 'suspended') void this.ctx.resume()
@@ -55,24 +69,38 @@ export class Synth {
     }
   }
 
+  /** Volume, waveform, note length and octave all follow the mood. */
+  setMood(audio: MoodAudio): void {
+    this.mood = audio
+    if (this.ctx && this.master) {
+      this.master.gain.setTargetAtTime(audio.volume, this.ctx.currentTime, 0.15)
+    }
+  }
+
   /**
    * Play note `index` from the pentatonic table. Index is wrapped, so any
    * integer is valid — callers never have to bounds-check.
    */
-  play(index: number): void {
+  play(index: number, voice: Voice = 'blip'): void {
     this.unlock()
     const ctx = this.ctx
     const master = this.master
     if (!ctx || !master) return
     if (this.voices >= CONFIG.limits.maxVoices) return
 
+    const n = this.noteTable.length
+    const freq = this.noteTable[((index % n) + n) % n] * Math.pow(2, this.mood.octaveShift)
+    if (voice === 'piano') {
+      this.playPiano(ctx, master, freq)
+      return
+    }
+
     try {
-      const freq = this.noteTable[((index % this.noteTable.length) + this.noteTable.length) % this.noteTable.length]
       const now = ctx.currentTime
-      const dur = CONFIG.audio.noteMs / 1000
+      const dur = this.mood.noteMs / 1000
 
       const osc = ctx.createOscillator()
-      osc.type = 'triangle'
+      osc.type = this.mood.wave
       osc.frequency.value = freq
 
       // A second oscillator a fifth up, quieter, gives the blip some body
@@ -112,6 +140,55 @@ export class Synth {
       osc2.start(now)
       osc.stop(now + dur)
       osc2.stop(now + dur)
+    } catch {
+      this.voices = Math.max(0, this.voices - 1)
+    }
+  }
+
+  /**
+   * A struck string: sine partials sharing one envelope with a very fast
+   * attack and a long exponential ring-out. Counts as one voice.
+   */
+  private playPiano(ctx: AudioContext, master: GainNode, freq: number): void {
+    try {
+      const now = ctx.currentTime
+      const dur = this.mood.pianoMs / 1000
+
+      const gain = ctx.createGain()
+      gain.gain.setValueAtTime(0, now)
+      gain.gain.linearRampToValueAtTime(0.8, now + 0.005)
+      gain.gain.exponentialRampToValueAtTime(0.25, now + 0.12)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
+      gain.connect(master)
+
+      const nodes: AudioNode[] = [gain]
+      const oscs = PIANO_PARTIALS.map(([ratio, level]) => {
+        const osc = ctx.createOscillator()
+        osc.type = 'sine'
+        osc.frequency.value = freq * ratio
+        const partialGain = ctx.createGain()
+        partialGain.gain.value = level * 0.6
+        osc.connect(partialGain)
+        partialGain.connect(gain)
+        nodes.push(osc, partialGain)
+        return osc
+      })
+
+      this.voices++
+      oscs[0].onended = () => {
+        this.voices = Math.max(0, this.voices - 1)
+        for (const node of nodes) {
+          try {
+            node.disconnect()
+          } catch {
+            /* already torn down */
+          }
+        }
+      }
+      for (const osc of oscs) {
+        osc.start(now)
+        osc.stop(now + dur)
+      }
     } catch {
       this.voices = Math.max(0, this.voices - 1)
     }
