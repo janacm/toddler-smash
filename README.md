@@ -8,6 +8,8 @@ get shapes, ripples, or a googly-eyed blob. Tap or click anywhere and the same
 thing happens. Nothing errors, nothing quits, nothing needs precision, and there
 is no way to lose.
 
+**Play it:** [toddler-smash.netlify.app](https://toddler-smash.netlify.app)
+
 ## Run it
 
 ```bash

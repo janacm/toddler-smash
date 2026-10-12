@@ -141,6 +141,19 @@ Breaking these breaks the actual requirement, so don't "clean them up":
   close and app exit are refused unless `quit` was called. Don't add another
   exit a child could hit.
 
+## Web deploy
+
+Live at https://toddler-smash.netlify.app (Netlify site `toddler-smash`,
+config in `netlify.toml`). Deploys are manual from a local build:
+
+```bash
+npm run build && netlify deploy --prod --dir dist --no-build
+```
+
+The site's "Powered by Netlify" badge is turned off
+(`built_with_badge_enabled: false`). Keep it off: it's a link floating over
+the game, and a toddler will tap it.
+
 ## Desktop app
 
 `src-tauri/` wraps the same `dist/` build in a borderless, full-screen window

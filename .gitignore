@@ -3,5 +3,6 @@ dist/
 shots/
 src-tauri/target/
 src-tauri/gen/
+.netlify/
 *.local
 .DS_Store
