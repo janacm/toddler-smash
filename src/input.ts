@@ -2,10 +2,11 @@ import { CONFIG } from './config'
 import { isDesktop } from './desktop'
 import { currentMood } from './settings'
 import { isDiagonalCornerHold, type Point } from './gestures'
-import type { SmashEvent } from './toys/types'
+import type { SmashEvent, StrokeEvent } from './toys/types'
 
 export interface InputHooks {
   onSmash(e: SmashEvent): void
+  onStroke(e: StrokeEvent): void
   onParentEscape(): void
 }
 
@@ -43,11 +44,11 @@ export function installInput(canvasParent: HTMLElement, hooks: InputHooks): () =
     return true
   }
 
-  const emit = (x: number, y: number, char: string, source: 'key' | 'pointer') => {
+  const emit = (x: number, y: number, char: string, source: 'key' | 'pointer', pointerId?: number) => {
     if (!allowSpawn()) return
     const isLetter = /^[A-Z]$/.test(char)
     const isDigit = /^[0-9]$/.test(char)
-    hooks.onSmash({ x, y, char, isLetter, isDigit, index: counter++, source })
+    hooks.onSmash({ x, y, char, isLetter, isDigit, index: counter++, source, pointerId })
   }
 
   const onKeyDown = (ev: KeyboardEvent) => {
@@ -86,21 +87,24 @@ export function installInput(canvasParent: HTMLElement, hooks: InputHooks): () =
     ev.preventDefault()
     pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY })
     updateCorners()
-    emit(ev.clientX, ev.clientY, '', 'pointer')
+    emit(ev.clientX, ev.clientY, '', 'pointer', ev.pointerId)
   }
 
   const onPointerMove = (ev: PointerEvent) => {
     if (!pointers.has(ev.pointerId)) return
     pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY })
     updateCorners()
+    hooks.onStroke({ pointerId: ev.pointerId, x: ev.clientX, y: ev.clientY, phase: 'move' })
   }
 
   const onPointerEnd = (ev: PointerEvent) => {
-    pointers.delete(ev.pointerId)
+    if (!pointers.delete(ev.pointerId)) return
     updateCorners()
+    hooks.onStroke({ pointerId: ev.pointerId, x: ev.clientX, y: ev.clientY, phase: 'end' })
   }
 
   const onBlur = () => {
+    for (const [pointerId, p] of pointers) hooks.onStroke({ pointerId, ...p, phase: 'end' })
     pointers.clear()
     updateCorners()
     escapeHeldSince = 0

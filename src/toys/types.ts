@@ -16,6 +16,19 @@ export interface SmashEvent {
   /** Monotonic counter across the whole session. Handy for cycling behaviour. */
   index: number
   source: 'key' | 'pointer'
+  /** Which finger or mouse, for pointer events. Matches `StrokeEvent`. */
+  pointerId?: number
+}
+
+/**
+ * A finger or held mouse button moving, or lifting. Unlike smashes these are
+ * not rate-limited, so a mode can draw a continuous line from them.
+ */
+export interface StrokeEvent {
+  pointerId: number
+  x: number
+  y: number
+  phase: 'move' | 'end'
 }
 
 /** Everything a toy is allowed to touch. */

@@ -73,6 +73,24 @@ export function buildTextures(scene: Phaser.Scene): void {
   for (let i = 0; i < 4; i++) g.fillRoundedRect(14 + i * 26, 24, 22, 80, 6)
   g.generateTexture('iconPiano', SIZE, SIZE)
 
+  // A crayon, tip down-left: the picture on the child's drawing button.
+  reset()
+  const tilt = Math.PI / 4
+  const crayon = [
+    [-16, -52],
+    [16, -52],
+    [16, 20],
+    [0, 52],
+    [-16, 20],
+  ].map(([px, py]) => new Phaser.Math.Vector2(c + px * Math.cos(tilt) - py * Math.sin(tilt), c + px * Math.sin(tilt) + py * Math.cos(tilt)))
+  g.fillPoints(crayon, true)
+  g.generateTexture('iconCrayon', SIZE, SIZE)
+
+  // Plain white, stretched over the whole drawing to fade it.
+  reset()
+  g.fillRect(0, 0, 4, 4)
+  g.generateTexture('pixel', 4, 4)
+
   g.destroy()
 }
 
