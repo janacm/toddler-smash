@@ -33,10 +33,11 @@ npm run test:rust  # desktop keyboard-lock rules (cargo test)
 ```
 
 `npm run shot` mashes Smash in Daytime (`latest.png`), taps the child's piano
-button and plays it (`piano.png`), opens the grown-up panel (`panel.png`), then
+button and plays it (`piano.png`), scribbles in Drawing (`drawing.png`, and
+`drawing-faded.png` 6s later), opens the grown-up panel (`panel.png`), then
 switches to Bedtime + Smash and mashes again (`bedtime.png`). Then a 390×844
-touch phone taps around (`mobile.png`), switches to piano (`mobile-piano.png`)
-and opens the panel with a real two-finger corner hold (`mobile-panel.png`).
+touch phone taps around (`mobile.png`), switches to piano (`mobile-piano.png`),
+draws with two fingers (`mobile-drawing.png`) and opens the panel with a real two-finger corner hold (`mobile-panel.png`).
 **Read the
 screenshots.** A visual change cannot be verified from a diff. The script exits
 non-zero if the page logged any console error, so a green run means both "it
@@ -63,6 +64,8 @@ src/
     index.ts         MODES registry (order = panel number keys)
     smash.ts         the original game: the toy registry below
     piano.ts         rainbow piano, scenery + its own toy
+    drawing.ts       finger painting on a slowly fading RenderTexture
+    drawingMath.ts   pure stroke / brush / pitch helpers (unit-tested)
   toys/
     types.ts         SmashEvent, Toy, ToyContext
     index.ts         TOYS registry (Smash's toys) + playSmash
@@ -82,7 +85,9 @@ without either knowing about the other.
 - Adding a sub-game: create `src/modes/myMode.ts` exporting a `Mode` with its
   own `toys` list, and add it to `MODES`. If it needs something permanently on
   screen (piano keys), build it in `enter` and return a cleanup. `enter` is
-  re-run on resize and mood change.
+  re-run on resize and mood change. A mode that follows a moving finger
+  (drawing) also implements `stroke`, which gets un-rate-limited move/end
+  events per `pointerId`.
 - Adding a mood: copy a block in `CONFIG.moods` and give it a new `panelKey`.
   A mood sets palette, background, tween `timeScale`, spawn rate, and synth
   volume, waveform, note length and octave.
@@ -202,6 +207,7 @@ To type-check the Windows code from a Mac:
 | "bedtime should be darker / slower" | `config.ts` → `moods.bedtime` |
 | "a new sub-game" | new file in `src/modes/` |
 | "the piano should do X" | `src/modes/piano.ts` |
+| "thicker brush / drawing fades slower" | `config.ts` → `drawing` |
 | "new effect when you press a key" | new file in `src/toys/` |
 | "letters should do X" | `src/toys/letterPop.ts` |
 | "stop key X doing a browser thing" | `src/input.ts` |

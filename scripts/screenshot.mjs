@@ -80,9 +80,11 @@ try {
 
   await page.screenshot({ path: OUT })
 
-  // Tap the child's piano button (second of two in the top-right corner)
-  // and play across it.
-  await page.mouse.click(1280 - 26 - 46, 26 + 46)
+  // The child's buttons sit top-right, 108px apart: smash, piano, drawing.
+  const button = (i, w) => [w - 26 - 46 - (2 - i) * 108, 26 + 46]
+
+  // Tap the piano button and play across it.
+  await page.mouse.click(...button(1, 1280))
   await sleep(600)
   for (const k of '13579QWERTY0'.split('')) {
     await page.keyboard.press(k)
@@ -91,6 +93,28 @@ try {
   await page.mouse.click(300, 650)
   await sleep(500)
   await page.screenshot({ path: sibling('piano') })
+
+  // Drawing: a few mouse scribbles, then keys for stickers. A second shot a
+  // few seconds later checks the drawing fades.
+  await page.mouse.click(...button(2, 1280))
+  await sleep(400)
+  const scribble = async (points) => {
+    await page.mouse.move(...points[0])
+    await page.mouse.down()
+    for (const p of points.slice(1)) await page.mouse.move(...p, { steps: 12 })
+    await page.mouse.up()
+  }
+  await scribble([[150, 600], [350, 250], [550, 600], [750, 250], [950, 600]])
+  await scribble([[200, 400], [640, 700], [1100, 350]])
+  for (const k of 'CAT7'.split('')) {
+    await page.keyboard.press(k)
+    await sleep(120)
+  }
+  await page.keyboard.press('Space')
+  await sleep(600)
+  await page.screenshot({ path: sibling('drawing') })
+  await sleep(6000)
+  await page.screenshot({ path: sibling('drawing-faded') })
 
   // Grown-up panel: hold Escape, switch to Bedtime + Smash, hide it, mash.
   await holdEscape()
@@ -135,7 +159,7 @@ try {
     await sleep(500)
     await phone.screenshot({ path: sibling('mobile') })
 
-    await phone.touchscreen.tap(W - 26 - 46, 26 + 46)
+    await phone.touchscreen.tap(...button(1, W))
     await sleep(700)
     for (let i = 0; i < 5; i++) {
       await phone.touchscreen.tap(40 + i * 75, 700)
@@ -144,7 +168,23 @@ try {
     await sleep(400)
     await phone.screenshot({ path: sibling('mobile-piano') })
 
+    // Drawing with two fingers at once.
     const cdp = await context.newCDPSession(phone)
+    await phone.touchscreen.tap(...button(2, W))
+    await sleep(500)
+    const fingers = (t) => [
+      { x: 60 + t * 270, y: 250 + Math.sin(t * 9) * 80, id: 0 },
+      { x: 330 - t * 270, y: 600 + Math.cos(t * 7) * 90, id: 1 },
+    ]
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: fingers(0) })
+    for (let i = 1; i <= 30; i++) {
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: fingers(i / 30) })
+      await sleep(16)
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    await sleep(400)
+    await phone.screenshot({ path: sibling('mobile-drawing') })
+
     const holdCorners = async () => {
       await cdp.send('Input.dispatchTouchEvent', {
         type: 'touchStart',
@@ -175,7 +215,7 @@ try {
     for (const p of problems) console.error('  -', p)
     process.exitCode = 1
   } else {
-    const names = ['piano', 'panel', 'bedtime', 'mobile', 'mobile-piano', 'mobile-panel']
+    const names = ['piano', 'drawing', 'drawing-faded', 'panel', 'bedtime', 'mobile', 'mobile-piano', 'mobile-drawing', 'mobile-panel']
     console.log(`ok — no page errors. screenshots: ${[OUT, ...names.map(sibling)].join(', ')}`)
   }
 } finally {

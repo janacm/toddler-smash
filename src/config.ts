@@ -58,6 +58,28 @@ export const CONFIG = {
     gapPx: 10,
   },
 
+  /** The drawing sub-game. */
+  drawing: {
+    /** Brush width as a share of the screen's short side, with a floor. */
+    brushFrac: 0.03,
+    minBrushPx: 14,
+    /** Gap between brush stamps, as a share of brush width. Lower = smoother. */
+    spacingFrac: 0.25,
+    /** A line drifts to the next palette colour over this many pixels. */
+    colorEveryPx: 260,
+    /** A moving finger plays a note every this many pixels. Higher = quieter. */
+    noteEveryPx: 110,
+    /** Key-press stickers, as a multiple of brush width. */
+    stickerSize: 4,
+    /**
+     * Old drawing fades away so the screen never fills up and never needs
+     * clearing: every `fadeEveryMs`, `fadeAlpha` of what's there is erased.
+     * 250ms / 0.03 leaves a line about half as strong after 6s.
+     */
+    fadeEveryMs: 250,
+    fadeAlpha: 0.03,
+  },
+
   /**
    * Hold this key for `parentHoldMs` to open the grown-up panel. A toddler
    * mashes; they very rarely hold one specific key down for three full seconds.

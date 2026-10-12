@@ -28,10 +28,12 @@ seconds**) and choose Full screen.
 - **Smash**: letters, shapes, ripples and critters.
 - **Piano**: ten rainbow keys. The number row plays them 1 to 0, letters play
   the key under them, and taps play the key they land on.
+- **Drawing**: finger-paint rainbow lines that hum as they go; keys stamp
+  letters and shapes. Old drawing fades, so there's nothing to clear.
 
 Each runs in a **Daytime** mood (bright and calm) or a **Bedtime** mood
 (starry navy sky, pastels, slow motion, soft low notes). In the grown-up menu,
-press **1**/**2** to pick a game, **D**/**B** to pick a mood, and **C** to
+press **1**/**2**/**3** to pick a game, **D**/**B** to pick a mood, and **C** to
 show or hide the round corner buttons that let the child switch games
 themselves. Choices are remembered. The full parent guide, including what to
 set up before playtime, is in [docs/grown-ups.md](docs/grown-ups.md).

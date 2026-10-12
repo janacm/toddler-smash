@@ -55,6 +55,9 @@ export class PlayScene extends Phaser.Scene {
 
     this.teardownInput = installInput(this.game.canvas.parentElement ?? document.body, {
       onSmash: (e) => this.handleSmash(e),
+      onStroke: (e) => {
+        if (!this.panel.visible) this.mode.stroke?.(e, this.context())
+      },
       onParentEscape: () => this.toggleParentPanel(),
     })
 

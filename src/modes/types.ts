@@ -1,4 +1,4 @@
-import type { Toy, ToyContext } from '../toys/types'
+import type { StrokeEvent, Toy, ToyContext } from '../toys/types'
 
 /**
  * A sub-game. The scene runs exactly one at a time. The grown-up panel picks
@@ -26,4 +26,10 @@ export interface Mode {
    * `scene.add` directly; per-smash visuals must still go through the pools.
    */
   enter?(ctx: ToyContext): () => void
+  /**
+   * Finger and mouse drags, for modes that draw. The press that starts a drag
+   * still arrives as a smash first, but may have been rate-limited away, so a
+   * move from an unknown `pointerId` should be treated as a new stroke.
+   */
+  stroke?(e: StrokeEvent, ctx: ToyContext): void
 }

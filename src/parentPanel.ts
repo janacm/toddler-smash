@@ -179,7 +179,8 @@ export class ParentPanel {
     y += 6
     row([{ label: 'Done', action: { kind: 'close' } }])
 
-    const shortcuts = state.isDesktop ? 'Keys: 1–2 game · D/B mood · C · Q quit' : 'Keys: 1–2 game · D/B mood · C · F full screen'
+    const games = `1–${state.modes.length} game`
+    const shortcuts = state.isDesktop ? `Keys: ${games} · D/B mood · C · Q quit` : `Keys: ${games} · D/B mood · C · F full screen`
     y += text(`${shortcuts}\nOpen again: hold Escape, or hold the top-left\nand bottom-right corners, for 3 seconds`, 13, COLORS.muted).height
     y += PAD
 
