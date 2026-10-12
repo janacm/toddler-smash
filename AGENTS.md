@@ -34,7 +34,10 @@ npm run test:rust  # desktop keyboard-lock rules (cargo test)
 
 `npm run shot` mashes Smash in Daytime (`latest.png`), taps the child's piano
 button and plays it (`piano.png`), opens the grown-up panel (`panel.png`), then
-switches to Bedtime + Smash and mashes again (`bedtime.png`). **Read the
+switches to Bedtime + Smash and mashes again (`bedtime.png`). Then a 390×844
+touch phone taps around (`mobile.png`), switches to piano (`mobile-piano.png`)
+and opens the panel with a real two-finger corner hold (`mobile-panel.png`).
+**Read the
 screenshots.** A visual change cannot be verified from a diff. The script exits
 non-zero if the page logged any console error, so a green run means both "it
 looks like this" and "nothing threw."
@@ -49,9 +52,12 @@ src/
   textures.ts        every shape drawn at runtime; no image files
   pool.ts            SpritePool + TextPool — the hard caps
   input.ts           keyboard/pointer → SmashEvent, plus browser-shortcut defense
+  gestures.ts        two-finger corner hold (the touch way into the panel)
   switcher.ts        the child's round sub-game buttons, top-right
+  parentPanel.ts     the grown-up panel: tappable buttons, scales to fit
+  safeArea.ts        notch / home-indicator insets from CSS env()
   desktop.ts         Tauri bridge: isDesktop, quit, keyboard-lock status
-  scenes/PlayScene.ts  the only scene; also the grown-up panel
+  scenes/PlayScene.ts  the only scene
   modes/             sub-games
     types.ts         Mode
     index.ts         MODES registry (order = panel number keys)
@@ -131,8 +137,9 @@ Breaking these breaks the actual requirement, so don't "clean them up":
 - **Ignore `ev.repeat` in keydown.** A held key fires ~30x/sec; a forearm on the
   keyboard should produce one burst per key, then quiet.
 - **No new scenes, menus, or modal states** without a way out that a
-  non-reader can find. The grown-up panel (hold Escape 3s) is the one exception
-  and it's deliberately hard to reach by accident.
+  non-reader can find. The grown-up panel (hold Escape 3s, or hold the
+  top-left and bottom-right corners 3s on touch) is the one exception and
+  it's deliberately hard to reach by accident.
 - **No image or audio files.** Everything is drawn or synthesized in code, so an
   agent can read and change every asset. Adding a `.png` breaks that property.
 - **Errors are swallowed globally** (`src/main.ts`). Keep it that way. A stack
@@ -153,6 +160,11 @@ npm run build && netlify deploy --prod --dir dist --no-build
 The site's "Powered by Netlify" badge is turned off
 (`built_with_badge_enabled: false`). Keep it off: it's a link floating over
 the game, and a toddler will tap it.
+
+The web build is an installable PWA (`vite-plugin-pwa` in `vite.config.ts`):
+fullscreen manifest, `public/icon.svg`, and a service worker that precaches
+everything so it plays offline. The service worker is registered in
+`src/main.ts` only outside the desktop app.
 
 ## Desktop app
 
@@ -193,6 +205,8 @@ To type-check the Windows code from a Mac:
 | "new effect when you press a key" | new file in `src/toys/` |
 | "letters should do X" | `src/toys/letterPop.ts` |
 | "stop key X doing a browser thing" | `src/input.ts` |
+| "the grown-up menu should have X" | `src/parentPanel.ts` + `PlayScene.runPanelAction` |
+| "looks wrong on a phone" | `safeArea.ts`, `config.ts` → `piano`, then `mobile*.png` |
 | "stop key X doing an OS thing" | `src-tauri/src/lockdown/` |
 
 ## Testing what actually matters

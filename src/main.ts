@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { currentMood } from './settings'
+import { isDesktop } from './desktop'
 import { PlayScene } from './scenes/PlayScene'
 
 /**
@@ -14,6 +15,12 @@ window.addEventListener('unhandledrejection', (ev) => {
   console.warn('recovered from rejection:', ev.reason)
   ev.preventDefault()
 })
+
+// Offline support and home-screen install. Not in the desktop app, whose
+// tauri:// pages can't host a service worker and don't need one.
+if (!isDesktop && 'serviceWorker' in navigator) {
+  void import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }))
+}
 
 new Phaser.Game({
   type: Phaser.AUTO,

@@ -1,6 +1,7 @@
 import { CONFIG } from './config'
 import { isDesktop } from './desktop'
 import { currentMood } from './settings'
+import { isDiagonalCornerHold, type Point } from './gestures'
 import type { SmashEvent } from './toys/types'
 
 export interface InputHooks {
@@ -20,6 +21,16 @@ export function installInput(canvasParent: HTMLElement, hooks: InputHooks): () =
   let counter = 0
   let lastSpawn = 0
   let escapeHeldSince = 0
+
+  // Fingers currently down, for the touch way into the grown-up panel. After
+  // it fires, `cornersHeldSince` stays Infinity until the hold is released,
+  // so keeping fingers on the corners doesn't toggle the panel repeatedly.
+  const pointers = new Map<number, Point>()
+  let cornersHeldSince = 0
+  const updateCorners = () => {
+    if (!isDiagonalCornerHold(pointers.values(), width(), height())) cornersHeldSince = 0
+    else if (cornersHeldSince === 0) cornersHeldSince = performance.now()
+  }
 
   const width = () => window.innerWidth
   const height = () => window.innerHeight
@@ -73,14 +84,38 @@ export function installInput(canvasParent: HTMLElement, hooks: InputHooks): () =
 
   const onPointer = (ev: PointerEvent) => {
     ev.preventDefault()
+    pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY })
+    updateCorners()
     emit(ev.clientX, ev.clientY, '', 'pointer')
   }
 
-  // Check the parent hold on a timer rather than in keydown, because key
-  // repeat can be disabled at the OS level and we cannot rely on it firing.
+  const onPointerMove = (ev: PointerEvent) => {
+    if (!pointers.has(ev.pointerId)) return
+    pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY })
+    updateCorners()
+  }
+
+  const onPointerEnd = (ev: PointerEvent) => {
+    pointers.delete(ev.pointerId)
+    updateCorners()
+  }
+
+  const onBlur = () => {
+    pointers.clear()
+    updateCorners()
+    escapeHeldSince = 0
+  }
+
+  // Check the parent holds on a timer rather than in event handlers, because
+  // key repeat can be disabled at the OS level and a still finger sends nothing.
   const holdTimer = window.setInterval(() => {
-    if (escapeHeldSince > 0 && performance.now() - escapeHeldSince >= CONFIG.parentEscape.holdMs) {
+    const now = performance.now()
+    if (escapeHeldSince > 0 && now - escapeHeldSince >= CONFIG.parentEscape.holdMs) {
       escapeHeldSince = 0
+      hooks.onParentEscape()
+    }
+    if (cornersHeldSince > 0 && now - cornersHeldSince >= CONFIG.parentEscape.holdMs) {
+      cornersHeldSince = Infinity
       hooks.onParentEscape()
     }
   }, 120)
@@ -90,6 +125,10 @@ export function installInput(canvasParent: HTMLElement, hooks: InputHooks): () =
   window.addEventListener('keydown', onKeyDown, { passive: false })
   window.addEventListener('keyup', onKeyUp)
   canvasParent.addEventListener('pointerdown', onPointer, { passive: false })
+  window.addEventListener('pointermove', onPointerMove)
+  window.addEventListener('pointerup', onPointerEnd)
+  window.addEventListener('pointercancel', onPointerEnd)
+  window.addEventListener('blur', onBlur)
   window.addEventListener('contextmenu', blockContext)
 
   return () => {
@@ -97,6 +136,10 @@ export function installInput(canvasParent: HTMLElement, hooks: InputHooks): () =
     window.removeEventListener('keydown', onKeyDown)
     window.removeEventListener('keyup', onKeyUp)
     canvasParent.removeEventListener('pointerdown', onPointer)
+    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', onPointerEnd)
+    window.removeEventListener('pointercancel', onPointerEnd)
+    window.removeEventListener('blur', onBlur)
     window.removeEventListener('contextmenu', blockContext)
   }
 }

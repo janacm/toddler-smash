@@ -2,6 +2,16 @@ import { CONFIG } from '../config'
 import type { SmashEvent } from '../toys/types'
 
 /**
+ * How many keys fit across `width` at no less than `minKeyPx` each: all ten
+ * on a laptop or tablet, five to nine on a phone.
+ */
+export function pianoKeyCount(width: number, piano: typeof CONFIG.piano = CONFIG.piano): number {
+  // n keys need n * minKeyPx + (n - 1) * gapPx; the piano spans 92% of width.
+  const fit = Math.floor((width * 0.92 + piano.gapPx) / (piano.minKeyPx + piano.gapPx))
+  return Math.min(piano.keys, Math.max(piano.minKeys, Number.isFinite(fit) ? fit : piano.keys))
+}
+
+/**
  * Which piano key (0 = leftmost) a smash plays. Digits map 1..9, 0 onto the
  * keys in keyboard order; everything else uses its horizontal position, so a
  * letter plays the key under its spot on the keyboard and a tap plays the key

@@ -57,10 +57,13 @@ try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } })
 
   const problems = []
-  page.on('pageerror', (err) => problems.push(String(err)))
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') problems.push(msg.text())
-  })
+  const watch = (p) => {
+    p.on('pageerror', (err) => problems.push(String(err)))
+    p.on('console', (msg) => {
+      if (msg.type() === 'error') problems.push(msg.text())
+    })
+  }
+  watch(page)
 
   await page.goto(URL, { waitUntil: 'networkidle' })
   await sleep(600)
@@ -104,7 +107,61 @@ try {
   await sleep(900)
   await page.screenshot({ path: sibling('bedtime') })
 
+  await mobilePass()
   await browser.close()
+
+  /**
+   * A phone-sized touch screen: tap around, switch to piano with the corner
+   * button, then open the grown-up panel with the two-finger corner hold.
+   */
+  async function mobilePass() {
+    const W = 390
+    const H = 844
+    const context = await browser.newContext({
+      viewport: { width: W, height: H },
+      deviceScaleFactor: 2,
+      isMobile: true,
+      hasTouch: true,
+    })
+    const phone = await context.newPage()
+    watch(phone)
+    await phone.goto(URL, { waitUntil: 'networkidle' })
+    await sleep(600)
+
+    for (const [x, y] of [[120, 300], [260, 420], [200, 600], [90, 520]]) {
+      await phone.touchscreen.tap(x, y)
+      await sleep(120)
+    }
+    await sleep(500)
+    await phone.screenshot({ path: sibling('mobile') })
+
+    await phone.touchscreen.tap(W - 26 - 46, 26 + 46)
+    await sleep(700)
+    for (let i = 0; i < 5; i++) {
+      await phone.touchscreen.tap(40 + i * 75, 700)
+      await sleep(110)
+    }
+    await sleep(400)
+    await phone.screenshot({ path: sibling('mobile-piano') })
+
+    const cdp = await context.newCDPSession(phone)
+    const holdCorners = async () => {
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [
+          { x: 12, y: 12, id: 0 },
+          { x: W - 12, y: H - 12, id: 1 },
+        ],
+      })
+      await sleep(3400)
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+      await sleep(300)
+    }
+    await holdCorners()
+    await phone.screenshot({ path: sibling('mobile-panel') })
+
+    await context.close()
+  }
 
   async function holdEscape() {
     await page.keyboard.down('Escape')
@@ -118,7 +175,8 @@ try {
     for (const p of problems) console.error('  -', p)
     process.exitCode = 1
   } else {
-    console.log(`ok — no page errors. screenshots: ${[OUT, ...['piano', 'panel', 'bedtime'].map(sibling)].join(', ')}`)
+    const names = ['piano', 'panel', 'bedtime', 'mobile', 'mobile-piano', 'mobile-panel']
+    console.log(`ok — no page errors. screenshots: ${[OUT, ...names.map(sibling)].join(', ')}`)
   }
 } finally {
   shutdown()

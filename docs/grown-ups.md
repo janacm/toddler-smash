@@ -9,7 +9,11 @@ desktop app, see [desktop.md](desktop.md).
 it. Hold Escape for 3 seconds again to hide it. A toddler mashing keys
 essentially never holds one key that long, which is why this is the way in.
 
-While the menu is open:
+**On a phone or tablet:** put one finger on the top-left corner and one on
+the bottom-right corner, and hold both for 3 seconds. Small hands can't span
+the screen like that, so it's just as hard to hit by accident.
+
+Every option in the menu is also a button you can tap. On a keyboard:
 
 | Key | What it does |
 | --- | --- |
@@ -21,8 +25,8 @@ While the menu is open:
 | **F** | Fullscreen (browser only) |
 | **Q** | Quit (desktop app only) |
 
-A filled dot (●) marks what's currently selected. Your choices are remembered
-the next time the game opens.
+The highlighted button shows what's currently selected. Your choices are
+remembered the next time the game opens.
 
 In the desktop app, the menu also shows whether the keyboard lock is working.
 
@@ -31,7 +35,8 @@ In the desktop app, the menu also shows whether the keyboard lock is working.
 **Smash.** Every key or tap makes something: the letter or number pressed,
 shapes that arc and bounce, ripples, or now and then a googly-eyed blob.
 
-**Piano.** Ten rainbow keys across the bottom of the screen.
+**Piano.** Ten rainbow keys across the bottom of the screen (five to eight on
+a phone, so each key stays big enough for a small finger).
 
 - The number row plays them in order: 1 is the leftmost key, 0 the rightmost.
 - Letters play the key under their spot on the keyboard, so Q is low and P is
@@ -68,6 +73,13 @@ one game, press **C** in the grown-up menu to hide the buttons.
 - **Browser:** open the grown-up menu and press F for fullscreen. A browser
   can't block every shortcut; Cmd-Q or Ctrl-W can still close the tab. For
   real lockdown, use the desktop app.
+- **Phone or tablet:** open the site and add it to your home screen (iPhone/
+  iPad: Share → Add to Home Screen; Android: menu → Install app). Launched from
+  the icon it runs full screen with no browser bar, and works offline after
+  the first visit. Android Chrome can also go full screen from the menu's
+  Full screen button. To stop the child leaving the app, use the phone's own
+  lock: **Guided Access** on iPhone/iPad (Settings → Accessibility), or
+  **App pinning** on Android (Settings → Security).
 - **Laptop touchpads:** three- and four-finger swipes are handled by the
   operating system and no app can block them. Turn them off before playtime:
   - Windows: Settings → Bluetooth & devices → Touchpad → Three-finger

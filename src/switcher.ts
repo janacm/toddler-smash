@@ -27,13 +27,21 @@ export class ModeSwitcher {
     private modes: Mode[],
   ) {}
 
-  layout(opts: { width: number; current: Mode; visible: boolean; night: boolean; color: (i: number) => number }): void {
+  layout(opts: {
+    width: number
+    /** Safe-area insets, so buttons stay clear of a notch or rounded corner. */
+    inset: { top: number; right: number }
+    current: Mode
+    visible: boolean
+    night: boolean
+    color: (i: number) => number
+  }): void {
     this.clear()
     if (!opts.visible) return
 
     this.modes.forEach((mode, i) => {
-      const x = opts.width - MARGIN - RADIUS - (this.modes.length - 1 - i) * SPACING
-      const y = MARGIN + RADIUS
+      const x = opts.width - opts.inset.right - MARGIN - RADIUS - (this.modes.length - 1 - i) * SPACING
+      const y = opts.inset.top + MARGIN + RADIUS
       const selected = mode === opts.current
       const scale = selected ? 1 : 0.8
 
