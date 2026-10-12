@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { CONFIG } from './config'
+import { currentMood } from './settings'
 import { PlayScene } from './scenes/PlayScene'
 
 /**
@@ -18,7 +18,7 @@ window.addEventListener('unhandledrejection', (ev) => {
 new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
-  backgroundColor: CONFIG.background.top,
+  backgroundColor: currentMood().background.top,
   scale: {
     mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,

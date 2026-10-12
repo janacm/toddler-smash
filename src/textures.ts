@@ -56,6 +56,23 @@ export function buildTextures(scene: Phaser.Scene): void {
   g.fillCircle(8, 8, 7)
   g.generateTexture('dot', 16, 16)
 
+  // An eighth note: head, stem, flag.
+  reset()
+  g.fillEllipse(46, 98, 54, 40)
+  g.fillRect(62, 16, 11, 84)
+  g.fillTriangle(73, 16, 106, 50, 73, 58)
+  g.generateTexture('note', SIZE, SIZE)
+
+  // One piano key, stretched to size with setDisplaySize.
+  reset()
+  g.fillRoundedRect(0, 0, 96, 256, 22)
+  g.generateTexture('pianoKey', 96, 256)
+
+  // Four little keys: the picture on the child's piano button.
+  reset()
+  for (let i = 0; i < 4; i++) g.fillRoundedRect(14 + i * 26, 24, 22, 80, 6)
+  g.generateTexture('iconPiano', SIZE, SIZE)
+
   g.destroy()
 }
 
