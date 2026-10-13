@@ -85,4 +85,5 @@ means an AI agent can read and modify every part of how the game looks and
 sounds.
 
 See [AGENTS.md](AGENTS.md) for architecture, conventions, and the
-build-and-screenshot verification loop.
+build-and-screenshot verification loop, and
+[docs/requirements.md](docs/requirements.md) for what the game must do.

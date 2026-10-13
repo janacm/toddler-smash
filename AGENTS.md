@@ -12,6 +12,10 @@ error they could ever be shown.
 The second goal is that the repo is pleasant to *prompt at*. Changes should
 usually be one file, verified by looking at a screenshot.
 
+The full list of requirements, each with where it lives and how it's checked,
+is in [docs/requirements.md](docs/requirements.md). When a request adds or
+changes a requirement, update that file in the same change.
+
 ## Stack
 
 - **Phaser 3** — scene, input, tween, and texture handling.
@@ -37,9 +41,9 @@ button and plays it (`piano.png`), scribbles in Drawing (`drawing.png`, and
 `drawing-faded.png` 6s later), opens the grown-up panel (`panel.png`), then
 switches to Bedtime + Smash and mashes again (`bedtime.png`). Then a 390×844
 touch phone taps around (`mobile.png`), switches to piano (`mobile-piano.png`),
-draws with two fingers (`mobile-drawing.png`) and opens the panel with a real two-finger corner hold (`mobile-panel.png`).
-**Read the
-screenshots.** A visual change cannot be verified from a diff. The script exits
+draws with two fingers (`mobile-drawing.png`) and opens the panel with a real
+two-finger corner hold (`mobile-panel.png`). **Read the screenshots.** A
+visual change cannot be verified from a diff. The script exits
 non-zero if the page logged any console error, so a green run means both "it
 looks like this" and "nothing threw."
 
@@ -88,6 +92,15 @@ without either knowing about the other.
   re-run on resize and mood change. A mode that follows a moving finger
   (drawing) also implements `stroke`, which gets un-rate-limited move/end
   events per `pointerId`.
+
+  Registering it gives it its own corner button and panel number key
+  automatically. Every sub-game is top-level; never nest one inside another,
+  because the child needs to reach each with one tap. Then:
+  1. Draw its button icon in `textures.ts` and set `icon`.
+  2. Add a pass to `scripts/screenshot.mjs` (bump `MODE_COUNT`) and read it.
+  3. Update `docs/grown-ups.md` (key table, Games, corner buttons), the
+     README's sub-game list, and `docs/requirements.md`.
+  4. Remember installed devices see it only after a reload or relaunch.
 - Adding a mood: copy a block in `CONFIG.moods` and give it a new `panelKey`.
   A mood sets palette, background, tween `timeScale`, spawn rate, and synth
   volume, waveform, note length and octave.
@@ -171,6 +184,13 @@ fullscreen manifest, `public/icon.svg`, and a service worker that precaches
 everything so it plays offline. The service worker is registered in
 `src/main.ts` only outside the desktop app.
 
+Because of that cache, a deploy doesn't reach a device that already has the
+game until it reloads, or for a home-screen install, until it's fully closed
+and reopened (sometimes twice). After deploying, check the live site in a
+fresh browser rather than one that has played before. If someone says a new
+feature is missing, suspect the cache first; the grown-up menu's key hint
+("Keys: 1–N game") shows which version they're on.
+
 ## Desktop app
 
 `src-tauri/` wraps the same `dist/` build in a borderless, full-screen window
@@ -221,7 +241,8 @@ Unit tests cover pure logic only. Testing tween choreography would be low
 value; that's what the screenshots are for. The checks, in order:
 
 1. `npm run build` — types and bundle.
-2. `npm test` — Vitest: piano key mapping, settings parsing, mood config
+2. `npm test` — Vitest: piano key mapping and key count, drawing stroke /
+   brush / pitch maths, the corner-hold gesture, settings parsing, mood config
    invariants (panel keys unique, bedtime calmer than daytime, volume below
    clipping, pentatonic scale).
 3. `npm run test:rust` — the desktop keyboard-lock rules for both macOS and
@@ -231,7 +252,7 @@ value; that's what the screenshots are for. The checks, in order:
 
 Tests live next to the code (`*.test.ts`) and must not import Phaser, which
 needs a browser. If logic worth testing lives in a Phaser file, move it into a
-plain module first, as with `modes/pianoLayout.ts`. Native lock logic belongs
+plain module first, as with `modes/pianoLayout.ts` and `modes/drawingMath.ts`. Native lock logic belongs
 in `src-tauri/src/lockdown/rules.rs` for the same reason.
 
 CI (`.github/workflows/ci.yml`) runs all of this. Rust tests run on real
@@ -243,7 +264,9 @@ If you change mash-tolerance behaviour, raise the key count in
 
 ## More docs
 
-- [docs/grown-ups.md](docs/grown-ups.md) — the parent guide: menu keys, games,
-  moods, prep before playtime.
+- [docs/requirements.md](docs/requirements.md) — what the game must do, where
+  each requirement lives, and how it's checked.
+- [docs/grown-ups.md](docs/grown-ups.md) — the parent guide: menu, games,
+  moods, prep before playtime, getting the latest version.
 - [docs/desktop.md](docs/desktop.md) — desktop install, what's blocked and
   what can't be, troubleshooting, building, how the lock works.

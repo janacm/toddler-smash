@@ -80,8 +80,10 @@ try {
 
   await page.screenshot({ path: OUT })
 
-  // The child's buttons sit top-right, 108px apart: smash, piano, drawing.
-  const button = (i, w) => [w - 26 - 46 - (2 - i) * 108, 26 + 46]
+  // The child's buttons sit top-right, 108px apart, in `MODES` order: smash,
+  // piano, drawing. Bump MODE_COUNT when a sub-game is added.
+  const MODE_COUNT = 3
+  const button = (i, w) => [w - 26 - 46 - (MODE_COUNT - 1 - i) * 108, 26 + 46]
 
   // Tap the piano button and play across it.
   await page.mouse.click(...button(1, 1280))
