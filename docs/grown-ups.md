@@ -68,10 +68,11 @@ Bedtime.
 
 ## Letting the child switch games
 
-With the corner buttons on (the default), two round picture buttons sit in the
-top-right corner: a star for Smash, a little piano for Piano, and a crayon for
-Drawing. Tapping or
-clicking one switches games; the current game's button is the bigger one.
+With the corner buttons on (the default), each game has its own round picture
+button in the top-right corner: a star for Smash, a little piano for Piano,
+and a crayon for Drawing. Tapping or clicking one switches games; the current
+game's button is the bigger one. Games aren't inside each other, so every
+game is always one tap away.
 
 They only respond to taps and clicks, not keys, so mashing the keyboard won't
 flip games back and forth. If they're switching too often, or you want them on
@@ -79,8 +80,8 @@ one game, press **C** in the grown-up menu to hide the buttons.
 
 ## Before you hand over the computer
 
-- **Browser:** open the grown-up menu and press F for fullscreen. A browser
-  can't block every shortcut; Cmd-Q or Ctrl-W can still close the tab. For
+- **Browser:** open the grown-up menu and choose Full screen (or press F). A
+  browser can't block every shortcut; Cmd-Q or Ctrl-W can still close the tab. For
   real lockdown, use the desktop app.
 - **Phone or tablet:** open the site and add it to your home screen (iPhone/
   iPad: Share → Add to Home Screen; Android: menu → Install app). Launched from
@@ -97,3 +98,17 @@ one game, press **C** in the grown-up menu to hide the buttons.
     full-screen apps, Mission Control and App Exposé.
 - **Volume:** the game is quiet by design, but set the computer's volume
   before you start. The desktop app blocks the volume keys.
+
+## Getting the latest version
+
+The game saves itself on your device so it works offline. The catch is that
+after an update you may still see the old version once. If a new game or
+change doesn't show up:
+
+- **In a browser tab:** reload the page once or twice.
+- **From a home-screen icon:** fully close the app (swipe it away), then open
+  it again. It can take two launches.
+
+To check which version you have, open the grown-up menu: the line at the
+bottom lists the game keys (for example "Keys: 1–3 game"), and the Game row
+shows every game that's installed.
