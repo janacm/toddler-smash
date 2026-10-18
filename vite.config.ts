@@ -1,11 +1,21 @@
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { splashCss, splashScript } from './src/splash'
 
 export default defineConfig({
   server: { host: '127.0.0.1', port: 5173 },
   preview: { host: '127.0.0.1', port: 4173 },
   build: { target: 'es2022' },
   plugins: [
+    // The loading splash in index.html takes its colours from CONFIG.moods and
+    // picks the saved mood before first paint. See src/splash.ts.
+    {
+      name: 'splash',
+      transformIndexHtml: () => [
+        { tag: 'style', children: splashCss(), injectTo: 'head' },
+        { tag: 'script', children: splashScript(), injectTo: 'head' },
+      ],
+    },
     // Installable from a phone's home screen: opens full screen without the
     // browser bar, and works offline once loaded. The service worker is
     // registered from main.ts, and only in the browser (not the desktop app).

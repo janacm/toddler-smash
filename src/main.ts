@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { currentMood } from './settings'
 import { isDesktop } from './desktop'
 import { PlayScene } from './scenes/PlayScene'
+import { hideSplash } from './splash'
 
 /**
  * Nothing that happens in this game is important enough to justify showing a
@@ -22,7 +23,7 @@ if (!isDesktop && 'serviceWorker' in navigator) {
   void import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }))
 }
 
-new Phaser.Game({
+const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
   backgroundColor: currentMood().background.top,
@@ -40,3 +41,5 @@ new Phaser.Game({
   autoFocus: true,
   disableContextMenu: true,
 })
+
+game.events.once(Phaser.Core.Events.POST_RENDER, hideSplash)

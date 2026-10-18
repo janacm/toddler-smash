@@ -81,6 +81,16 @@ export const CONFIG = {
   },
 
   /**
+   * The loading splash in index.html. It stays up at least `minVisibleMs`
+   * from page load so a quick load doesn't flash it, unless the child presses
+   * something first, then fades out over `fadeMs`.
+   */
+  splash: {
+    minVisibleMs: 1000,
+    fadeMs: 450,
+  },
+
+  /**
    * Hold this key for `parentHoldMs` to open the grown-up panel. A toddler
    * mashes; they very rarely hold one specific key down for three full seconds.
    */

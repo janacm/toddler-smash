@@ -11,7 +11,7 @@ export interface Settings {
   childCanSwitch: boolean
 }
 
-const STORAGE_KEY = 'toddler-smash:settings'
+export const STORAGE_KEY = 'toddler-smash:settings'
 const DEFAULTS: Settings = { mode: 'smash', mood: 'daytime', childCanSwitch: true }
 
 export const settings: Settings = load()

@@ -20,6 +20,7 @@ is the only person who changes settings.
 | C4 | Sustained mashing doesn't slow down, leak memory or distort audio. Sprites, text and voices are hard-capped; held keys fire once. | `pool.ts`, `audio.ts` (`maxVoices`), `input.ts` (`ev.repeat`) | `input.test.ts` (repeats ignored, rate limit), screenshots under mashing |
 | C5 | Random input sounds musical: every note is on the pentatonic scale. | `audio.ts`, `CONFIG.audio` | `config.test.ts` |
 | C6 | No image or audio files. Everything is drawn or synthesized in code, so it can all be read and changed. Bundler icons are the only exception. | `textures.ts`, `audio.ts` | review |
+| C7 | While the game loads, a cute animated "Toddler Smash" logo and spinner show, in the saved mood's colours so Bedtime never flashes bright. It never blocks a press: a press makes the logo bounce, and once the game is ready a press skips straight to it. It fades by itself after at least a second. | `index.html` (`#splash`), `splash.ts`, `vite.config.ts` | `splash.test.ts`, `splash.png`, `splash-bedtime.png`, `mobile-splash.png` (and `npm run shot` checks it goes away) |
 
 ## Sub-games
 

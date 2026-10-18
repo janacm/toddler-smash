@@ -14,6 +14,7 @@ export default defineConfig({
         'src/gestures.ts',
         'src/input.ts',
         'src/settings.ts',
+        'src/splash.ts',
         'src/modes/drawingMath.ts',
         'src/modes/pianoLayout.ts',
         'src/toys/play.ts',
