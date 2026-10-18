@@ -37,7 +37,9 @@ npm run test:coverage # same, failing below the coverage thresholds (CI runs thi
 npm run test:rust  # desktop keyboard-lock rules (cargo test)
 ```
 
-`npm run shot` mashes Smash in Daytime (`latest.png`), taps the child's piano
+`npm run shot` first stalls the game bundle to photograph the loading splash
+(`splash.png`, `splash-bedtime.png`, `mobile-splash.png`) and checks it goes
+away once the game loads. Then it mashes Smash in Daytime (`latest.png`), taps the child's piano
 button and plays it (`piano.png`), scribbles in Drawing (`drawing.png`, and
 `drawing-faded.png` 6s later), opens the grown-up panel (`panel.png`), then
 switches to Bedtime + Smash and mashes again (`bedtime.png`). Then a 390×844
@@ -62,6 +64,8 @@ src/
   switcher.ts        the child's round sub-game buttons, top-right
   parentPanel.ts     the grown-up panel: tappable buttons, scales to fit
   safeArea.ts        notch / home-indicator insets from CSS env()
+  splash.ts          loading splash: mood colours + saved-mood script that
+                     vite.config.ts injects into index.html; hideSplash
   desktop.ts         Tauri bridge: isDesktop, quit, keyboard-lock status
   scenes/PlayScene.ts  the only scene
   modes/             sub-games
@@ -236,6 +240,7 @@ To type-check the Windows code from a Mac:
 | "the grown-up menu should have X" | `src/parentPanel.ts` + `PlayScene.runPanelAction` |
 | "looks wrong on a phone" | `safeArea.ts`, `config.ts` → `piano`, then `mobile*.png` |
 | "stop key X doing an OS thing" | `src-tauri/src/lockdown/` |
+| "the loading screen / logo should do X" | `index.html` (`#splash` markup and CSS), `config.ts` → `splash`, then `splash*.png` |
 
 ## Testing what actually matters
 
@@ -245,7 +250,8 @@ value; that's what the screenshots are for. The checks, in order:
 1. `npm run build` — types and bundle.
 2. `npm test` — Vitest: piano key mapping and key count, drawing stroke /
    brush / pitch maths, the corner-hold gesture, settings parsing and saving,
-   toy routing, keyboard and pointer input (repeats ignored, browser shortcuts
+   toy routing, the loading splash (mood colours match `index.html`, saved
+   mood picked, fades on time or on a press), keyboard and pointer input (repeats ignored, browser shortcuts
    swallowed, rate limit, both grown-up holds), mood config invariants (panel
    keys unique, bedtime calmer than daytime, volume below clipping, pentatonic
    scale). `npm run test:coverage` is the same run with a coverage gate: each

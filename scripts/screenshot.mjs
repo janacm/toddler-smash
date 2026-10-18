@@ -65,8 +65,10 @@ try {
   }
   watch(page)
 
+  await splashPass()
+
   await page.goto(URL, { waitUntil: 'networkidle' })
-  await sleep(600)
+  await splashGone(page)
 
   // Mash it the way the actual user will: fast, arbitrary, overlapping.
   const keys = 'HELLO2468WORLD'.split('')
@@ -152,7 +154,7 @@ try {
     const phone = await context.newPage()
     watch(phone)
     await phone.goto(URL, { waitUntil: 'networkidle' })
-    await sleep(600)
+    await splashGone(phone)
 
     for (const [x, y] of [[120, 300], [260, 420], [200, 600], [90, 520]]) {
       await phone.touchscreen.tap(x, y)
@@ -205,6 +207,45 @@ try {
     await context.close()
   }
 
+  /**
+   * The loading splash, held on screen by stalling the game bundle: Daytime,
+   * Bedtime (the saved mood must be picked before first paint), and a phone.
+   * Each then lets the game load and checks the splash takes itself down.
+   */
+  async function splashPass() {
+    const phone = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }
+    await splashShot('splash', { viewport: { width: 1280, height: 800 } })
+    await splashShot('splash-bedtime', { viewport: { width: 1280, height: 800 } }, 'bedtime')
+    await splashShot('mobile-splash', phone)
+  }
+
+  async function splashShot(name, options, mood) {
+    const context = await browser.newContext({ ...options, serviceWorkers: 'block' })
+    if (mood) {
+      await context.addInitScript((m) => localStorage.setItem('toddler-smash:settings', JSON.stringify({ mood: m })), mood)
+    }
+    const p = await context.newPage()
+    watch(p)
+    let release
+    const stalled = new Promise((resolve) => (release = resolve))
+    await p.route('**/assets/*.js', async (route) => {
+      await stalled
+      await route.continue()
+    })
+    await p.goto(URL, { waitUntil: 'commit' })
+    await p.waitForSelector('#splash')
+    await sleep(900)
+    await p.screenshot({ path: sibling(name) })
+    release()
+    await splashGone(p)
+    await context.close()
+  }
+
+  async function splashGone(p) {
+    await p.waitForSelector('#splash', { state: 'detached', timeout: 10_000 })
+    await sleep(200)
+  }
+
   async function holdEscape() {
     await page.keyboard.down('Escape')
     await sleep(3300)
@@ -217,7 +258,7 @@ try {
     for (const p of problems) console.error('  -', p)
     process.exitCode = 1
   } else {
-    const names = ['piano', 'drawing', 'drawing-faded', 'panel', 'bedtime', 'mobile', 'mobile-piano', 'mobile-drawing', 'mobile-panel']
+    const names = ['splash', 'splash-bedtime', 'mobile-splash', 'piano', 'drawing', 'drawing-faded', 'panel', 'bedtime', 'mobile', 'mobile-piano', 'mobile-drawing', 'mobile-panel']
     console.log(`ok — no page errors. screenshots: ${[OUT, ...names.map(sibling)].join(', ')}`)
   }
 } finally {
