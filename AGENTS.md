@@ -33,6 +33,7 @@ npm run typecheck  # fast correctness gate
 npm run build      # typecheck + production build
 npm run shot       # build output → headless Chromium → shots/*.png
 npm test           # Vitest unit tests
+npm run test:coverage # same, failing below the coverage thresholds (CI runs this)
 npm run test:rust  # desktop keyboard-lock rules (cargo test)
 ```
 
@@ -73,6 +74,7 @@ src/
   toys/
     types.ts         SmashEvent, Toy, ToyContext
     index.ts         TOYS registry (Smash's toys) + playSmash
+    play.ts          picks a toy for a smash, swallows its errors (unit-tested)
     letterPop.ts     ] one file per toy
     shapeBurst.ts    ]
     ripple.ts        ]
@@ -242,9 +244,13 @@ value; that's what the screenshots are for. The checks, in order:
 
 1. `npm run build` — types and bundle.
 2. `npm test` — Vitest: piano key mapping and key count, drawing stroke /
-   brush / pitch maths, the corner-hold gesture, settings parsing, mood config
-   invariants (panel keys unique, bedtime calmer than daytime, volume below
-   clipping, pentatonic scale).
+   brush / pitch maths, the corner-hold gesture, settings parsing and saving,
+   toy routing, keyboard and pointer input (repeats ignored, browser shortcuts
+   swallowed, rate limit, both grown-up holds), mood config invariants (panel
+   keys unique, bedtime calmer than daytime, volume below clipping, pentatonic
+   scale). `npm run test:coverage` is the same run with a coverage gate: each
+   logic module listed in `vitest.config.ts` must stay at 90% of lines and 85%
+   of branches and functions, or CI fails.
 3. `npm run test:rust` — the desktop keyboard-lock rules for both macOS and
    Windows, runnable on any OS.
 4. `npm run shot` — renders, and no console errors.
@@ -252,12 +258,16 @@ value; that's what the screenshots are for. The checks, in order:
 
 Tests live next to the code (`*.test.ts`) and must not import Phaser, which
 needs a browser. If logic worth testing lives in a Phaser file, move it into a
-plain module first, as with `modes/pianoLayout.ts` and `modes/drawingMath.ts`. Native lock logic belongs
-in `src-tauri/src/lockdown/rules.rs` for the same reason.
+plain module first, as with `modes/pianoLayout.ts`, `modes/drawingMath.ts`
+and `toys/play.ts`, and add it to the coverage `include` list in
+`vitest.config.ts`. Tests that need `window`, `localStorage` or DOM events
+start with `// @vitest-environment happy-dom` (see `input.test.ts`). Native
+lock logic belongs in `src-tauri/src/lockdown/rules.rs` for the same reason.
 
 CI (`.github/workflows/ci.yml`) runs all of this. Rust tests run on real
 macOS and Windows runners, which is the only place the Windows code gets
-compiled for real. Screenshots are uploaded as an artifact.
+compiled for real. Screenshots and the HTML coverage report are uploaded as
+artifacts.
 
 If you change mash-tolerance behaviour, raise the key count in
 `scripts/screenshot.mjs` and drop the delay to simulate harder mashing.

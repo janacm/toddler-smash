@@ -1,6 +1,7 @@
 node_modules/
 dist/
 shots/
+coverage/
 src-tauri/target/
 src-tauri/gen/
 .netlify/

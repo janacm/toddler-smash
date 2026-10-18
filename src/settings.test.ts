@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest'
+// @vitest-environment happy-dom
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { CONFIG } from './config'
 import { parseSettings } from './settings'
 
 const DEFAULTS = { mode: 'smash', mood: 'daytime', childCanSwitch: true }
@@ -35,5 +37,47 @@ describe('parseSettings', () => {
     const a = parseSettings(null)
     a.mood = 'bedtime'
     expect(parseSettings(null).mood).toBe('daytime')
+  })
+})
+
+describe('saved settings', () => {
+  const fresh = async () => {
+    vi.resetModules()
+    return import('./settings')
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    localStorage.clear()
+  })
+
+  it('come back after a reload', async () => {
+    const first = await fresh()
+    first.settings.mood = 'bedtime'
+    first.settings.childCanSwitch = false
+    first.saveSettings()
+
+    const second = await fresh()
+    expect(second.settings).toEqual({ mode: 'smash', mood: 'bedtime', childCanSwitch: false })
+    expect(second.currentMood()).toEqual(CONFIG.moods.bedtime)
+  })
+
+  it('fall back to defaults when storage is unreadable', async () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => {
+        throw new Error('denied')
+      },
+    })
+    expect((await fresh()).settings).toEqual(DEFAULTS)
+  })
+
+  it('save quietly when storage is full', async () => {
+    const { saveSettings } = await fresh()
+    vi.stubGlobal('localStorage', {
+      setItem: () => {
+        throw new Error('quota')
+      },
+    })
+    expect(() => saveSettings()).not.toThrow()
   })
 })
