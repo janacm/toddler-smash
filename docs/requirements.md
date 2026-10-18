@@ -16,8 +16,8 @@ is the only person who changes settings.
 | --- | --- | --- | --- |
 | C1 | Any key, tap or click does something visible and audible. | `input.ts`, `toys/`, `modes/` | screenshots |
 | C2 | No failure state, no levels, no game over, no dialog, no text the child must read. | `PlayScene.ts` (the only scene) | review |
-| C3 | Nothing the child can do shows an error or stops the game. Errors are swallowed. | `main.ts`, `toys/index.ts` | `npm run shot` fails on any console error |
-| C4 | Sustained mashing doesn't slow down, leak memory or distort audio. Sprites, text and voices are hard-capped; held keys fire once. | `pool.ts`, `audio.ts` (`maxVoices`), `input.ts` (`ev.repeat`) | screenshots under mashing |
+| C3 | Nothing the child can do shows an error or stops the game. Errors are swallowed. | `main.ts`, `toys/play.ts` | `play.test.ts` (a throwing toy is skipped), `npm run shot` fails on any console error |
+| C4 | Sustained mashing doesn't slow down, leak memory or distort audio. Sprites, text and voices are hard-capped; held keys fire once. | `pool.ts`, `audio.ts` (`maxVoices`), `input.ts` (`ev.repeat`) | `input.test.ts` (repeats ignored, rate limit), screenshots under mashing |
 | C5 | Random input sounds musical: every note is on the pentatonic scale. | `audio.ts`, `CONFIG.audio` | `config.test.ts` |
 | C6 | No image or audio files. Everything is drawn or synthesized in code, so it can all be read and changed. Bundler icons are the only exception. | `textures.ts`, `audio.ts` | review |
 
@@ -43,7 +43,7 @@ is the only person who changes settings.
 
 | # | Requirement | Where | Checked by |
 | --- | --- | --- | --- |
-| P1 | One grown-up menu, hard to reach by accident: hold Escape for 3 seconds, or on touch hold the top-left and bottom-right corners for 3 seconds. | `input.ts`, `gestures.ts` | `gestures.test.ts`, `panel.png`, `mobile-panel.png` |
+| P1 | One grown-up menu, hard to reach by accident: hold Escape for 3 seconds, or on touch hold the top-left and bottom-right corners for 3 seconds. | `input.ts`, `gestures.ts` | `gestures.test.ts`, `input.test.ts`, `panel.png`, `mobile-panel.png` |
 | P2 | The menu picks the sub-game, mood, whether the child's buttons show, and full screen (plus Quit in the desktop app). Every option is a tappable button; on a keyboard, number keys pick the game and letters do the rest. | `parentPanel.ts`, `PlayScene.runPanelAction` | screenshots |
 | P3 | Choices are remembered between sessions. | `settings.ts` | `settings.test.ts` |
 
@@ -51,7 +51,7 @@ is the only person who changes settings.
 
 | # | Requirement | Where | Checked by |
 | --- | --- | --- | --- |
-| W1 | Plays in a desktop browser. Browser shortcuts that don't need a modifier (F5, Tab, Space, quick-find, right-click) are swallowed. | `input.ts` | review |
+| W1 | Plays in a desktop browser. Browser shortcuts that don't need a modifier (F5, Tab, Space, quick-find, right-click) are swallowed. | `input.ts` | `input.test.ts` |
 | W2 | Plays on phones and tablets: touch, notch-safe layout, readable sizes, no pinch-zoom or scroll. | `safeArea.ts`, `index.html` | `mobile*.png` |
 | W3 | Can be added to the home screen and plays full screen and offline. | `vite.config.ts` (PWA) | review |
 | W4 | After a deploy, devices that saved the game get the new version. Today that happens after a reload, or after the home-screen app has been fully closed and reopened (sometimes twice). | `main.ts` (`registerSW`) | manual |

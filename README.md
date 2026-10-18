@@ -51,6 +51,7 @@ for setup, what can't be blocked, and troubleshooting.
 ```bash
 npm run build      # types + bundle
 npm test           # unit tests
+npm run test:coverage  # unit tests + coverage gate (what CI runs)
 npm run test:rust  # desktop keyboard-lock rules
 npm run shot       # headless screenshots in shots/, fails on console errors
 ```
