@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "shot": "node scripts/screenshot.mjs",
+    "test:updates": "node scripts/update-pass.mjs",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build",
     "test": "vitest run",

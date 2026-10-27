@@ -2,9 +2,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CONFIG } from './config'
 import { installInput, type InputHooks } from './input'
-import { currentMood } from './settings'
+import { currentMood, settings } from './settings'
 
-let hooks: { [K in keyof InputHooks]: ReturnType<typeof vi.fn> }
+let hooks: { [K in keyof Required<InputHooks>]: ReturnType<typeof vi.fn> }
 let parent: HTMLElement
 let uninstall: () => void
 
@@ -25,11 +25,12 @@ const pointer = (type: string, pointerId: number, clientX: number, clientY: numb
 }
 
 const smashes = () => hooks.onSmash.mock.calls.map(([e]) => e)
+const actions = () => hooks.onAction.mock.calls.map(([action]) => action)
 
 beforeEach(() => {
   vi.useFakeTimers()
   vi.advanceTimersByTime(1000)
-  hooks = { onSmash: vi.fn(), onStroke: vi.fn(), onParentEscape: vi.fn() }
+  hooks = { onAction: vi.fn(() => false), onSmash: vi.fn(), onStroke: vi.fn(), onParentEscape: vi.fn() }
   parent = document.createElement('div')
   document.body.appendChild(parent)
   uninstall = installInput(parent, hooks as unknown as InputHooks)
@@ -38,6 +39,7 @@ beforeEach(() => {
 afterEach(() => {
   uninstall()
   parent.remove()
+  settings.mood = 'daytime'
   vi.useRealTimers()
 })
 
@@ -92,6 +94,7 @@ describe('keyboard', () => {
     vi.advanceTimersByTime(GAP)
     const repeat = key('keydown', 'a', { code: 'KeyA', repeat: true })
     expect(hooks.onSmash).toHaveBeenCalledOnce()
+    expect(hooks.onAction).toHaveBeenCalledOnce()
     expect(repeat.defaultPrevented).toBe(true)
   })
 
@@ -102,7 +105,7 @@ describe('keyboard', () => {
     expect(hooks.onSmash).toHaveBeenCalledOnce()
     vi.advanceTimersByTime(GAP)
     key('keydown', 'f', { code: 'KeyF' })
-    expect(smashes().map((e) => e.index)).toEqual([0, 1])
+    expect(smashes().map((e) => e.index)).toEqual([0, 3])
   })
 
   it.each(['F5', 'Tab', ' ', '/', "'", 'Backspace'])('swallows browser shortcut %j', (k) => {
@@ -113,6 +116,8 @@ describe('keyboard', () => {
     'lets modifier combos through in a browser: %j',
     (mods) => {
       expect(key('keydown', 'w', { code: 'KeyW', ...mods }).defaultPrevented).toBe(false)
+      expect(hooks.onAction).not.toHaveBeenCalled()
+      expect(hooks.onSmash).toHaveBeenCalledOnce()
     },
   )
 
@@ -120,6 +125,57 @@ describe('keyboard', () => {
     const ev = new MouseEvent('contextmenu', { cancelable: true })
     window.dispatchEvent(ev)
     expect(ev.defaultPrevented).toBe(true)
+  })
+})
+
+describe('logical play actions', () => {
+  it('delivers every rapid navigation press before Bedtime cosmetic rate limiting', () => {
+    settings.mood = 'bedtime'
+    const presses = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', ' ', 'Enter', 'Backspace']
+    for (const k of presses) {
+      key('keydown', k)
+      vi.advanceTimersByTime(10)
+    }
+    expect(actions().map((action) => action.key)).toEqual(presses)
+    expect(actions().map((action) => action.event.index)).toEqual([0, 1, 2, 3, 4, 5, 6])
+    expect(hooks.onSmash).toHaveBeenCalledOnce()
+  })
+
+  it('consumed actions do not spawn toys or throttle the next ordinary smash', () => {
+    hooks.onAction.mockReturnValueOnce(true)
+    key('keydown', 'Enter')
+    key('keydown', 'a', { code: 'KeyA' })
+    expect(actions()).toHaveLength(2)
+    expect(smashes()).toEqual([expect.objectContaining({ char: 'A', index: 1 })])
+  })
+
+  it('supplies original keys alongside normalized letters', () => {
+    key('keydown', 'a', { code: 'KeyA' })
+    expect(actions()).toEqual([
+      { key: 'a', event: expect.objectContaining({ char: 'A', isLetter: true, source: 'key' }) },
+    ])
+  })
+
+  it('delivers simultaneous fingers even when ordinary visuals are capped', () => {
+    pointer('pointerdown', 3, 120, 340, parent)
+    pointer('pointerdown', 4, 220, 440, parent)
+    expect(actions()).toEqual([
+      { key: undefined, event: expect.objectContaining({ pointerId: 3, x: 120, y: 340, source: 'pointer' }) },
+      { key: undefined, event: expect.objectContaining({ pointerId: 4, x: 220, y: 440, source: 'pointer' }) },
+    ])
+    expect(hooks.onSmash).toHaveBeenCalledOnce()
+  })
+
+  it('keeps working when no logical action hook is installed', () => {
+    uninstall()
+    uninstall = installInput(parent, {
+      onSmash: hooks.onSmash,
+      onStroke: hooks.onStroke,
+      onParentEscape: hooks.onParentEscape,
+    })
+    key('keydown', 'a', { code: 'KeyA' })
+    expect(hooks.onSmash).toHaveBeenCalledOnce()
+    expect(hooks.onAction).not.toHaveBeenCalled()
   })
 })
 
@@ -131,6 +187,7 @@ describe('grown-up Escape hold', () => {
     vi.advanceTimersByTime(400)
     expect(hooks.onParentEscape).toHaveBeenCalledOnce()
     expect(hooks.onSmash).not.toHaveBeenCalled()
+    expect(hooks.onAction).not.toHaveBeenCalled()
   })
 
   it('times from the first press, not from repeats', () => {
@@ -234,6 +291,7 @@ it('stops listening once uninstalled', () => {
   key('keydown', 'Escape')
   vi.advanceTimersByTime(HOLD * 2)
   expect(hooks.onSmash).not.toHaveBeenCalled()
+  expect(hooks.onAction).not.toHaveBeenCalled()
   expect(hooks.onParentEscape).not.toHaveBeenCalled()
   uninstall = () => {}
 })

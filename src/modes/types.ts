@@ -32,4 +32,10 @@ export interface Mode {
    * move from an unknown `pointerId` should be treated as a new stroke.
    */
   stroke?(e: StrokeEvent, ctx: ToyContext): void
+  /** Toggle an earned creative power without rebuilding or clearing scenery. */
+  setPlayground?(active: boolean, ctx: ToyContext): void
+  /** Paint one deliberate keyboard movement using the same brush as touch. */
+  paintSegment?(from: { x: number; y: number }, to: { x: number; y: number }, ctx: ToyContext): void
+  /** Demonstrate a piano note without treating it as player input or an echo. */
+  replayNote?(index: number, ctx: ToyContext): void
 }

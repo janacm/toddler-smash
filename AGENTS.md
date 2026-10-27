@@ -9,6 +9,10 @@ decision: **the player cannot read, cannot be instructed, and will press
 everything.** There is no failure state, no menu they can get stuck in, and no
 error they could ever be shown.
 
+Older players can discover optional puzzle tiers within each game. Free play
+remains the entry point, and every puzzle has a picture-based return. Hidden
+progress is independent per game and lasts only until reload or relaunch.
+
 The second goal is that the repo is pleasant to *prompt at*. Changes should
 usually be one file, verified by looking at a screenshot.
 
@@ -32,6 +36,7 @@ npm run dev        # http://127.0.0.1:5173 — hot reload while iterating
 npm run typecheck  # fast correctness gate
 npm run build      # typecheck + production build
 npm run shot       # build output → headless Chromium → shots/*.png
+npm run test:updates # cached browser → repeated releases, offline and recovery
 npm test           # Vitest unit tests
 npm run test:coverage # same, failing below the coverage thresholds (CI runs this)
 npm run test:rust  # desktop keyboard-lock rules (cargo test)
@@ -50,6 +55,19 @@ visual change cannot be verified from a diff. The script exits
 non-zero if the page logged any console error, so a green run means both "it
 looks like this" and "nothing threw."
 
+It also runs `scripts/progression-pass.mjs`: keyboard and touch discovery,
+all six authored puzzles and each reward in all three games, plus Bedtime
+Piano. Read `challenge-*.png`, `mobile-challenge-*.png` and
+`bedtime-challenge-piano-*.png`. That pass checks replay, wrong attempts,
+multi-touch rejection, game switching, resize, mood changes, New player and
+reload. Assess discovery and the 20–40 second target per tier with actual
+child playtesting; screenshots cannot establish engagement or pacing.
+
+The same run exercises `scripts/animal-pass.mjs`: D/S animal shortcuts,
+ordinary mouse and touch encounters, Bedtime styling, held-key repeats,
+sustained mashing, pooled sprite recycling and voice retirement. Inspect
+`animals-*.png`, `mobile-animals-play.png` and `bedtime-animals-*.png`.
+
 ## Architecture
 
 ```
@@ -58,8 +76,9 @@ src/
   settings.ts        current mode / mood / corner buttons, saved to localStorage
   audio.ts           WebAudio synth, voice-capped, pentatonic; blip + piano voices
   textures.ts        every shape drawn at runtime; no image files
+  animalTextures.ts  procedural dinosaur/shark faces, footprints and bubbles
   pool.ts            SpritePool + TextPool — the hard caps
-  input.ts           keyboard/pointer → SmashEvent, plus browser-shortcut defense
+  input.ts           logical PlayAction before cosmetic limits; shortcut defense
   gestures.ts        two-finger corner hold (the touch way into the panel)
   switcher.ts        the child's round sub-game buttons, top-right
   parentPanel.ts     the grown-up panel: tappable buttons, scales to fit
@@ -68,6 +87,11 @@ src/
                      vite.config.ts injects into index.html; hideSplash
   desktop.ts         Tauri bridge: isDesktop, quit, keyboard-lock status
   scenes/PlayScene.ts  the only scene
+  challenges/
+    model.ts         session-only per-game discovery and six authored rounds
+    layout.ts        shared grid, navigation, hit tests and crossed waypoints
+    controller.ts    picture-only puzzles, demonstrations, cursor and garden
+    rewards.ts       capped, cancellable Piano echo queue
   modes/             sub-games
     types.ts         Mode
     index.ts         MODES registry (order = panel number keys)
@@ -83,6 +107,7 @@ src/
     shapeBurst.ts    ]
     ripple.ts        ]
     critter.ts       ]
+    animals.ts       D/S shortcuts and weighted dinosaur/shark reactions
 src-tauri/           desktop app (see "Desktop app" below)
 ```
 
@@ -106,7 +131,8 @@ without either knowing about the other.
   2. Add a pass to `scripts/screenshot.mjs` (bump `MODE_COUNT`) and read it.
   3. Update `docs/grown-ups.md` (key table, Games, corner buttons), the
      README's sub-game list, and `docs/requirements.md`.
-  4. Remember installed devices see it only after a reload or relaunch.
+  4. Browser and home-screen installs switch automatically after the new
+     worker finishes installing. Native desktop apps need a rebuilt installer.
 - Adding a mood: copy a block in `CONFIG.moods` and give it a new `panelKey`.
   A mood sets palette, background, tween `timeScale`, spawn rate, and synth
   volume, waveform, note length and octave.
@@ -116,6 +142,36 @@ The child can switch sub-game with the corner buttons, but not mood, so
 Bedtime stays Bedtime. Sub-game switching is pointer-only on purpose: a
 keyboard shortcut would be mashed constantly. `C` in the panel hides the
 buttons.
+
+### Hidden progression
+
+`PlayScene` owns `Progression`; the challenge controller only presents it.
+Three successive firefly selections discover a game's entrance. Two puzzles
+per tier lead through three tiers, then a creative playground. Errors reset
+only the current attempt. A mode switch returns to free play and preserves
+that game's discoveries; reload or New player (panel R) resets all progress.
+Never persist puzzle state in `settings.ts`.
+
+The pure model holds the authored shape, melody and 3×3 Drawing routes.
+Keep recognition there and geometry in `layout.ts`, with unit coverage.
+Logical play actions must arrive before cosmetic rate limiting, especially in
+Bedtime. Grown-up controls and navigation must not enter the recognizers.
+Held-key repeats remain ignored. The controller contains optional errors so
+ordinary play continues.
+
+Arrows move a visible cursor; Space/Enter selects; outward arrows at a board
+edge reach back/replay; Tab cycles those controls. Backspace or the back
+picture immediately returns to free play. Drawing arrows paint adjacent
+waypoints, while pointer players tap or trace the same ordered route, including
+closure. Puzzle controls do not enable keyboard switching between games.
+
+Optional `Mode` hooks enable a playground, paint a keyboard segment and replay
+a Piano note. Toggle powers without rebuilding Drawing's canvas. Smash keeps
+at most 24 connected garden stars; Piano schedules one quiet 600 ms echo per
+player note with at most four pending and no recursion; Drawing mirrors strokes
+and stickers across the canvas's vertical centre. Keep caps and audio settings
+in `CONFIG.challenges`. Rebuild presentation on resize or mood change without
+resetting earned rounds.
 
 ### Adding a new effect — the main extension point
 
@@ -190,12 +246,27 @@ fullscreen manifest, `public/icon.svg`, and a service worker that precaches
 everything so it plays offline. The service worker is registered in
 `src/main.ts` only outside the desktop app.
 
-Because of that cache, a deploy doesn't reach a device that already has the
-game until it reloads, or for a home-screen install, until it's fully closed
-and reopened (sometimes twice). After deploying, check the live site in a
-fresh browser rather than one that has played before. If someone says a new
-feature is missing, suspect the cache first; the grown-up menu's key hint
-("Keys: 1–N game") shows which version they're on.
+Online browser and home-screen installs check for updates on launch, foreground
+return, restored navigation, reconnect, and every 60 seconds while visible.
+`webUpdates.ts` registers the worker; `updates.ts` coalesces checks and guards
+reloads. Workbox must explicitly set `skipWaiting` and `clientsClaim` because
+`injectRegister:false` suppresses this plugin version's auto-update defaults.
+The helper's activation callback and native controller-change recovery share
+one reload guard; the fallback handles failed installs that Workbox stops
+observing. First installation must not reload unnecessarily.
+
+Updates reload during play after the complete worker activates. Settings stay
+saved; drawing and session progress reset. Failed downloads and offline starts
+keep the last complete cached game, then retry. The grown-up menu's build ID
+matches uncached `/version.json`; do not infer a version from the game count.
+After deploying, verify both a fresh browser and an already-cached installation
+on the canonical site. Existing old workers get the repair at their next check.
+
+`npm run test:updates` uses the production PWA configuration and registration
+code on a stable local origin, without clearing browser storage between
+releases. It covers legacy migration, repeated updates, lifecycle triggers,
+offline startup, failed precaching, settings retention, and reload-loop
+prevention. CI runs it with service workers enabled, alongside gameplay shots.
 
 ## Desktop app
 
@@ -254,8 +325,10 @@ value; that's what the screenshots are for. The checks, in order:
    mood picked, fades on time or on a press), keyboard and pointer input (repeats ignored, browser shortcuts
    swallowed, rate limit, both grown-up holds), mood config invariants (panel
    keys unique, bedtime calmer than daytime, volume below clipping, pentatonic
-   scale). `npm run test:coverage` is the same run with a coverage gate: each
-   logic module listed in `vitest.config.ts` must stay at 90% of lines and 85%
+   scale), session progression and wrong-answer resets, ordered route closure,
+   shared challenge geometry, and capped/cancelled echoes.
+   `npm run test:coverage` is the same run with a coverage gate: each logic
+   module listed in `vitest.config.ts` must stay at 90% of lines and 85%
    of branches and functions, or CI fails.
 3. `npm run test:rust` — the desktop keyboard-lock rules for both macOS and
    Windows, runnable on any OS.

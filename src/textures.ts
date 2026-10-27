@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { createAnimalTextures } from './animalTextures'
 
 /**
  * All artwork is drawn at runtime with Phaser's Graphics API and baked into
@@ -92,6 +93,7 @@ export function buildTextures(scene: Phaser.Scene): void {
   g.generateTexture('pixel', 4, 4)
 
   g.destroy()
+  createAnimalTextures(scene)
 }
 
 function drawStar(

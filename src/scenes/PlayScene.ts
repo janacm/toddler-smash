@@ -3,7 +3,9 @@ import { CONFIG, type MoodName } from '../config'
 import { Synth } from '../audio'
 import { SpritePool, TextPool } from '../pool'
 import { buildTextures } from '../textures'
-import { installInput } from '../input'
+import { installInput, type PlayAction } from '../input'
+import { Progression, type GameId } from '../challenges/model'
+import { ChallengeController } from '../challenges/controller'
 import { isDesktop, keyboardLocked, quitApp } from '../desktop'
 import { currentMood, saveSettings, settings } from '../settings'
 import { ModeSwitcher } from '../switcher'
@@ -36,6 +38,9 @@ export class PlayScene extends Phaser.Scene {
   private mode: Mode = MODES[0]
   private leaveMode?: () => void
   private switcher!: ModeSwitcher
+  private progress = new Progression()
+  private challenge?: ChallengeController
+  private blockedPointers = new Set<number>()
 
   constructor() {
     super('play')
@@ -54,9 +59,21 @@ export class PlayScene extends Phaser.Scene {
     this.applyMood()
 
     this.teardownInput = installInput(this.game.canvas.parentElement ?? document.body, {
+      onAction: (action) => {
+        const handled = this.handleAction(action)
+        if (handled && action.event.pointerId !== undefined) this.blockedPointers.add(action.event.pointerId)
+        return handled
+      },
       onSmash: (e) => this.handleSmash(e),
       onStroke: (e) => {
-        if (!this.panel.visible) this.mode.stroke?.(e, this.context())
+        if (this.blockedPointers.has(e.pointerId)) {
+          if (e.phase === 'end') this.blockedPointers.delete(e.pointerId)
+          return
+        }
+        if (!this.panel.visible) {
+          this.safely(() => this.challenge?.stroke(e))
+          this.safely(() => this.mode.stroke?.(e, this.context()))
+        }
       },
       onParentEscape: () => this.toggleParentPanel(),
     })
@@ -81,10 +98,33 @@ export class PlayScene extends Phaser.Scene {
     })
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.teardownInput?.()
+      this.challenge?.destroy()
       this.leaveMode?.()
       window.removeEventListener('touchend', unlockAudio)
       window.removeEventListener('click', unlockAudio)
     })
+  }
+
+  private safely<T>(fn: () => T): T | undefined {
+    try { return fn() } catch { return undefined }
+  }
+
+  private handleAction(action: PlayAction): boolean {
+    this.hint?.setVisible(false)
+    const e = action.event
+    if (this.panel.visible) {
+      const picked = e.source === 'pointer' ? this.panel.hit(e.x, e.y) : undefined
+      if (picked) this.runPanelAction(picked, 'pointer')
+      return true
+    }
+    if (e.source === 'pointer') {
+      const mode = this.switcher.hit(e.x, e.y)
+      if (mode) {
+        this.setMode(mode)
+        return true
+      }
+    }
+    return this.safely(() => this.challenge?.action(action)) ?? false
   }
 
   private handleSmash(e: SmashEvent): void {
@@ -129,9 +169,14 @@ export class PlayScene extends Phaser.Scene {
 
   private setMode(mode: Mode): void {
     if (mode === this.mode) {
+      if (this.challenge) this.progress.back(this.mode.name as GameId)
+      this.challenge?.destroy()
+      this.challenge = this.createChallenge()
+      this.challenge?.pause(this.panel.visible)
       this.switcher.wiggle(mode)
       return
     }
+    if (this.challenge) this.progress.back(this.mode.name as GameId)
     this.mode = mode
     settings.mode = mode.name
     saveSettings()
@@ -163,8 +208,19 @@ export class PlayScene extends Phaser.Scene {
   }
 
   private enterMode(): void {
+    this.challenge?.destroy()
     this.leaveMode?.()
     this.leaveMode = this.mode.enter?.(this.context())
+    this.challenge = this.createChallenge()
+    this.challenge?.pause(this.panel.visible)
+  }
+
+  private createChallenge(): ChallengeController | undefined {
+    const name = this.mode.name
+    if (name === 'smash' || name === 'piano' || name === 'drawing') {
+      return this.safely(() => new ChallengeController(this.progress, name, () => this.context(), this.mode))
+    }
+    return undefined
   }
 
   private layoutSwitcher(): void {
@@ -244,9 +300,11 @@ export class PlayScene extends Phaser.Scene {
   private toggleParentPanel(): void {
     if (this.panel.visible) {
       this.panel.hide()
+      this.challenge?.pause(false)
       return
     }
     this.panel.show(this.panelState())
+    this.challenge?.pause(true)
     if (isDesktop) {
       void keyboardLocked().then((on) => {
         this.lockStatus = on
@@ -279,6 +337,7 @@ export class PlayScene extends Phaser.Scene {
     const mood = (Object.keys(CONFIG.moods) as MoodName[]).find((m) => CONFIG.moods[m].panelKey.toLowerCase() === key)
     if (mood) return { kind: 'mood', mood }
     if (key === 'c') return { kind: 'toggleChild' }
+    if (key === 'r') return { kind: 'resetProgress' }
     if (key === 'f' && !isDesktop) return { kind: 'fullscreen' }
     if (key === 'q' && isDesktop) return { kind: 'quit' }
     return undefined
@@ -297,6 +356,12 @@ export class PlayScene extends Phaser.Scene {
         saveSettings()
         this.layoutSwitcher()
         break
+      case 'resetProgress':
+        this.progress.reset()
+        this.challenge?.destroy()
+        this.challenge = this.createChallenge()
+        this.challenge?.pause(true)
+        break
       case 'fullscreen': {
         const toggle = () => {
           if (this.scale.isFullscreen) this.scale.stopFullscreen()
@@ -314,6 +379,7 @@ export class PlayScene extends Phaser.Scene {
         return
       case 'close':
         this.panel.hide()
+        this.challenge?.pause(false)
         return
     }
     this.panel.refresh(this.panelState())

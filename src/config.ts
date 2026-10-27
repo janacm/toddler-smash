@@ -58,6 +58,16 @@ export const CONFIG = {
     gapPx: 10,
   },
 
+  /** Optional discoveries; progress lasts for this launch only. */
+  challenges: {
+    maxGardenStars: 24,
+    echoDelayMs: 600,
+    maxEchoes: 4,
+    echoGain: 0.35,
+    demoStepMs: 650,
+    feedbackIntervalMs: 90,
+  },
+
   /** The drawing sub-game. */
   drawing: {
     /** Brush width as a share of the screen's short side, with a floor. */

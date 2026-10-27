@@ -13,6 +13,8 @@ import { spawn } from 'node:child_process'
 import { mkdirSync, existsSync, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
+import { progressionPass } from './progression-pass.mjs'
+import { animalPass } from './animal-pass.mjs'
 
 // Not vite's default 4173, which other copies of the game may already be
 // serving. --strictPort below makes a clash fail instead of silently
@@ -71,10 +73,10 @@ try {
   await splashGone(page)
 
   // Mash it the way the actual user will: fast, arbitrary, overlapping.
-  const keys = 'HELLO2468WORLD'.split('')
+  const keys = 'HELLO2468WORLD'.repeat(3).split('')
   for (const k of keys) {
     await page.keyboard.press(k)
-    await sleep(55)
+    await sleep(18)
   }
   await page.mouse.click(400, 300)
   await page.mouse.click(900, 500)
@@ -136,6 +138,8 @@ try {
   await page.screenshot({ path: sibling('bedtime') })
 
   await mobilePass()
+  await animalPass({ browser, url: URL, sibling, watch })
+  await progressionPass({ browser, url: URL, sibling, watch })
   await browser.close()
 
   /**

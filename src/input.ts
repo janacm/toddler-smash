@@ -4,7 +4,15 @@ import { currentMood } from './settings'
 import { isDiagonalCornerHold, type Point } from './gestures'
 import type { SmashEvent, StrokeEvent } from './toys/types'
 
+export interface PlayAction {
+  event: SmashEvent
+  /** Original key, including navigation keys; absent for pointer input. */
+  key?: string
+}
+
 export interface InputHooks {
+  /** Runs before cosmetic throttling. Return true when the action was handled. */
+  onAction?(action: PlayAction): boolean
   onSmash(e: SmashEvent): void
   onStroke(e: StrokeEvent): void
   onParentEscape(): void
@@ -44,11 +52,21 @@ export function installInput(canvasParent: HTMLElement, hooks: InputHooks): () =
     return true
   }
 
-  const emit = (x: number, y: number, char: string, source: 'key' | 'pointer', pointerId?: number) => {
-    if (!allowSpawn()) return
+  const emit = (
+    x: number,
+    y: number,
+    char: string,
+    source: 'key' | 'pointer',
+    pointerId?: number,
+    key?: string,
+    logical = true,
+  ) => {
     const isLetter = /^[A-Z]$/.test(char)
     const isDigit = /^[0-9]$/.test(char)
-    hooks.onSmash({ x, y, char, isLetter, isDigit, index: counter++, source, pointerId })
+    const event: SmashEvent = { x, y, char, isLetter, isDigit, index: counter++, source, pointerId }
+    if (logical && hooks.onAction?.({ event, key })) return
+    if (!allowSpawn()) return
+    hooks.onSmash(event)
   }
 
   const onKeyDown = (ev: KeyboardEvent) => {
@@ -76,7 +94,7 @@ export function installInput(canvasParent: HTMLElement, hooks: InputHooks): () =
     // left-to-right sweeps across the screen. Unknown keys land randomly.
     const x = keyToX(ev.code, width())
     const y = keyToY(ev.code, height())
-    emit(x, y, char, 'key')
+    emit(x, y, char, 'key', undefined, ev.key, !ev.metaKey && !ev.ctrlKey && !ev.altKey)
   }
 
   const onKeyUp = (ev: KeyboardEvent) => {

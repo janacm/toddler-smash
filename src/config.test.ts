@@ -3,8 +3,8 @@ import { CONFIG, type MoodName } from './config'
 
 const moods = Object.keys(CONFIG.moods) as MoodName[]
 
-/** Keys the grown-up panel already uses for something other than a mood. */
-const RESERVED_PANEL_KEYS = ['c', 'f', 'q', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+/** Keys the grown-up panel already uses for controls other than a mood. */
+const RESERVED_PANEL_KEYS = ['c', 'f', 'q', 'r', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
 describe('CONFIG.moods', () => {
   it('every mood defines the same fields', () => {
@@ -15,7 +15,7 @@ describe('CONFIG.moods', () => {
     for (const name of moods) expect(shape(name), name).toEqual(shape('daytime'))
   })
 
-  it('panel keys are single letters, unique, and not used by the panel for anything else', () => {
+  it('panel keys are single letters, unique, and not used by other panel controls', () => {
     const keys = moods.map((m) => CONFIG.moods[m].panelKey.toLowerCase())
     for (const key of keys) {
       expect(key).toMatch(/^[a-z]$/)
