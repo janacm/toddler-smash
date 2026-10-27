@@ -17,6 +17,10 @@ reloads during play, retaining grown-up settings and resetting the current
 drawing and puzzle progress. Offline or failed downloads keep the last
 complete version. The grown-up panel shows its build ID.
 
+Merging to `main` automatically publishes to Netlify after CI passes on web,
+macOS and Windows. Deployment uses the tested build, skips superseded commits,
+and verifies the published files on the live site. No manual deploy is needed.
+
 ## Run it
 
 ```bash
