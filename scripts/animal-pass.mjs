@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { CONFIG } from '../src/config.ts'
+import { observeGame } from './browser-helpers.mjs'
 
 /** Real keyboard and pointer events, observing Phaser only from the test context. */
 export async function animalPass({ browser, url, sibling, watch }) {
@@ -9,22 +10,9 @@ export async function animalPass({ browser, url, sibling, watch }) {
       serviceWorkers: 'block',
       ...(touch ? { deviceScaleFactor: 2, isMobile: true, hasTouch: true } : {}),
     })
+    await observeGame(context)
     await context.addInitScript((mood) => {
       localStorage.setItem('toddler-smash:settings', JSON.stringify({ mode: 'smash', mood }))
-      // Phaser publishes its namespace. Capture its game without a production debug API.
-      Object.defineProperty(window, 'Phaser', {
-        configurable: true,
-        set(value) {
-          Object.defineProperty(window, 'Phaser', { configurable: true, writable: true, value })
-          const OriginalGame = value.Game
-          value.Game = class extends OriginalGame {
-            constructor(...args) {
-              super(...args)
-              window.__animalGame = this
-            }
-          }
-        },
-      })
     }, mood)
     const page = await context.newPage()
     watch(page)
@@ -36,7 +24,7 @@ export async function animalPass({ browser, url, sibling, watch }) {
     const pause = mood === 'bedtime' ? 850 : 480
     const gap = CONFIG.moods[mood].minSpawnIntervalMs + 15
     const state = () => page.evaluate(() => {
-      const scene = window.__animalGame.scene.getScene('play')
+      const scene = window.__smashGame.scene.getScene('play')
       return {
         sprites: scene.pool.ring.length,
         texts: scene.text.ring.length,
@@ -50,9 +38,9 @@ export async function animalPass({ browser, url, sibling, watch }) {
     try {
       await page.goto(url, { waitUntil: 'networkidle' })
       await page.waitForSelector('#splash', { state: 'detached', timeout: 10_000 })
-      await page.waitForFunction(() => window.__animalGame?.scene.getScene('play')?.pool)
+      await page.waitForFunction(() => window.__smashGame?.scene.getScene('play')?.pool)
       await page.evaluate(() => {
-        const scene = window.__animalGame.scene.getScene('play')
+        const scene = window.__smashGame.scene.getScene('play')
         window.__animalSpawns = []
         const spawn = scene.pool.spawn.bind(scene.pool)
         scene.pool.spawn = (texture, ...args) => {
@@ -120,7 +108,7 @@ export async function animalPass({ browser, url, sibling, watch }) {
       }
       assert.equal((await state()).sprites, CONFIG.limits.maxSprites)
       await page.evaluate(() => {
-        const pool = window.__animalGame.scene.getScene('play').pool
+        const pool = window.__smashGame.scene.getScene('play').pool
         const recycled = pool.ring[pool.cursor]
         recycled.setFlip(true, true).setDepth(3)
         const next = pool.spawn('dot', 20, 20)

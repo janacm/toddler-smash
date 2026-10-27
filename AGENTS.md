@@ -62,6 +62,8 @@ Piano. Read `challenge-*.png`, `mobile-challenge-*.png` and
 multi-touch rejection, game switching, resize, mood changes, New player and
 reload. Assess discovery and the 20–40 second target per tier with actual
 child playtesting; screenshots cannot establish engagement or pacing.
+Panel hold checks keep the real input down until the panel toggles; the
+Smash pass also exercises delayed timer ticks to cover busy CI runners.
 
 The same run exercises `scripts/animal-pass.mjs`: D/S animal shortcuts,
 ordinary mouse and touch encounters, Bedtime styling, held-key repeats,

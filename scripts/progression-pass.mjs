@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { CONFIG } from '../src/config.ts'
 import { getPuzzle } from '../src/challenges/model.ts'
 import { challengeLayout, moveNode } from '../src/challenges/layout.ts'
+import { holdEscape, observeGame } from './browser-helpers.mjs'
 
 const GAMES = ['smash', 'piano', 'drawing']
 const DESKTOP = { width: 1280, height: 800 }
@@ -22,6 +23,15 @@ export async function progressionPass({ browser, url, sibling, watch }) {
       serviceWorkers: 'block',
       ...(touch ? { deviceScaleFactor: 2, isMobile: true, hasTouch: true } : {}),
     })
+    await observeGame(context)
+    if (!touch && game === 'smash') {
+      // A busy runner can defer the hold timer beyond a fixed 3.24s sleep.
+      // Coarse ticks reproduce that case without changing the game's threshold.
+      await context.addInitScript(() => {
+        const interval = window.setInterval.bind(window)
+        window.setInterval = (callback, delay, ...args) => interval(callback, Math.max(delay ?? 0, 1200), ...args)
+      })
+    }
     await context.addInitScript(({ mode, mood }) => {
       localStorage.setItem('toddler-smash:settings', JSON.stringify({ mode, mood, childCanSwitch: true }))
     }, { mode: game, mood })
@@ -138,11 +148,7 @@ export async function progressionPass({ browser, url, sibling, watch }) {
       else await press('Backspace')
       cursor = 4
     }
-    const holdPanel = async () => {
-      await page.keyboard.down('Escape')
-      await page.waitForTimeout(CONFIG.parentEscape.holdMs + 240)
-      await page.keyboard.up('Escape')
-    }
+    const holdPanel = () => holdEscape(page)
 
     try {
       await page.goto(url, { waitUntil: 'networkidle' })
