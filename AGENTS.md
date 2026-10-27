@@ -233,7 +233,19 @@ Breaking these breaks the actual requirement, so don't "clean them up":
 ## Web deploy
 
 Live at https://toddler-smash.netlify.app (Netlify site `toddler-smash`,
-config in `netlify.toml`). Deploys are manual from a local build:
+config in `netlify.toml`). Merging to `main` deploys automatically through
+`.github/workflows/ci.yml` after web checks and both desktop test jobs pass.
+The deploy job downloads the web job's tested `dist/` artifact; do not rebuild
+it before publishing. Production uploads are serialized, and superseded
+commits are skipped. `scripts/verify-deploy.mjs` compares every published file
+with the artifact on the canonical site and checks HTML/worker/version headers.
+Only Netlify's known invisible promotional HTML comment is ignored in that
+comparison; application HTML, JavaScript and service-worker bytes must match.
+
+GitHub Actions uses the encrypted `NETLIFY_AUTH_TOKEN` repository secret and
+the `NETLIFY_SITE_ID` repository variable. Keep credentials out of the repo.
+To retry a failed upload, rerun the failed deploy job in Actions. Emergency
+manual deployment remains available:
 
 ```bash
 npm run build && netlify deploy --prod --dir dist --no-build

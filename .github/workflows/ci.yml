@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   web:
     name: Build, unit tests, screenshots
@@ -24,6 +27,13 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:updates
       - run: npm run shot
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          name: production-build
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -56,3 +66,49 @@ jobs:
         with:
           workspaces: src-tauri
       - run: npm run test:rust
+
+  deploy:
+    name: Deploy production
+    needs: [web, desktop]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Never interrupt an upload. Recheck main inside this lock because older
+    # workflows can finish their tests after a newer release has deployed.
+    concurrency:
+      group: netlify-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip superseded commits
+        id: release
+        shell: bash
+        run: |
+          latest="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test -n "$latest"
+          if [[ "$latest" == "$GITHUB_SHA" ]]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Skipping $GITHUB_SHA; main is now $latest." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.release.outputs.current == 'true'
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v4
+        if: steps.release.outputs.current == 'true'
+        with:
+          name: production-build
+          path: dist/
+      - name: Publish tested build
+        if: steps.release.outputs.current == 'true'
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
+        run: |
+          test -n "$NETLIFY_AUTH_TOKEN"
+          test -n "$NETLIFY_SITE_ID"
+          npx --yes netlify-cli@26.0.1 deploy --prod --dir dist --no-build --site "$NETLIFY_SITE_ID" --message "$GITHUB_SHA"
+      - name: Verify published files
+        if: steps.release.outputs.current == 'true'
+        run: node scripts/verify-deploy.mjs
