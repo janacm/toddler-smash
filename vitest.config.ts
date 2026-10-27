@@ -18,6 +18,10 @@ export default defineConfig({
         'src/modes/drawingMath.ts',
         'src/modes/pianoLayout.ts',
         'src/toys/play.ts',
+        'src/challenges/model.ts',
+        'src/challenges/layout.ts',
+        'src/challenges/rewards.ts',
+        'src/updates.ts',
       ],
       // Per file, so one untested module can't hide behind well-tested ones.
       thresholds: {

@@ -13,6 +13,9 @@ import { spawn } from 'node:child_process'
 import { mkdirSync, existsSync, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
+import { progressionPass } from './progression-pass.mjs'
+import { animalPass } from './animal-pass.mjs'
+import { holdEscape as holdEscapeOn, holdForPanel, observeGame } from './browser-helpers.mjs'
 
 // Not vite's default 4173, which other copies of the game may already be
 // serving. --strictPort below makes a clash fail instead of silently
@@ -50,11 +53,13 @@ process.on('SIGINT', () => {
   process.exit(130)
 })
 
+let browser
 try {
   await waitForServer(URL, 15_000)
 
-  const browser = await chromium.launch(findChromium())
+  browser = await chromium.launch(findChromium())
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } })
+  await observeGame(page.context())
 
   const problems = []
   const watch = (p) => {
@@ -71,10 +76,10 @@ try {
   await splashGone(page)
 
   // Mash it the way the actual user will: fast, arbitrary, overlapping.
-  const keys = 'HELLO2468WORLD'.split('')
+  const keys = 'HELLO2468WORLD'.repeat(3).split('')
   for (const k of keys) {
     await page.keyboard.press(k)
-    await sleep(55)
+    await sleep(18)
   }
   await page.mouse.click(400, 300)
   await page.mouse.click(900, 500)
@@ -136,7 +141,10 @@ try {
   await page.screenshot({ path: sibling('bedtime') })
 
   await mobilePass()
-  await browser.close()
+  // The baseline page is finished; stop rendering it during the later passes.
+  await page.close()
+  await animalPass({ browser, url: URL, sibling, watch })
+  await progressionPass({ browser, url: URL, sibling, watch })
 
   /**
    * A phone-sized touch screen: tap around, switch to piano with the corner
@@ -151,6 +159,7 @@ try {
       isMobile: true,
       hasTouch: true,
     })
+    await observeGame(context)
     const phone = await context.newPage()
     watch(phone)
     await phone.goto(URL, { waitUntil: 'networkidle' })
@@ -190,16 +199,13 @@ try {
     await phone.screenshot({ path: sibling('mobile-drawing') })
 
     const holdCorners = async () => {
-      await cdp.send('Input.dispatchTouchEvent', {
+      await holdForPanel(phone, () => cdp.send('Input.dispatchTouchEvent', {
         type: 'touchStart',
         touchPoints: [
           { x: 12, y: 12, id: 0 },
           { x: W - 12, y: H - 12, id: 1 },
         ],
-      })
-      await sleep(3400)
-      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
-      await sleep(300)
+      }), () => cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }))
     }
     await holdCorners()
     await phone.screenshot({ path: sibling('mobile-panel') })
@@ -247,10 +253,7 @@ try {
   }
 
   async function holdEscape() {
-    await page.keyboard.down('Escape')
-    await sleep(3300)
-    await page.keyboard.up('Escape')
-    await sleep(200)
+    await holdEscapeOn(page)
   }
 
   if (problems.length) {
@@ -262,6 +265,7 @@ try {
     console.log(`ok — no page errors. screenshots: ${[OUT, ...names.map(sibling)].join(', ')}`)
   }
 } finally {
+  await browser?.close()
   shutdown()
 }
 

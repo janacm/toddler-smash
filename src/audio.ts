@@ -2,8 +2,8 @@ import { CONFIG, type Mood } from './config'
 
 type MoodAudio = Mood['audio']
 
-/** 'blip' is the default toy sound; 'piano' is a struck, ringing note. */
-export type Voice = 'blip' | 'piano'
+/** Toy voices share the same pentatonic notes, mood volume and voice cap. */
+export type Voice = 'blip' | 'piano' | 'dinosaur' | 'bubble'
 
 /** Harmonic partials of the piano voice and their relative loudness. */
 const PIANO_PARTIALS: [number, number][] = [
@@ -18,7 +18,7 @@ const PIANO_PARTIALS: [number, number][] = [
  * stays pure text and an agent can change how the game *sounds* by editing
  * numbers instead of sourcing assets.
  *
- * Two things matter here for mash tolerance:
+ * Two safeguards preserve mash tolerance:
  *
  *  1. Voices are capped. Fifty keypresses in one second will not stack fifty
  *     oscillators and blow the output into clipping distortion.
@@ -79,9 +79,12 @@ export class Synth {
 
   /**
    * Play note `index` from the pentatonic table. Index is wrapped, so any
-   * integer is valid — callers never have to bounds-check.
+   * integer is valid — callers never have to bounds-check. An optional gain
+   * multiplier makes earned echoes quieter without increasing the voice cap.
    */
-  play(index: number, voice: Voice = 'blip'): void {
+  play(index: number, voice: Voice = 'blip', gainScale = 1): void {
+    const level = Math.max(0, Math.min(1, gainScale))
+    if (!Number.isFinite(level) || level === 0) return
     this.unlock()
     const ctx = this.ctx
     const master = this.master
@@ -91,7 +94,11 @@ export class Synth {
     const n = this.noteTable.length
     const freq = this.noteTable[((index % n) + n) % n] * Math.pow(2, this.mood.octaveShift)
     if (voice === 'piano') {
-      this.playPiano(ctx, master, freq)
+      this.playPiano(ctx, master, freq, level)
+      return
+    }
+    if (voice === 'dinosaur' || voice === 'bubble') {
+      this.playAnimal(ctx, master, freq, voice, level)
       return
     }
 
@@ -111,7 +118,7 @@ export class Synth {
 
       const gain = ctx.createGain()
       gain.gain.setValueAtTime(0, now)
-      gain.gain.linearRampToValueAtTime(0.9, now + 0.012) // fast attack: feels responsive
+      gain.gain.linearRampToValueAtTime(0.9 * level, now + 0.012) // fast attack: feels responsive
       gain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
 
       const gain2 = ctx.createGain()
@@ -145,19 +152,92 @@ export class Synth {
     }
   }
 
+  /** Soft animal reactions: octave-only pitches, with character in the envelope. */
+  private playAnimal(
+    ctx: AudioContext, master: GainNode, freq: number,
+    voice: 'dinosaur' | 'bubble', level: number,
+  ): void {
+    const nodes: AudioNode[] = []
+    const oscs: OscillatorNode[] = []
+    let counted = false
+    let finished = false
+    const cleanup = (interrupt = false) => {
+      if (finished) return
+      finished = true
+      if (counted) this.voices = Math.max(0, this.voices - 1)
+      for (const osc of oscs) {
+        osc.onended = null
+        if (interrupt) {
+          try { osc.stop() } catch { /* not started or already stopped */ }
+        }
+      }
+      for (const node of nodes) {
+        try { node.disconnect() } catch { /* already torn down */ }
+      }
+    }
+
+    try {
+      const now = ctx.currentTime
+      const dinosaur = voice === 'dinosaur'
+      const dur = this.mood.noteMs / 1000 * (dinosaur ? 1 : 0.5)
+      const gain = ctx.createGain()
+      nodes.push(gain)
+      gain.gain.setValueAtTime(0, now)
+      if (dinosaur) {
+        // A low, gently wobbling "rrrum"; no noisy or startling roar.
+        for (const [time, amount] of [
+          [0.08, 0.55], [0.26, 0.25], [0.4, 0.45],
+          [0.57, 0.2], [0.7, 0.3],
+        ]) {
+          gain.gain.linearRampToValueAtTime(amount * level, now + dur * time)
+        }
+      } else {
+        // A rounded plop: a short sine note, without a dissonant pitch slide.
+        gain.gain.linearRampToValueAtTime(0.55 * level, now + dur * 0.08)
+      }
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
+      gain.connect(master)
+
+      const partials = dinosaur ? [[0.25, 0.75], [0.5, 0.2]] : [[1, 1]]
+      for (const [ratio, amount] of partials) {
+        const osc = ctx.createOscillator()
+        nodes.push(osc)
+        oscs.push(osc)
+        osc.type = dinosaur ? this.mood.wave : 'sine'
+        osc.frequency.value = freq * ratio
+        const partialGain = ctx.createGain()
+        nodes.push(partialGain)
+        partialGain.gain.value = amount
+        osc.connect(partialGain)
+        partialGain.connect(gain)
+      }
+
+      this.voices++
+      counted = true
+      oscs[0].onended = () => cleanup()
+      for (const osc of oscs) {
+        osc.start(now)
+        osc.stop(now + dur)
+      }
+    } catch {
+      // Partial setup must not leak nodes or steal an already-playing slot.
+      cleanup(true)
+    }
+  }
+
   /**
    * A struck string: sine partials sharing one envelope with a very fast
    * attack and a long exponential ring-out. Counts as one voice.
    */
-  private playPiano(ctx: AudioContext, master: GainNode, freq: number): void {
+  private playPiano(ctx: AudioContext, master: GainNode, freq: number, level: number): void {
     try {
       const now = ctx.currentTime
       const dur = this.mood.pianoMs / 1000
 
       const gain = ctx.createGain()
       gain.gain.setValueAtTime(0, now)
-      gain.gain.linearRampToValueAtTime(0.8, now + 0.005)
-      gain.gain.exponentialRampToValueAtTime(0.25, now + 0.12)
+      gain.gain.linearRampToValueAtTime(0.8 * level, now + 0.005)
+      gain.gain.exponentialRampToValueAtTime(0.25 * level, now + 0.12)
       gain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
       gain.connect(master)
 

@@ -3,6 +3,10 @@ import { currentMood } from './settings'
 import { isDesktop } from './desktop'
 import { PlayScene } from './scenes/PlayScene'
 import { hideSplash } from './splash'
+import { startWebUpdates } from './webUpdates'
+import { BUILD_ID } from './version'
+
+document.documentElement.dataset.buildId = BUILD_ID
 
 /**
  * Nothing that happens in this game is important enough to justify showing a
@@ -20,7 +24,7 @@ window.addEventListener('unhandledrejection', (ev) => {
 // Offline support and home-screen install. Not in the desktop app, whose
 // tauri:// pages can't host a service worker and don't need one.
 if (!isDesktop && 'serviceWorker' in navigator) {
-  void import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }))
+  startWebUpdates()
 }
 
 const game = new Phaser.Game({

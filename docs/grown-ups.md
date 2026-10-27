@@ -23,6 +23,7 @@ Every option in the menu is also a button you can tap. On a keyboard:
 | **D** | Daytime mood |
 | **B** | Bedtime mood |
 | **C** | Show or hide the corner buttons that let the child switch games |
+| **R** | New player: reset all discoveries and puzzle progress for this launch |
 | **F** | Fullscreen (browser only) |
 | **Q** | Quit (desktop app only) |
 
@@ -35,6 +36,10 @@ In the desktop app, the menu also shows whether the keyboard lock is working.
 
 **Smash.** Every key or tap makes something: the letter or number pressed,
 shapes that arc and bounce, ripples, or now and then a googly-eyed blob.
+Friendly dinosaurs and sharks also visit: dinosaurs stomp and hop, while
+sharks swim through bubbles. In Smash free play, **D** always calls a dinosaur
+and **S** a shark, alongside the pressed letter. Taps and clicks can meet
+either animal. Their colours, motion and sounds soften in Bedtime.
 
 **Piano.** Ten rainbow keys across the bottom of the screen (five to eight on
 a phone, so each key stays big enough for a small finger).
@@ -53,6 +58,48 @@ nothing to clear.
 
 Every note is on the same five-note scale, so there are no wrong notes, and
 mashing still sounds like music.
+
+## Hidden puzzles and creative powers
+
+Each game begins with ordinary free play. A small firefly waits on the board.
+Select it, then follow it to two more locations to discover an entrance.
+The puzzles stay optional: there is no timer, reading requirement or game over.
+
+Each game has three tiers, with two puzzles in each tier:
+
+| Game | First tier | Second tier | Third tier | Earned power |
+| --- | --- | --- | --- | --- |
+| Smash | Match a silhouette | Continue an alternating pattern | Remember three shapes | Place stars that connect into a garden |
+| Piano | Copy two notes | Copy three notes | Copy four notes | Each played note can receive a quiet echo |
+| Drawing | Connect a straight path | Follow a bent path | Close a shape | Paint mirrored rainbow strokes and stickers |
+
+Watch and listen to the demonstration, or start playing immediately. The
+curved-arrow picture replays it. An incorrect answer quietly restarts the
+current attempt; completed puzzles remain earned. The garden keeps at most
+24 stars and replaces the oldest. Piano echoes arrive after 600 ms, with at
+most four waiting at once; echoes never produce further echoes.
+
+Tap or click the pictures to select them. Drawing also accepts a drag through
+the dots, using one finger for a puzzle attempt. On a keyboard:
+
+- **Arrows** move the visible cursor; **Space** or **Enter** selects its target.
+- In Drawing, arrows move the crayon one adjacent dot on the 3×3 grid and paint
+  that segment. Held keys produce one action, so release before pressing again.
+- Piano keeps its ordinary number-row and letter note mapping.
+- An arrow pointing outward from a board edge reaches the picture controls.
+  **Tab** cycles the board, back and replay controls; **Arrow Down** returns
+  from a control to the board.
+- **Backspace**, or the back-arrow picture, returns to free play immediately.
+
+Switching games also starts in free play. Each game's discovered entrance
+and completed puzzles remain available during the current launch; selecting
+its entrance resumes that progress. A reload or relaunch clears all puzzle
+progress. For another child, choose **New player** or press **R** in the
+grown-up menu. Game, mood and corner-button settings remain saved.
+
+The target is roughly 20–40 seconds per tier once the child understands the
+puzzle. Discovery and difficulty need observation during play; the automated
+checks cannot establish whether a child finds the puzzles engaging.
 
 ## Moods
 
@@ -101,14 +148,21 @@ one game, press **C** in the grown-up menu to hide the buttons.
 
 ## Getting the latest version
 
-The game saves itself on your device so it works offline. The catch is that
-after an update you may still see the old version once. If a new game or
-change doesn't show up:
+The browser and home-screen app update themselves. While online, the game
+checks when it opens, returns to the foreground, restores browser navigation,
+reconnects, and once a minute while visible. Once a new release has downloaded
+completely, it reloads automatically—even during play. Grown-up settings stay
+saved; the current drawing and puzzle progress start fresh.
 
-- **In a browser tab:** reload the page once or twice.
-- **From a home-screen icon:** fully close the app (swipe it away), then open
-  it again. It can take two launches.
+Offline, it keeps playing the last complete version. A failed update also
+leaves that version running and retries later. There is no update dialog for
+the child to dismiss.
 
-To check which version you have, open the grown-up menu: the line at the
-bottom lists the game keys (for example "Keys: 1–3 game"), and the Game row
-shows every game that's installed.
+The grown-up menu shows **Build** followed by the running version's unique ID.
+The current published ID is at `/version.json` on the game's website. The old
+offline cache receives this repair when the browser next checks its worker;
+already-open older copies do not gain the new minute-by-minute checks until
+that first update arrives.
+
+The separately installed Mac and Windows desktop apps still need a new
+installer; web deployments do not update those apps.

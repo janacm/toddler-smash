@@ -1,12 +1,23 @@
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { splashCss, splashScript } from './src/splash'
+import { randomUUID } from 'node:crypto'
+
+// Git alone cannot identify local manual deploys containing uncommitted edits.
+const buildId = `${new Date().toISOString()}-${randomUUID().slice(0, 8)}`
 
 export default defineConfig({
+  define: { __BUILD_ID__: JSON.stringify(buildId) },
   server: { host: '127.0.0.1', port: 5173 },
   preview: { host: '127.0.0.1', port: 4173 },
   build: { target: 'es2022' },
   plugins: [
+    {
+      name: 'build-version',
+      generateBundle() {
+        this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ buildId }) })
+      },
+    },
     // The loading splash in index.html takes its colours from CONFIG.moods and
     // picks the saved mood before first paint. See src/splash.ts.
     {
@@ -33,6 +44,11 @@ export default defineConfig({
         icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
       },
       workbox: {
+        // injectRegister:false prevents this plugin version's autoUpdate defaults.
+        skipWaiting: true,
+        clientsClaim: true,
+        // This diagnostic is a network document, never the cached app shell.
+        navigateFallbackDenylist: [/^\/version\.json(?:\?|$)/],
         globPatterns: ['**/*.{js,css,html,svg}'],
         // The Phaser bundle is ~1.4 MB; the default 2 MB cap leaves little room.
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,

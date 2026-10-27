@@ -26,6 +26,7 @@ const BRUSH = 'circle'
 const BRUSH_TEXTURE_PX = 120
 
 let canvas: Phaser.GameObjects.RenderTexture | undefined
+let playground = false
 const strokes = new Map<number, Stroke>()
 let strokeCount = 0
 
@@ -39,8 +40,12 @@ function strokeColor(ctx: ToyContext, s: Stroke): number {
 }
 
 function dab(ctx: ToyContext, s: Stroke, x: number, y: number, batched: boolean): void {
+  const target = canvas
+  if (!target) return
   const scale = brushPx(ctx.width, ctx.height) / BRUSH_TEXTURE_PX
-  canvas?.stamp(BRUSH, undefined, x, y, { scale, tint: strokeColor(ctx, s), skipBatch: batched })
+  const tint = strokeColor(ctx, s)
+  target.stamp(BRUSH, undefined, x, y, { scale, tint, skipBatch: batched })
+  if (playground) target.stamp(BRUSH, undefined, ctx.width - x, y, { scale, tint, skipBatch: batched })
 }
 
 function begin(ctx: ToyContext, pointerId: number, x: number, y: number): Stroke {
@@ -76,6 +81,10 @@ function extend(ctx: ToyContext, s: Stroke, x: number, y: number): void {
 
 /** A key press: a sticker pops in, then is painted onto the drawing. */
 function sticker(e: SmashEvent, ctx: ToyContext): void {
+  const target = canvas
+  if (!target) return
+  // A delayed pop belongs to the canvas and power that created it.
+  const mirrored = playground
   const color = ctx.color(e.index)
   const size = brushPx(ctx.width, ctx.height) * CONFIG.drawing.stickerSize
   const angle = ctx.rng.between(-20, 20)
@@ -92,7 +101,7 @@ function sticker(e: SmashEvent, ctx: ToyContext): void {
       duration: 260,
       ease: 'Back.easeOut',
       onComplete: () => {
-        canvas?.draw(txt, txt.x, txt.y)
+        paintSticker(target, txt, mirrored, ctx.width)
         ctx.text.retire(txt, 0, 1)
       },
     })
@@ -109,10 +118,42 @@ function sticker(e: SmashEvent, ctx: ToyContext): void {
     duration: 260,
     ease: 'Back.easeOut',
     onComplete: () => {
-      canvas?.draw(img, img.x, img.y)
+      paintSticker(target, img, mirrored, ctx.width)
       ctx.pool.retire(img, 0, 1)
     },
   })
+}
+
+function paintSticker(
+  target: Phaser.GameObjects.RenderTexture,
+  image: Phaser.GameObjects.Image | Phaser.GameObjects.Text,
+  mirrored: boolean,
+  width: number,
+): void {
+  if (canvas !== target || !target.active) return
+  target.draw(image, image.x, image.y)
+  if (!mirrored) return
+  const angle = image.angle
+  try {
+    image.setFlipX(true).setAngle(-angle)
+    target.draw(image, width - image.x, image.y)
+  } finally {
+    // Pool users expect the original transform when this object is recycled.
+    image.setFlipX(false).setAngle(angle)
+  }
+}
+
+function setPlayground(active: boolean): void {
+  if (playground !== active) strokes.clear()
+  playground = active
+}
+
+function paintSegment(from: { x: number; y: number }, to: { x: number; y: number }, ctx: ToyContext): void {
+  const previous = strokes.get(-2)
+  const s = previous && previous.x === from.x && previous.y === from.y
+    ? previous
+    : begin(ctx, -2, from.x, from.y)
+  extend(ctx, s, to.x, to.y)
 }
 
 const brush: Toy = {
@@ -135,6 +176,8 @@ function stroke(e: StrokeEvent, ctx: ToyContext): void {
 }
 
 function enter(ctx: ToyContext): () => void {
+  setPlayground(false)
+  strokes.clear()
   const { width, height } = ctx
   const rt = ctx.scene.add.renderTexture(0, 0, width, height).setOrigin(0).setDepth(-200)
   canvas = rt
@@ -156,7 +199,10 @@ function enter(ctx: ToyContext): () => void {
   return () => {
     fade.remove()
     strokes.clear()
-    if (canvas === rt) canvas = undefined
+    if (canvas === rt) {
+      canvas = undefined
+      setPlayground(false)
+    }
     rt.destroy()
   }
 }
@@ -168,4 +214,6 @@ export const drawing: Mode = {
   toys: [brush],
   enter,
   stroke,
+  setPlayground,
+  paintSegment,
 }

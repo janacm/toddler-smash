@@ -1,11 +1,13 @@
 import Phaser from 'phaser'
 import { CONFIG, type MoodName } from './config'
 import type { Mode } from './modes'
+import { BUILD_ID } from './version'
 
 export type PanelAction =
   | { kind: 'mode'; mode: Mode }
   | { kind: 'mood'; mood: MoodName }
   | { kind: 'toggleChild' }
+  | { kind: 'resetProgress' }
   | { kind: 'fullscreen' }
   | { kind: 'quit' }
   | { kind: 'close' }
@@ -165,6 +167,8 @@ export class ParentPanel {
       },
     ])
 
+    row([{ label: 'New player', action: { kind: 'resetProgress' } }])
+
     if (state.isDesktop) {
       row([{ label: 'Quit', action: { kind: 'quit' } }])
       if (state.lockStatus) {
@@ -180,8 +184,10 @@ export class ParentPanel {
     row([{ label: 'Done', action: { kind: 'close' } }])
 
     const games = `1–${state.modes.length} game`
-    const shortcuts = state.isDesktop ? `Keys: ${games} · D/B mood · C · Q quit` : `Keys: ${games} · D/B mood · C · F full screen`
+    const shortcuts = state.isDesktop ? `Keys: ${games} · D/B mood · C · R new player · Q quit` : `Keys: ${games} · D/B mood · C · R new player · F full screen`
     y += text(`${shortcuts}\nOpen again: hold Escape, or hold the top-left\nand bottom-right corners, for 3 seconds`, 13, COLORS.muted).height
+    y += GAP
+    y += text(`Build ${BUILD_ID}`, 11, COLORS.muted).height
     y += PAD
 
     bg.fillStyle(COLORS.panel, 0.97)

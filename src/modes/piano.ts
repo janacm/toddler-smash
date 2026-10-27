@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { CONFIG } from '../config'
+import { EchoQueue } from '../challenges/rewards'
 import type { Toy, ToyContext } from '../toys/types'
 import { keyIndex, pianoKeyCount } from './pianoLayout'
 import type { Mode } from './types'
@@ -24,8 +25,18 @@ interface PianoKey {
 }
 
 let keys: PianoKey[] = []
+let playground = false
+let echoes: EchoQueue | undefined
+
+function setPlayground(active: boolean): void {
+  playground = active
+  if (!active) echoes?.cancel()
+}
 
 function buildKeys(ctx: ToyContext): () => void {
+  setPlayground(false)
+  const entryEchoes = new EchoQueue((index, gain) => playKey(index, ctx, gain), CONFIG.challenges)
+  echoes = entryEchoes
   const { heightFrac, gapPx } = CONFIG.piano
   const n = pianoKeyCount(ctx.width)
   // Number labels only mean something when they match the number row.
@@ -69,14 +80,55 @@ function buildKeys(ctx: ToyContext): () => void {
     keys.push({ img, label, x, top, restY, labelY })
   }
 
+  const entryKeys = keys
   return () => {
-    for (const key of keys) {
+    setPlayground(false)
+    entryEchoes.cancel()
+    if (echoes === entryEchoes) echoes = undefined
+    for (const key of entryKeys) {
       ctx.scene.tweens.killTweensOf([key.img, key.label])
       key.img.destroy()
       key.label.destroy()
     }
-    keys = []
+    if (keys === entryKeys) keys = []
   }
+}
+
+/** Shared by player notes, puzzle demonstrations and the quiet earned echo. */
+function playKey(i: number, ctx: ToyContext, gainScale = 1): void {
+  const key = keys[i]
+  if (!key) return
+  const color = ctx.color(i)
+
+  ctx.synth.play(i, 'piano', gainScale)
+
+  // Dip the key. Resetting first means a mashed key never drifts down.
+  ctx.scene.tweens.killTweensOf([key.img, key.label])
+  key.img.y = key.restY
+  key.label.y = key.labelY
+  ctx.scene.tweens.add({
+    targets: [key.img, key.label],
+    y: '+=12',
+    duration: 80,
+    yoyo: true,
+    ease: 'Quad.easeOut',
+  })
+
+  // A note floats up out of the key.
+  const note = ctx.pool.spawn('note', key.x, key.top - 20)
+  note.setTint(color)
+  note.setAlpha(gainScale)
+  note.setScale(0.5)
+  note.setAngle(ctx.rng.between(-15, 15))
+  ctx.scene.tweens.add({
+    targets: note,
+    x: key.x + ctx.rng.between(-50, 50),
+    y: key.top - ctx.rng.between(170, 280),
+    angle: ctx.rng.between(-25, 25),
+    duration: 1500,
+    ease: 'Sine.easeOut',
+  })
+  ctx.pool.retire(note, 900, 500)
 }
 
 const pianoKey: Toy = {
@@ -88,35 +140,10 @@ const pianoKey: Toy = {
     const key = keys[i]
     if (!key) return
     const color = ctx.color(i)
+    playKey(i, ctx)
 
-    ctx.synth.play(i, 'piano')
-
-    // Dip the key. Resetting first means a mashed key never drifts down.
-    ctx.scene.tweens.killTweensOf([key.img, key.label])
-    key.img.y = key.restY
-    key.label.y = key.labelY
-    ctx.scene.tweens.add({
-      targets: [key.img, key.label],
-      y: '+=12',
-      duration: 80,
-      yoyo: true,
-      ease: 'Quad.easeOut',
-    })
-
-    // A note floats up out of the key.
-    const note = ctx.pool.spawn('note', key.x, key.top - 20)
-    note.setTint(color)
-    note.setScale(0.5)
-    note.setAngle(ctx.rng.between(-15, 15))
-    ctx.scene.tweens.add({
-      targets: note,
-      x: key.x + ctx.rng.between(-50, 50),
-      y: key.top - ctx.rng.between(170, 280),
-      angle: ctx.rng.between(-25, 25),
-      duration: 1500,
-      ease: 'Sine.easeOut',
-    })
-    ctx.pool.retire(note, 900, 500)
+    // Only player notes schedule echoes. Replaying the echo cannot recurse.
+    if (playground) echoes?.schedule(i)
 
     // Letters ride up alongside, so a pressed A still shows an A.
     if (e.isLetter) {
@@ -136,4 +163,6 @@ export const piano: Mode = {
   icon: 'iconPiano',
   toys: [pianoKey],
   enter: buildKeys,
+  setPlayground,
+  replayNote: playKey,
 }

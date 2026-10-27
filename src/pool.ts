@@ -20,6 +20,14 @@ export class SpritePool {
     return this.ring.length
   }
 
+  /** Park transient effects when a discovered puzzle needs a clear stage. */
+  clear(): void {
+    for (const img of this.ring) {
+      this.scene.tweens.killTweensOf(img)
+      img.setVisible(false).setActive(false)
+    }
+  }
+
   /**
    * Get a sprite showing `texture` at (x, y), reusing an old one if we are at
    * capacity. Any tween or physics state from the previous life is cleared.
@@ -40,6 +48,8 @@ export class SpritePool {
     img.setScale(1)
     img.setAlpha(1)
     img.setAngle(0)
+    img.setFlip(false, false)
+    img.setDepth(0)
     img.setTint(0xffffff)
     img.setVisible(true)
     img.setActive(true)
@@ -79,6 +89,13 @@ export class TextPool {
   private static readonly MAX = 28
 
   constructor(private scene: Phaser.Scene) {}
+
+  clear(): void {
+    for (const txt of this.ring) {
+      this.scene.tweens.killTweensOf(txt)
+      txt.setVisible(false).setActive(false)
+    }
+  }
 
   spawn(content: string, x: number, y: number, sizePx: number): Phaser.GameObjects.Text {
     let txt: Phaser.GameObjects.Text
