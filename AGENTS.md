@@ -244,8 +244,12 @@ comparison; application HTML, JavaScript and service-worker bytes must match.
 
 GitHub Actions uses the encrypted `NETLIFY_AUTH_TOKEN` repository secret and
 the `NETLIFY_SITE_ID` repository variable. Keep credentials out of the repo.
-To retry a failed upload, rerun the failed deploy job in Actions. Emergency
-manual deployment remains available:
+To retry a failed upload within the artifact's seven-day retention, rerun the
+failed deploy job in Actions. After seven days, rerun the entire workflow.
+Verification runs after publication: if it fails, the release may already be
+live. Investigate the mismatch before retrying an upload.
+If a newer main commit fails CI, the site keeps the previous release; stale
+passing commits are skipped. Emergency manual deployment remains available:
 
 ```bash
 npm run build && netlify deploy --prod --dir dist --no-build

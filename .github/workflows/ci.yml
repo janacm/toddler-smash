@@ -21,6 +21,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - run: node --test scripts/deploy-html.test.mjs
       # Unit tests, failing if coverage of the logic modules drops below the
       # thresholds in vitest.config.ts.
       - run: npm run test:coverage
@@ -78,6 +79,7 @@ jobs:
     concurrency:
       group: netlify-production
       cancel-in-progress: false
+      queue: max
     steps:
       - uses: actions/checkout@v4
       - name: Skip superseded commits
