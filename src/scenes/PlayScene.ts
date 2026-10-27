@@ -193,6 +193,7 @@ export class PlayScene extends Phaser.Scene {
 
   private applyMood(): void {
     const mood = currentMood()
+    document.documentElement.dataset.mood = settings.mood
     this.tweens.timeScale = mood.timeScale
     this.synth.setMood(mood.audio)
     this.hint?.setColor(mood.hintColor)

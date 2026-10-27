@@ -21,6 +21,7 @@ is the only person who changes settings.
 | C5 | Random input sounds musical: every note is on the pentatonic scale. | `audio.ts`, `CONFIG.audio` | `config.test.ts` |
 | C6 | No image or audio files. Everything is drawn or synthesized in code, so it can all be read and changed. Bundler icons are the only exception. | `textures.ts`, `audio.ts` | review |
 | C7 | While the game loads, a cute animated "Toddler Smash" logo and spinner show, in the saved mood's colours so Bedtime never flashes bright. It never blocks a press: a press makes the logo bounce, and once the game is ready a press skips straight to it. It fades by itself after at least a second. | `index.html` (`#splash`), `splash.ts`, `vite.config.ts` | `splash.test.ts`, `splash.png`, `splash-bedtime.png`, `mobile-splash.png` (and `npm run shot` checks it goes away) |
+| C8 | A small, static, colourful Toddler Smash logo stays centred along the top edge during loading, every game and puzzle, the grown-up panel and full screen. It respects safe areas, sits above the game buttons, passes taps through to play, and immediately follows the current mood. | `index.html` (`#edge-logo`), `PlayScene.applyMood`, `main.ts` (fullscreen target) | desktop, mobile, splash, panel and challenge screenshots; browser layout, resize, fullscreen and input checks |
 
 ## Sub-games
 
