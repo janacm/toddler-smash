@@ -1,6 +1,8 @@
 # AGENTS.md — toddler-smash
 
 Conventions for any AI agent working in this repo. Read this before changing code.
+`CLAUDE.md` imports this file. Keep shared project instructions here so Claude,
+Codex and other agents receive the same guidance.
 
 ## What this is
 
@@ -64,6 +66,12 @@ reload. Assess discovery and the 20–40 second target per tier with actual
 child playtesting; screenshots cannot establish engagement or pacing.
 Panel hold checks keep the real input down until the panel toggles; the
 Smash pass also exercises delayed timer ticks to cover busy CI runners.
+Use `observeGame(context)` from `scripts/browser-helpers.mjs` before creating
+test pages, then `holdEscape` or `holdForPanel`. A fixed sleep just over three
+seconds can release before a delayed timer tick, leaving the panel open and
+turning a later R press into New player. Wait for `panel.visible` to change
+with a bounded timeout and release held input in `finally`. Keep scene
+observation in browser-test setup rather than adding a production debug API.
 
 The same run exercises `scripts/animal-pass.mjs`: D/S animal shortcuts,
 ordinary mouse and touch encounters, Bedtime styling, held-key repeats,
@@ -254,6 +262,28 @@ passing commits are skipped. Emergency manual deployment remains available:
 ```bash
 npm run build && netlify deploy --prod --dir dist --no-build
 ```
+
+### Deployment pitfalls
+
+- Keep `queue: max`, `cancel-in-progress: false`, and the check that `main`
+  still points at this commit **inside** the deployment lock. With the default
+  single pending slot, an older commit finishing CI late can replace a newer
+  waiting deployment, then skip itself as stale, leaving the new release
+  unpublished. actionlint 1.7.12 does not recognize `queue`; check GitHub's
+  current workflow syntax before removing a supported key to satisfy a linter.
+- Netlify sometimes inserts an invisible promotional comment into HTML.
+  Changing User-Agent or compression headers does not reliably prevent it.
+  `scripts/deploy-html.mjs` accepts only the complete known comment, directly
+  after the charset in `index.html`, with only the site UUID varying. Remove
+  at most one comment. Keep all other bytes strict; do not broaden the matcher
+  to swallow arbitrary markup. Run `node --test scripts/deploy-html.test.mjs`
+  when changing this exception.
+- Verify the canonical site against the downloaded CI artifact with
+  `node scripts/verify-deploy.mjs /path/to/artifact`. In a cached browser,
+  observe the app's own periodic checker without forcing a worker update:
+  expect the new build ID, one reload and saved settings retained. Fresh
+  desktop and phone installs must load that build without an extra reload.
+  A successful upload alone does not prove installed players received it.
 
 The site's "Powered by Netlify" badge is turned off
 (`built_with_badge_enabled: false`). Keep it off: it's a link floating over
