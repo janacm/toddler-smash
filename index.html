@@ -54,14 +54,27 @@
         opacity: 0;
         transform: scale(1.08);
       }
-      .splash-logo {
-        position: relative;
+      .splash-logo, #edge-logo {
         font-family: 'Arial Rounded MT Bold', ui-rounded, 'Nunito', Verdana, sans-serif;
         font-weight: 900;
-        font-size: min(20vw, 19vh, 170px);
         line-height: 1;
         text-align: center;
         white-space: nowrap;
+      }
+      .splash-logo {
+        position: relative;
+        font-size: min(20vw, 19vh, 170px);
+      }
+      /* Stay within the 26px gap above the child's buttons, even on phones.
+         This DOM layer also stays above the splash and the canvas panel. */
+      #edge-logo {
+        position: fixed;
+        top: calc(env(safe-area-inset-top, 0px) + 3px);
+        left: env(safe-area-inset-left, 0px);
+        right: env(safe-area-inset-right, 0px);
+        z-index: 20;
+        font-size: clamp(14px, 3.6vw, 18px);
+        pointer-events: none;
       }
       #splash.splash-boop .splash-logo {
         animation: splash-boop 0.4s ease-out;
@@ -70,7 +83,7 @@
         font-size: 0.52em;
         margin-bottom: 0.04em;
       }
-      .splash-logo span {
+      .splash-logo span, #edge-logo span {
         display: inline-block;
         transform-origin: 50% 100%;
         --o: var(--splash-outline);
@@ -79,6 +92,8 @@
           0.042em 0.042em 0 var(--o), -0.042em 0.042em 0 var(--o),
           0.042em -0.042em 0 var(--o), -0.042em -0.042em 0 var(--o),
           0 0.12em 0.06em rgba(20, 30, 70, 0.18);
+      }
+      .splash-logo span {
         animation: splash-hop 1.8s ease-in-out infinite;
         animation-delay: calc(var(--i) * 0.08s);
       }
@@ -148,6 +163,10 @@
     </style>
   </head>
   <body>
+    <div id="edge-logo" role="img" aria-label="Toddler Smash">
+      <span style="color: var(--splash-0)">T</span><span style="color: var(--splash-1)">o</span><span style="color: var(--splash-2)">d</span><span style="color: var(--splash-4)">d</span><span style="color: var(--splash-3)">l</span><span style="color: var(--splash-5)">e</span><span style="color: var(--splash-6)">r</span>
+      <span style="color: var(--splash-7)">S</span><span style="color: var(--splash-0)">m</span><span style="color: var(--splash-1)">a</span><span style="color: var(--splash-4)">s</span><span style="color: var(--splash-5)">h</span>
+    </div>
     <div id="splash" role="status" aria-label="Toddler Smash is loading">
       <div class="splash-logo" aria-hidden="true">
         <div class="splash-toddler">

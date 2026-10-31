@@ -33,6 +33,8 @@ const game = new Phaser.Game({
   backgroundColor: currentMood().background.top,
   scale: {
     mode: Phaser.Scale.RESIZE,
+    // Include the persistent HTML logo when the grown-up selects full screen.
+    fullscreenTarget: document.documentElement,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: '100%',
     height: '100%',
