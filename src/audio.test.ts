@@ -150,3 +150,93 @@ describe('animal synth voices', () => {
     expect(currentContext().oscs).toHaveLength(1)
   })
 })
+
+describe('combo synth voices', () => {
+  const timers: Array<{ fn: () => void; ms: number }> = []
+  beforeEach(() => {
+    MockAudioContext.instances = []
+    timers.length = 0
+    vi.stubGlobal('window', {
+      AudioContext: MockAudioContext,
+      setTimeout: (fn: () => void, ms: number) => timers.push({ fn, ms }),
+    })
+  })
+  afterEach(() => vi.unstubAllGlobals())
+
+  it.each(['daytime', 'bedtime'] as const)('%s blips use the mood attack and overtone gain', name => {
+    const synth = new Synth()
+    synth.setMood(CONFIG.moods[name].audio)
+    synth.play(0)
+    const ctx = currentContext()
+    const [, voiceGain, overtoneGain] = ctx.gains
+    expect(voiceGain.gain.linearRampToValueAtTime).toHaveBeenCalledWith(0.9, 10 + CONFIG.moods[name].audio.attackMs / 1000)
+    expect(overtoneGain.gain.value).toBe(CONFIG.moods[name].audio.harmonicGain)
+  })
+
+  it('never lets the attack outlast half the note', () => {
+    const synth = new Synth()
+    synth.setMood({ ...CONFIG.moods.daytime.audio, noteMs: 100, attackMs: 500 } as never)
+    synth.play(0)
+    expect(currentContext().gains[1].gain.linearRampToValueAtTime).toHaveBeenCalledWith(0.9, 10.05)
+  })
+
+  it('plays the arpeggio up the pentatonic table and wraps past the top', () => {
+    const synth = new Synth()
+    const { rootHz, scaleSemitones } = CONFIG.audio
+    for (let step = 0; step < CONFIG.combo.maxCombo; step++) synth.playArpeggio(step)
+    const blips = currentContext().oscs.filter((_, i) => i % 2 === 0).map(osc => osc.frequency.value)
+    const expected = [0, 1, 2, 3, 4, 5].map(i =>
+      rootHz * Math.pow(2, Math.floor(i / 5) + scaleSemitones[i % 5] / 12))
+    expect(blips).toEqual(expected)
+    expect([...blips].sort((a, b) => a - b)).toEqual(blips)
+
+    synth.playArpeggio(synth.noteCount) // wraps to the first note
+    expect(currentContext().oscs.at(-2)!.frequency.value).toBe(rootHz)
+  })
+
+  it('strums the warm chord 24 ms apart on pentatonic notes, within the voice cap', () => {
+    const synth = new Synth()
+    synth.playWarmChord(0)
+    expect(timers.map(t => t.ms)).toEqual([0, 24, 48, 72])
+    expect(MockAudioContext.instances).toHaveLength(0)
+    timers.forEach(t => t.fn())
+    const ctx = currentContext()
+    const { rootHz } = CONFIG.audio
+    expect(ctx.oscs.filter((_, i) => i % 2 === 0).map(o => o.frequency.value)).toEqual([
+      rootHz, rootHz * Math.pow(2, 4 / 12), rootHz * Math.pow(2, 7 / 12), rootHz * 2,
+    ])
+    expect(ctx.gains[1].gain.linearRampToValueAtTime.mock.calls[0][0]).toBeCloseTo(0.9 * 0.85 * 0.6)
+    expect(ctx.oscs.length / 2).toBeLessThanOrEqual(CONFIG.limits.maxVoices)
+  })
+
+  describe('cues', () => {
+    let now = 1000
+    beforeEach(() => {
+      now = 1000
+      vi.spyOn(performance, 'now').mockImplementation(() => now)
+    })
+    afterEach(() => vi.restoreAllMocks())
+
+    it('throttles to cueThrottleMs and plays again once it has passed', () => {
+      const synth = new Synth()
+      synth.playCue('bounce')
+      now += CONFIG.audio.cueThrottleMs - 1
+      synth.playCue('bounce')
+      expect(currentContext().oscs).toHaveLength(1)
+      now += 1
+      synth.playCue('retire')
+      expect(currentContext().oscs).toHaveLength(3) // bubble: 1 osc; blip: 2
+    })
+
+    it('is quieter in Bedtime in proportion to the mood volume', () => {
+      const day = new Synth()
+      day.playCue('bounce', 0.2)
+      const dayRamp = currentContext().gains[1].gain.linearRampToValueAtTime.mock.calls[0][0]
+      const night = new Synth()
+      night.setMood(CONFIG.moods.bedtime.audio)
+      night.playCue('bounce', 0.2)
+      const nightRamp = currentContext().gains[1].gain.linearRampToValueAtTime.mock.calls[0][0]
+      expect(nightRamp / dayRamp).toBeCloseTo(CONFIG.moods.bedtime.audio.volume / CONFIG.moods.daytime.audio.volume)
+    })
+  })
+})
