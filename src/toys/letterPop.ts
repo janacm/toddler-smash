@@ -1,4 +1,3 @@
-import { CONFIG } from '../config'
 import type { Toy } from './types'
 
 /**
@@ -38,15 +37,16 @@ export const letterPop: Toy = {
     ctx.scene.tweens.add({
       targets: txt,
       y: e.y - ctx.rng.between(50, 120),
-      duration: CONFIG.lifetime.glyphMs,
+      duration: ctx.mood.decay.glyphMs,
       ease: 'Sine.easeOut',
     })
 
-    ctx.text.retire(txt, CONFIG.lifetime.glyphMs * 0.55)
+    ctx.text.retire(txt, ctx.mood.decay.glyphMs * 0.55)
 
     // Pitch tracks position on screen: left is low, right is high. Sweeping a
     // hand across the keyboard produces a rising run rather than random notes.
-    const note = Math.floor((e.x / ctx.width) * ctx.synth.noteCount)
+    // A fast streak lifts the pitch a step at a time (the synth wraps it).
+    const note = Math.floor((e.x / ctx.width) * ctx.synth.noteCount) + ctx.combo.step
     ctx.synth.play(note)
 
     // A few sparkles so the glyph has some weight behind it.

@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { CONFIG, type MoodName } from '../config'
 import { Synth } from '../audio'
+import { ComboTracker, IDLE_HIT, type ComboHit } from '../combo'
 import { SpritePool, TextPool } from '../pool'
 import { buildTextures } from '../textures'
 import { installInput, type PlayAction } from '../input'
@@ -41,6 +42,7 @@ export class PlayScene extends Phaser.Scene {
   private progress = new Progression()
   private challenge?: ChallengeController
   private blockedPointers = new Set<number>()
+  private comboTracker = new ComboTracker(CONFIG.combo)
 
   constructor() {
     super('play')
@@ -145,10 +147,71 @@ export class PlayScene extends Phaser.Scene {
       }
     }
 
-    playSmash(e, this.context(), this.mode.toys)
+    // Only Smash climbs the arpeggio. Piano and Drawing keep their own notes,
+    // and a celebration chord must not land on top of a melody puzzle.
+    if (this.mode.name !== 'smash') {
+      playSmash(e, this.context(), this.mode.toys)
+      return
+    }
+    const combo = this.comboTracker.hit(performance.now())
+    const ctx = this.context(combo)
+    if (combo.isPeak) {
+      this.safely(() => this.celebrateCombo(e, ctx))
+      // The chord sits an octave above the arpeggio's last note.
+      this.synth.playWarmChord(CONFIG.combo.maxCombo - 1)
+    }
+    playSmash(e, ctx, this.mode.toys)
   }
 
-  private context(): ToyContext {
+  /**
+   * The crescendo at the top of a streak: a few big rings and a shimmer of
+   * stars and dots. Everything comes from the sprite pool, so mashing a streak
+   * over and over stays capped. Bedtime spreads slower and fades later.
+   */
+  private celebrateCombo(e: SmashEvent, ctx: ToyContext): void {
+    const { rings, shimmerCount } = CONFIG.combo.celebration
+    const { speedScale } = ctx.mood.motion
+    const { rippleMs } = ctx.mood.decay
+
+    for (let i = 0; i < rings; i++) {
+      const ring = ctx.pool.spawn('ring', e.x, e.y)
+      ring.setTint(ctx.color(e.index + i))
+      ring.setScale(0.2)
+      ring.setAlpha(0.95)
+      ctx.scene.tweens.add({
+        targets: ring,
+        scale: ctx.rng.realInRange(4.5, 6),
+        alpha: 0,
+        delay: i * 90,
+        duration: rippleMs,
+        ease: 'Cubic.easeOut',
+        onComplete: () => {
+          ring.setVisible(false)
+          ring.setActive(false)
+        },
+      })
+    }
+
+    for (let i = 0; i < shimmerCount; i++) {
+      const p = ctx.pool.spawn(i % 2 === 0 ? 'star' : 'dot', e.x, e.y)
+      p.setTint(ctx.color(e.index + i))
+      p.setScale(ctx.rng.realInRange(0.5, 0.9))
+      const angle = (i / shimmerCount) * Math.PI * 2 + ctx.rng.realInRange(-0.15, 0.15)
+      const dist = ctx.rng.between(140, 260) * speedScale
+      ctx.scene.tweens.add({
+        targets: p,
+        x: Phaser.Math.Clamp(e.x + Math.cos(angle) * dist, 10, ctx.width - 10),
+        y: e.y + Math.sin(angle) * dist,
+        scale: p.scale * 1.5,
+        duration: 650, // the mood's tween timeScale already slows Bedtime
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+      })
+      ctx.pool.retire(p, 700, 350)
+    }
+  }
+
+  private context(combo: ComboHit = IDLE_HIT): ToyContext {
     return {
       scene: this,
       pool: this.pool,
@@ -158,6 +221,8 @@ export class PlayScene extends Phaser.Scene {
       width: this.scale.width,
       height: this.scale.height,
       color: (seed) => this.color(seed),
+      combo,
+      mood: currentMood(),
     }
   }
 
@@ -168,6 +233,7 @@ export class PlayScene extends Phaser.Scene {
   }
 
   private setMode(mode: Mode): void {
+    this.comboTracker.reset()
     if (mode === this.mode) {
       if (this.challenge) this.progress.back(this.mode.name as GameId)
       this.challenge?.destroy()
@@ -186,6 +252,7 @@ export class PlayScene extends Phaser.Scene {
   }
 
   private setMood(name: MoodName): void {
+    this.comboTracker.reset()
     settings.mood = name
     saveSettings()
     this.applyMood()
@@ -299,6 +366,7 @@ export class PlayScene extends Phaser.Scene {
    * mashing produces.
    */
   private toggleParentPanel(): void {
+    this.comboTracker.reset()
     if (this.panel.visible) {
       this.panel.hide()
       this.challenge?.pause(false)
@@ -359,6 +427,7 @@ export class PlayScene extends Phaser.Scene {
         break
       case 'resetProgress':
         this.progress.reset()
+        this.comboTracker.reset()
         this.challenge?.destroy()
         this.challenge = this.createChallenge()
         this.challenge?.pause(true)
