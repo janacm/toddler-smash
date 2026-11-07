@@ -81,6 +81,7 @@ challenge and pacing; automated checks establish control behaviour only.
 | W7 | Every merge to main automatically deploys the tested web artifact after web, macOS and Windows CI pass. Pull requests never publish. Serialize uploads and skip superseded commits so older CI runs cannot overwrite a newer release. Check the canonical site's published bytes and cache headers; failed verification fails the deploy job. | `.github/workflows/ci.yml`, `scripts/verify-deploy.mjs`, GitHub Actions deployment secret/variable | workflow lint, successful main deployment and live artifact comparison |
 | D1 | A Windows and Mac desktop app that a toddler can't leave: blocks the Windows and menu keys, Alt-Tab, Cmd-Q, Cmd-Tab, Spotlight, media keys and similar. Asking for the Mac Accessibility permission is acceptable. | `src-tauri/` | `npm run test:rust`, CI on macOS and Windows |
 | D2 | In the desktop app, the grown-up menu's Quit is the only way out. | `src-tauri/src/lib.rs` | review |
+| D3 | Desktop release bundles are configured for automated signing and notarization: Apple Developer ID Application signing and Apple notarization on macOS (`.app` and `.dmg`), and Authenticode signing with RFC 3161 timestamping on Windows (`.msi` and `.exe`). Unsigned builds validate gracefully in CI without secrets. | `src-tauri/tauri.conf.json`, `src-tauri/entitlements.plist`, `gon.json`, `.github/workflows/ci.yml` | CI desktop matrix build, `docs/desktop.md` |
 
 ## Out of scope
 
