@@ -20,7 +20,7 @@ import { holdEscape as holdEscapeOn, holdForPanel, observeGame } from './browser
 // Not vite's default 4173, which other copies of the game may already be
 // serving. --strictPort below makes a clash fail instead of silently
 // screenshotting someone else's server.
-const PORT = 4391
+const PORT = process.env.PORT ? Number(process.env.PORT) : 4391
 const URL = `http://127.0.0.1:${PORT}/`
 const OUT = process.argv[2] ?? 'shots/latest.png'
 
