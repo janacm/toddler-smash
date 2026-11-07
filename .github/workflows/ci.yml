@@ -22,6 +22,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: node --test scripts/deploy-html.test.mjs
+      - run: node --test scripts/browser-helpers.test.mjs
       # Unit tests, failing if coverage of the logic modules drops below the
       # thresholds in vitest.config.ts.
       - run: npm run test:coverage
