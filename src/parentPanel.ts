@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { CONFIG, type MoodName } from './config'
 import type { Mode } from './modes'
 import { BUILD_ID } from './version'
+import type { DesktopUpdateState } from './desktopUpdates'
 
 export type PanelAction =
   | { kind: 'mode'; mode: Mode }
@@ -9,6 +10,7 @@ export type PanelAction =
   | { kind: 'toggleChild' }
   | { kind: 'resetProgress' }
   | { kind: 'fullscreen' }
+  | { kind: 'desktopUpdate' }
   | { kind: 'quit' }
   | { kind: 'close' }
 
@@ -25,6 +27,8 @@ export interface PanelState {
   standalone: boolean
   /** Desktop only: the keyboard-lock line, or '' while checking. */
   lockStatus: string
+  /** Desktop only: status of available/downloaded background updates. */
+  desktopUpdate?: DesktopUpdateState
 }
 
 interface Button {
@@ -170,6 +174,13 @@ export class ParentPanel {
     row([{ label: 'New player', action: { kind: 'resetProgress' } }])
 
     if (state.isDesktop) {
+      if (state.desktopUpdate?.status === 'ready') {
+        row([{ label: `Update to v${state.desktopUpdate.version} (restart)`, action: { kind: 'desktopUpdate' } }])
+      } else if (state.desktopUpdate?.status === 'downloading') {
+        row([{ label: `Downloading update v${state.desktopUpdate.version}...`, action: { kind: 'desktopUpdate' } }])
+      } else if (state.desktopUpdate?.status === 'installing') {
+        row([{ label: 'Updating...', action: { kind: 'desktopUpdate' } }])
+      }
       row([{ label: 'Quit', action: { kind: 'quit' } }])
       if (state.lockStatus) {
         y += text(state.lockStatus, 14, COLORS.muted).height + GAP
@@ -184,7 +195,10 @@ export class ParentPanel {
     row([{ label: 'Done', action: { kind: 'close' } }])
 
     const games = `1–${state.modes.length} game`
-    const shortcuts = state.isDesktop ? `Keys: ${games} · D/B mood · C · R new player · Q quit` : `Keys: ${games} · D/B mood · C · R new player · F full screen`
+    const updateKey = state.desktopUpdate?.status === 'ready' ? ' · U update' : ''
+    const shortcuts = state.isDesktop
+      ? `Keys: ${games} · D/B mood · C · R new player${updateKey} · Q quit`
+      : `Keys: ${games} · D/B mood · C · R new player · F full screen`
     y += text(`${shortcuts}\nOpen again: hold Escape, or hold the top-left\nand bottom-right corners, for 3 seconds`, 13, COLORS.muted).height
     y += GAP
     y += text(`Build ${BUILD_ID}`, 11, COLORS.muted).height

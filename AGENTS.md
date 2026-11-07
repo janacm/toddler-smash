@@ -142,7 +142,9 @@ without either knowing about the other.
   3. Update `docs/grown-ups.md` (key table, Games, corner buttons), the
      README's sub-game list, and `docs/requirements.md`.
   4. Browser and home-screen installs switch automatically after the new
-     worker finishes installing. Native desktop apps need a rebuilt installer.
+     worker finishes installing. Native desktop apps update silently in the
+     background and can be restarted from the grown-up menu (or via tag-triggered
+     desktop release builds).
 - Adding a mood: copy a block in `CONFIG.moods` and give it a new `panelKey`.
   A mood sets palette, background, tween `timeScale`, spawn rate, and synth
   volume, waveform, note length and octave.

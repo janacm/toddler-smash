@@ -11,6 +11,10 @@ export function quitApp(): void {
   invoke('quit').catch(() => {})
 }
 
+export function restartApp(): void {
+  invoke('restart').catch(() => {})
+}
+
 /** Whether the native keyboard lock is running (Mac: needs Accessibility). */
 export async function keyboardLocked(): Promise<boolean> {
   return invoke<boolean>('keyboard_locked').catch(() => false)

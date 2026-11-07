@@ -111,3 +111,42 @@ grown-up menu.
 
 To block another key, add it to the rules in `rules.rs` and add a test next
 to the existing ones.
+
+## In-app automatic updates
+
+Desktop installations feature automatic, cryptographically verified in-app
+updates powered by Tauri's official updater plugin (`@tauri-apps/plugin-updater`
+and `tauri-plugin-updater`):
+
+### Toddler-friendly update rules
+
+1. **Silent background download:** The app periodically checks the update
+   manifest (`latest.json` on GitHub Releases) and reconnect events in the
+   background (`src/desktopUpdates.ts`). When a signed release is found, it
+   downloads the update payload without displaying any modal dialogue, system
+   toast, or audible prompt.
+2. **Zero interruption during play:** Active toddler play sessions are never
+   interrupted by update prompts or unexpected app exits. The child can keep
+   mashing, drawing, and playing undisturbed.
+3. **Parent-controlled restart:** When an update has finished downloading and
+   verifying, the grown-up menu (hold Escape for 3 seconds) shows:
+   `Update to vX.Y.Z (restart)` along with the keyboard shortcut `U`.
+4. **Clean lockdown release on restart:** The native `restart` command in
+   `src-tauri/src/lib.rs` restores the operating system keyboard state (releasing
+   the CGEventTap on macOS and restoring Sticky/Filter Keys and low-level hooks on
+   Windows) and sets the `QUITTING` flag before triggering `app.restart()`,
+   preventing stray keystrokes from leaking into the desktop.
+
+### Release signing and publishing
+
+1. **Signing Keys:** Releases are signed with Minisign Ed25519 keys generated
+   via `npx @tauri-apps/cli signer generate`.
+   - The public key is embedded in `src-tauri/tauri.conf.json` (`plugins.updater.pubkey`).
+   - The private key is stored as the `TAURI_SIGNING_PRIVATE_KEY` repository secret
+     in GitHub Actions (with optional `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`).
+2. **Release Workflow:** `.github/workflows/desktop-release.yml` triggers on version
+   tags (`v*`) or manual `workflow_dispatch`. It builds release bundles across macOS
+   (universal Apple Silicon and Intel targets) and Windows, signs the updater
+   archives (`.tar.gz` and `.nsis.zip`), compiles the `latest.json` manifest, and
+   attaches them to the GitHub Release via `tauri-apps/tauri-action`.
+
