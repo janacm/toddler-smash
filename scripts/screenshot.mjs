@@ -20,7 +20,7 @@ import { holdEscape as holdEscapeOn, holdForPanel, observeGame } from './browser
 // Not vite's default 4173, which other copies of the game may already be
 // serving. --strictPort below makes a clash fail instead of silently
 // screenshotting someone else's server.
-const PORT = 4391
+const PORT = Number(process.env.PORT ?? 4398)
 const URL = `http://127.0.0.1:${PORT}/`
 const OUT = process.argv[2] ?? 'shots/latest.png'
 
@@ -32,11 +32,12 @@ function sibling(name) {
 }
 
 const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], {
-  stdio: 'ignore',
+  stdio: ['ignore', 'inherit', 'inherit'],
   detached: false,
 })
 let serverExited = false
-server.on('exit', () => {
+server.on('exit', (code, sig) => {
+  console.log(`[screenshot.mjs] preview server exited with code=${code} sig=${sig}`)
   serverExited = true
 })
 
@@ -75,6 +76,10 @@ try {
   await page.goto(URL, { waitUntil: 'networkidle' })
   await splashGone(page)
 
+  // Thought-bubble companion sits happily in top-left
+  await sleep(350)
+  await page.screenshot({ path: sibling('companion') })
+
   // Mash it the way the actual user will: fast, arbitrary, overlapping.
   const keys = 'HELLO2468WORLD'.repeat(3).split('')
   for (const k of keys) {
@@ -102,6 +107,15 @@ try {
   await page.mouse.click(300, 650)
   await sleep(500)
   await page.screenshot({ path: sibling('piano') })
+
+  // Play a 3-note phrase and photograph the animal choir singing back
+  await page.keyboard.press('1')
+  await sleep(150)
+  await page.keyboard.press('2')
+  await sleep(150)
+  await page.keyboard.press('3')
+  await sleep(650)
+  await page.screenshot({ path: sibling('piano-choral') })
 
   // Drawing: a few mouse scribbles, then keys for stickers. A second shot a
   // few seconds later checks the drawing fades.

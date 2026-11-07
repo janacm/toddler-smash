@@ -149,4 +149,59 @@ describe('animal synth voices', () => {
     synth.play(0, 'bubble')
     expect(currentContext().oscs).toHaveLength(1)
   })
+
+  it('plays choral voice with two detuned sines and 4.5Hz vibrato', () => {
+    const synth = new Synth()
+    synth.play(0, 'choral', 0.8)
+    const ctx = currentContext()
+    expect(ctx.oscs).toHaveLength(3) // 1 LFO + 2 voice oscillators
+    const lfo = ctx.oscs[0]
+    expect(lfo.type).toBe('sine')
+    expect(lfo.frequency.value).toBe(4.5)
+
+    const baseFreq = CONFIG.audio.rootHz
+    const osc1 = ctx.oscs[1]
+    const osc2 = ctx.oscs[2]
+    expect(osc1.type).toBe('sine')
+    expect(osc2.type).toBe('sine')
+    expect(osc1.frequency.value).toBeCloseTo(baseFreq * Math.pow(2, 3.5 / 1200), 2)
+    expect(osc2.frequency.value).toBeCloseTo(baseFreq * Math.pow(2, -3.5 / 1200), 2)
+
+    // Master gain is index 0. Main voice gain is index 1.
+    const mainGain = ctx.gains[1]
+    expect(mainGain.gain.setValueAtTime).toHaveBeenCalledWith(0, 10)
+    expect(mainGain.gain.linearRampToValueAtTime).toHaveBeenCalledWith(0.7 * 0.8, 10 + 0.035)
+    expect(mainGain.gain.exponentialRampToValueAtTime).toHaveBeenCalledWith(0.0001, 10 + 0.45)
+
+    for (const osc of ctx.oscs) {
+      expect(osc.start).toHaveBeenCalledWith(10)
+      expect(osc.stop).toHaveBeenCalledWith(10 + 0.45)
+    }
+
+    // Counts as 1 voice: fill up remaining 7 voices
+    for (let i = 0; i < 7; i++) synth.play(i, 'bubble')
+    expect(ctx.oscs).toHaveLength(3 + 7)
+
+    // Voice cap reached (8 voices). Next play is dropped.
+    synth.play(0, 'choral')
+    expect(ctx.oscs).toHaveLength(10)
+
+    // When choral voice ends, 1 slot is released
+    const endChoral = ctx.oscs[1].onended!
+    endChoral()
+    synth.play(0, 'bubble')
+    expect(ctx.oscs).toHaveLength(11)
+  })
+
+  it('safely handles errors during choral setup without leaking voice count', () => {
+    const synth = new Synth()
+    synth.unlock()
+    const ctx = currentContext()
+    ctx.createOscillator.mockImplementationOnce(() => {
+      throw new Error('osc error')
+    })
+    expect(() => synth.play(0, 'choral')).not.toThrow()
+    for (let i = 0; i < CONFIG.limits.maxVoices; i++) synth.play(i, 'bubble')
+    expect(ctx.oscs).toHaveLength(CONFIG.limits.maxVoices)
+  })
 })

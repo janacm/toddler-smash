@@ -48,6 +48,9 @@ a phone, so each key stays big enough for a small finger).
 - Letters play the key under their spot on the keyboard, so Q is low and P is
   high, and the letter floats up.
 - A tap or click plays whichever key column it lands in, anywhere on screen.
+- Each key is stamped with a friendly animal face (frog, kitten, bird, puppy).
+  Playing a 3-note melodic phrase prompts the animal choir to sing back the
+  melody in a call-and-response pentatonic harmony.
 
 **Drawing.** Drag a finger (or hold the mouse button and move) to paint a fat
 line that slowly shifts through the rainbow and hums as it goes: higher up the
@@ -55,6 +58,14 @@ screen, higher the note. Several fingers draw at once. Keys stamp a sticker:
 the letter or number pressed, or a shape for any other key. Old drawing fades
 away over about half a minute, so the screen never fills up and there's
 nothing to clear.
+
+**The thought-bubble companion.** A sweet little baby dinosaur sits in the
+top-left corner with a soft thought bubble showing a picture: a shape or animal
+in Smash, a note or animal key in Piano, or a colour in Drawing. If the child
+happens to match it, the companion does a joyful backflip, eats the icon, and
+showers sparkles with a happy chime. If they ignore it, nothing happens: there
+are no timers, no scores, and no sad faces, and the thought quietly changes on
+its own after a while.
 
 Every note is on the same five-note scale, so there are no wrong notes, and
 mashing still sounds like music.

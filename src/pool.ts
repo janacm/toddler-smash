@@ -13,6 +13,7 @@ import { CONFIG } from './config'
 export class SpritePool {
   private ring: Phaser.GameObjects.Image[] = []
   private cursor = 0
+  onSpawn?: (texture: string, img: Phaser.GameObjects.Image) => void
 
   constructor(private scene: Phaser.Scene) {}
 
@@ -36,6 +37,7 @@ export class SpritePool {
     if (this.ring.length < CONFIG.limits.maxSprites) {
       const img = this.scene.add.image(x, y, texture)
       this.ring.push(img)
+      this.onSpawn?.(texture, img)
       return img
     }
 
@@ -53,6 +55,7 @@ export class SpritePool {
     img.setTint(0xffffff)
     img.setVisible(true)
     img.setActive(true)
+    this.onSpawn?.(texture, img)
     return img
   }
 

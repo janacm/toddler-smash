@@ -22,6 +22,9 @@ export default defineConfig({
         'src/challenges/layout.ts',
         'src/challenges/rewards.ts',
         'src/updates.ts',
+        'src/modes/pianoChoralLogic.ts',
+        'src/modes/choralEchoQueue.ts',
+        'src/companion/thoughtBubbleLogic.ts',
       ],
       // Per file, so one untested module can't hide behind well-tested ones.
       thresholds: {

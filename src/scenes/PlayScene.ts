@@ -13,6 +13,9 @@ import { ParentPanel, type PanelAction, type PanelState } from '../parentPanel'
 import { safeAreaInsets } from '../safeArea'
 import { MODES, findMode, type Mode } from '../modes'
 import { playSmash, type SmashEvent, type ToyContext } from '../toys'
+import { ThoughtCompanion } from '../companion/thoughtCompanion'
+import { keyIndex, pianoKeyCount } from '../modes/pianoLayout'
+import { getAnimalForPianoKey } from '../modes/pianoChoralLogic'
 
 const isTouchScreen = window.matchMedia('(pointer: coarse)').matches
 const isStandalone =
@@ -40,6 +43,9 @@ export class PlayScene extends Phaser.Scene {
   private switcher!: ModeSwitcher
   private progress = new Progression()
   private challenge?: ChallengeController
+  private companion?: ThoughtCompanion
+  private matchingSmash = false
+  private lastSmashChar?: string
   private blockedPointers = new Set<number>()
 
   constructor() {
@@ -50,13 +56,23 @@ export class PlayScene extends Phaser.Scene {
     this.rng = new Phaser.Math.RandomDataGenerator([String(Date.now())])
     buildTextures(this)
     this.pool = new SpritePool(this)
+    this.pool.onSpawn = (texture) => {
+      if (this.matchingSmash && this.mode.name === 'smash') {
+        this.companion?.checkMatch({
+          shape: texture,
+          char: this.lastSmashChar,
+        })
+      }
+    }
     this.text = new TextPool(this)
     this.switcher = new ModeSwitcher(this, MODES)
     this.panel = new ParentPanel(this)
     this.mode = findMode(settings.mode)
+    this.companion = new ThoughtCompanion(this, () => this.context())
 
     this.drawHint()
     this.applyMood()
+    this.layoutCompanion()
 
     this.teardownInput = installInput(this.game.canvas.parentElement ?? document.body, {
       onAction: (action) => {
@@ -95,10 +111,12 @@ export class PlayScene extends Phaser.Scene {
     this.scale.on('resize', () => {
       this.refresh()
       this.panel.refresh(this.panelState())
+      this.layoutCompanion()
     })
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.teardownInput?.()
       this.challenge?.destroy()
+      this.companion?.destroy()
       this.leaveMode?.()
       window.removeEventListener('touchend', unlockAudio)
       window.removeEventListener('click', unlockAudio)
@@ -124,7 +142,9 @@ export class PlayScene extends Phaser.Scene {
         return true
       }
     }
-    return this.safely(() => this.challenge?.action(action)) ?? false
+    const handled = this.safely(() => this.challenge?.action(action)) ?? false
+    this.syncCompanionVisibility()
+    return handled
   }
 
   private handleSmash(e: SmashEvent): void {
@@ -145,7 +165,28 @@ export class PlayScene extends Phaser.Scene {
       }
     }
 
+    if (this.mode.name === 'piano') {
+      const key = keyIndex(e, this.scale.width, pianoKeyCount(this.scale.width))
+      const noteIndex = key % 5
+      const animal = getAnimalForPianoKey(key)
+      this.companion?.checkMatch({ noteIndex, animal })
+    } else if (this.mode.name === 'drawing') {
+      const palette = currentMood().palette
+      const colorIndex = Math.abs(e.index) % palette.length
+      this.companion?.checkMatch({ colorIndex })
+    } else if (this.mode.name === 'smash') {
+      this.matchingSmash = true
+      this.lastSmashChar = e.char
+      if (e.char === 'D' || e.char === 'd') {
+        this.companion?.checkMatch({ animal: 'dinosaur', char: 'D' })
+      } else if (e.char === 'S' || e.char === 's') {
+        this.companion?.checkMatch({ animal: 'shark', char: 'S' })
+      }
+    }
+
     playSmash(e, this.context(), this.mode.toys)
+    this.matchingSmash = false
+    this.syncCompanionVisibility()
   }
 
   private context(): ToyContext {
@@ -173,6 +214,7 @@ export class PlayScene extends Phaser.Scene {
       this.challenge?.destroy()
       this.challenge = this.createChallenge()
       this.challenge?.pause(this.panel.visible)
+      this.syncCompanionVisibility()
       this.switcher.wiggle(mode)
       return
     }
@@ -182,6 +224,7 @@ export class PlayScene extends Phaser.Scene {
     saveSettings()
     this.enterMode()
     this.layoutSwitcher()
+    this.layoutCompanion()
     this.synth.chime()
   }
 
@@ -206,6 +249,7 @@ export class PlayScene extends Phaser.Scene {
     this.drawBackground()
     this.enterMode()
     this.layoutSwitcher()
+    this.layoutCompanion()
   }
 
   private enterMode(): void {
@@ -302,10 +346,12 @@ export class PlayScene extends Phaser.Scene {
     if (this.panel.visible) {
       this.panel.hide()
       this.challenge?.pause(false)
+      this.syncCompanionVisibility()
       return
     }
     this.panel.show(this.panelState())
     this.challenge?.pause(true)
+    this.syncCompanionVisibility()
     if (isDesktop) {
       void keyboardLocked().then((on) => {
         this.lockStatus = on
@@ -381,8 +427,30 @@ export class PlayScene extends Phaser.Scene {
       case 'close':
         this.panel.hide()
         this.challenge?.pause(false)
+        this.syncCompanionVisibility()
         return
     }
     this.panel.refresh(this.panelState())
+    this.syncCompanionVisibility()
+  }
+
+  private layoutCompanion(): void {
+    if (!this.companion) return
+    const insets = safeAreaInsets()
+    const { width, height } = this.scale
+    const night = currentMood().night
+    this.companion.layout(width, height, insets, night)
+    this.companion.setGameMode(this.mode.name)
+    this.syncCompanionVisibility()
+  }
+
+  private syncCompanionVisibility(): void {
+    if (!this.companion) return
+    const isPuzzle =
+      this.mode.name === 'smash' || this.mode.name === 'piano' || this.mode.name === 'drawing'
+        ? this.progress.state(this.mode.name as GameId).view === 'puzzle'
+        : false
+    const hidden = this.panel.visible || isPuzzle
+    this.companion.setVisible(!hidden)
   }
 }

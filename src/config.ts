@@ -68,6 +68,27 @@ export const CONFIG = {
     feedbackIntervalMs: 90,
   },
 
+  /** Sago Mini-style non-punitive pictorial thought bubbles. */
+  thoughtBubble: {
+    idleBobMs: 1600,
+    idleDriftPx: 5,
+    autoCycleMs: 25000,
+    celebrateMs: 480,
+    sparkleCount: 8,
+    targetScale: 0.38,
+    respawnMs: 1500,
+  },
+
+  /** Harmonic call-and-response sound toys. */
+  choralEcho: {
+    phraseMaxGapMs: 1200,
+    phraseLen: 3,
+    responseDelayMs: 550,
+    stepIntervalMs: 280,
+    echoGain: 0.45,
+    harmonyInterval: 2, // pentatonic third
+  },
+
   /** The drawing sub-game. */
   drawing: {
     /** Brush width as a share of the screen's short side, with a floor. */
