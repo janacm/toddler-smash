@@ -347,6 +347,7 @@ To type-check the Windows code from a Mac:
 | --- | --- |
 | "slower / floatier / calmer" | `config.ts` → `moods.*.timeScale`, `lifetime` |
 | "more things on screen" | `config.ts` → `limits.maxSprites` |
+| "more / fewer animal visits" | `config.ts` → `moods.*.animalSpawnWeight` |
 | "quieter / different sound" | `config.ts` → `moods.*.audio` |
 | "different colours" | `config.ts` → `moods.*.palette` |
 | "bedtime should be darker / slower" | `config.ts` → `moods.bedtime` |
