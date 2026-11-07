@@ -18,6 +18,7 @@ export default defineConfig({
         'src/modes/drawingMath.ts',
         'src/modes/pianoLayout.ts',
         'src/toys/play.ts',
+        'src/toys/schemaMath.ts',
         'src/challenges/model.ts',
         'src/challenges/layout.ts',
         'src/challenges/rewards.ts',
