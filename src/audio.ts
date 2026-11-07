@@ -113,12 +113,8 @@ export class Synth {
       this.playPiano(ctx, master, freq, level)
       return
     }
-    if (voice === 'dinosaur') {
-      this.playDinosaur(ctx, master, freq, level)
-      return
-    }
-    if (voice === 'bubble') {
-      this.playBubble(ctx, master, freq, level)
+    if (voice === 'dinosaur' || voice === 'bubble') {
+      this.playAnimal(ctx, master, freq, voice, level)
       return
     }
 
@@ -173,12 +169,18 @@ export class Synth {
   }
 
   /**
-   * A low, gently wobbling dinosaur stomp and rumble.
-   * Octave partials (sub-bass 0.25, bass 0.5, and overtone layers 1 and 2)
-   * ensure the sound translates clearly on small phone/tablet speakers
-   * while remaining gentle, pleasant, and pentatonic in Bedtime.
+   * Soft animal reactions: octave-only pitches, with character in the envelope.
+   * Dinosaur uses `DINOSAUR_PARTIALS` (sub-bass 0.25, bass 0.5, and overtones 1 and 2)
+   * so the stomp and rumble translate clearly on small phone/tablet speakers while
+   * remaining gentle, pleasant, and pentatonic in Bedtime.
    */
-  private playDinosaur(ctx: AudioContext, master: GainNode, freq: number, level: number): void {
+  private playAnimal(
+    ctx: AudioContext,
+    master: GainNode,
+    freq: number,
+    voice: 'dinosaur' | 'bubble',
+    level: number,
+  ): void {
     const nodes: AudioNode[] = []
     const oscs: OscillatorNode[] = []
     let counted = false
@@ -208,28 +210,35 @@ export class Synth {
 
     try {
       const now = ctx.currentTime
-      const dur = this.mood.noteMs / 1000
+      const dinosaur = voice === 'dinosaur'
+      const dur = (this.mood.noteMs / 1000) * (dinosaur ? 1 : 0.5)
       const gain = ctx.createGain()
       nodes.push(gain)
       gain.gain.setValueAtTime(0, now)
-      // A low, gently wobbling "rrrum"; no noisy or startling roar.
-      for (const [time, amount] of [
-        [0.08, 0.55],
-        [0.26, 0.25],
-        [0.4, 0.45],
-        [0.57, 0.2],
-        [0.7, 0.3],
-      ]) {
-        gain.gain.linearRampToValueAtTime(amount * level, now + dur * time)
+      if (dinosaur) {
+        // A low, gently wobbling "rrrum"; no noisy or startling roar.
+        for (const [time, amount] of [
+          [0.08, 0.55],
+          [0.26, 0.25],
+          [0.4, 0.45],
+          [0.57, 0.2],
+          [0.7, 0.3],
+        ]) {
+          gain.gain.linearRampToValueAtTime(amount * level, now + dur * time)
+        }
+      } else {
+        // A rounded plop: a short sine note, without a dissonant pitch slide.
+        gain.gain.linearRampToValueAtTime(0.55 * level, now + dur * 0.08)
       }
       gain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
       gain.connect(master)
 
-      for (const [ratio, amount] of DINOSAUR_PARTIALS) {
+      const partials: [number, number][] = dinosaur ? DINOSAUR_PARTIALS : [[1, 1]]
+      for (const [ratio, amount] of partials) {
         const osc = ctx.createOscillator()
         nodes.push(osc)
         oscs.push(osc)
-        osc.type = this.mood.wave
+        osc.type = dinosaur ? this.mood.wave : 'sine'
         osc.frequency.value = freq * ratio
         const partialGain = ctx.createGain()
         nodes.push(partialGain)
@@ -237,69 +246,6 @@ export class Synth {
         osc.connect(partialGain)
         partialGain.connect(gain)
       }
-
-      this.voices++
-      counted = true
-      oscs[0].onended = () => cleanup()
-      for (const osc of oscs) {
-        osc.start(now)
-        osc.stop(now + dur)
-      }
-    } catch {
-      // Partial setup must not leak nodes or steal an already-playing slot.
-      cleanup(true)
-    }
-  }
-
-  /** A rounded plop: a short sine note, without a dissonant pitch slide. */
-  private playBubble(ctx: AudioContext, master: GainNode, freq: number, level: number): void {
-    const nodes: AudioNode[] = []
-    const oscs: OscillatorNode[] = []
-    let counted = false
-    let finished = false
-    const cleanup = (interrupt = false) => {
-      if (finished) return
-      finished = true
-      if (counted) this.voices = Math.max(0, this.voices - 1)
-      for (const osc of oscs) {
-        osc.onended = null
-        if (interrupt) {
-          try {
-            osc.stop()
-          } catch {
-            /* not started or already stopped */
-          }
-        }
-      }
-      for (const node of nodes) {
-        try {
-          node.disconnect()
-        } catch {
-          /* already torn down */
-        }
-      }
-    }
-
-    try {
-      const now = ctx.currentTime
-      const dur = (this.mood.noteMs / 1000) * 0.5
-      const gain = ctx.createGain()
-      nodes.push(gain)
-      gain.gain.setValueAtTime(0, now)
-      gain.gain.linearRampToValueAtTime(0.55 * level, now + dur * 0.08)
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
-      gain.connect(master)
-
-      const osc = ctx.createOscillator()
-      nodes.push(osc)
-      oscs.push(osc)
-      osc.type = 'sine'
-      osc.frequency.value = freq
-      const partialGain = ctx.createGain()
-      nodes.push(partialGain)
-      partialGain.gain.value = 1
-      osc.connect(partialGain)
-      partialGain.connect(gain)
 
       this.voices++
       counted = true
