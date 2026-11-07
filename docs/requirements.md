@@ -82,6 +82,12 @@ challenge and pacing; automated checks establish control behaviour only.
 | D1 | A Windows and Mac desktop app that a toddler can't leave: blocks the Windows and menu keys, Alt-Tab, Cmd-Q, Cmd-Tab, Spotlight, media keys and similar. Asking for the Mac Accessibility permission is acceptable. | `src-tauri/` | `npm run test:rust`, CI on macOS and Windows |
 | D2 | In the desktop app, the grown-up menu's Quit is the only way out. | `src-tauri/src/lib.rs` | review |
 
+## Process & Documentation
+
+| # | Requirement | Where | Checked by |
+| --- | --- | --- | --- |
+| P5 | Every pull request must update both documentation (`docs/` or `README.md`) and agent instructions (`AGENTS.md` or `CLAUDE.md`). CI verifies these updates before merging. | `scripts/verify-docs.mjs`, `.github/workflows/ci.yml` | `scripts/verify-docs.test.mjs`, `npm run test:docs` on PRs |
+
 ## Out of scope
 
 - Blocking what no app can block: Ctrl-Alt-Del, Win-L, the power button,

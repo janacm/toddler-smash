@@ -41,6 +41,7 @@ npm run shot       # build output → headless Chromium → shots/*.png
 npm run test:updates # cached browser → repeated releases, offline and recovery
 npm test           # Vitest unit tests
 npm run test:coverage # same, failing below the coverage thresholds (CI runs this)
+npm run test:docs  # verify pull request docs and agent guidelines update
 npm run test:rust  # desktop keyboard-lock rules (cargo test)
 ```
 
@@ -239,6 +240,10 @@ Breaking these breaks the actual requirement, so don't "clean them up":
 - **In the desktop app, the grown-up panel's Q is the only way out.** Window
   close and app exit are refused unless `quit` was called. Don't add another
   exit a child could hit.
+- **Every pull request must update docs and agent instructions.** Changes must
+  reflect new or altered requirements in `docs/` (`docs/requirements.md` or
+  user guides) and agent conventions in `AGENTS.md` (or `CLAUDE.md`). CI gates
+  pull requests on `npm run test:docs`.
 
 ## Web deploy
 
@@ -363,6 +368,7 @@ To type-check the Windows code from a Mac:
 | "looks wrong on a phone" | `safeArea.ts`, `config.ts` → `piano`, then `mobile*.png` |
 | "stop key X doing an OS thing" | `src-tauri/src/lockdown/` |
 | "the loading screen / logo should do X" | `index.html` (`#splash` markup and CSS), `config.ts` → `splash`, then `splash*.png` |
+| "check docs and agent rules in PRs" | `scripts/verify-docs.mjs` + `.github/workflows/ci.yml` |
 
 ## Testing what actually matters
 
@@ -381,6 +387,10 @@ value; that's what the screenshots are for. The checks, in order:
    `npm run test:coverage` is the same run with a coverage gate: each logic
    module listed in `vitest.config.ts` must stay at 90% of lines and 85%
    of branches and functions, or CI fails.
+   Node test runner suites (`node --test scripts/*.test.mjs`) verify deploy HTML
+   normalization, browser hold/rAF assertions, and pull request doc/agent gates.
+   On pull requests, `npm run test:docs` verifies that docs and agent instructions
+   were updated.
 3. `npm run test:rust` — the desktop keyboard-lock rules for both macOS and
    Windows, runnable on any OS.
 4. `npm run shot` — renders, and no console errors.
