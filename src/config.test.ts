@@ -36,6 +36,14 @@ describe('CONFIG.moods', () => {
     expect(bedtime.timeScale).toBeLessThan(daytime.timeScale)
     expect(bedtime.audio.volume).toBeLessThan(daytime.audio.volume)
     expect(bedtime.minSpawnIntervalMs).toBeGreaterThan(daytime.minSpawnIntervalMs)
+    expect(bedtime.animalSpawnWeight).toBeLessThanOrEqual(daytime.animalSpawnWeight)
+  })
+
+  it('animal spawn weight is balanced and positive', () => {
+    for (const name of moods) {
+      expect(CONFIG.moods[name].animalSpawnWeight, name).toBeGreaterThan(0)
+      expect(CONFIG.moods[name].animalSpawnWeight, name).toBeLessThanOrEqual(3)
+    }
   })
 
   it('every mood has a palette to draw with', () => {
