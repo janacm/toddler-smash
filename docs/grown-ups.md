@@ -39,7 +39,9 @@ shapes that arc and bounce, ripples, or now and then a googly-eyed blob.
 Friendly dinosaurs and sharks also visit: dinosaurs stomp and hop, while
 sharks swim through bubbles. In Smash free play, **D** always calls a dinosaur
 and **S** a shark, alongside the pressed letter. Taps and clicks can meet
-either animal. Their colours, motion and sounds soften in Bedtime.
+either animal. Their colours, motion and sounds soften in Bedtime. Fast
+mashing also builds a musical streak: successive presses climb an ascending
+pentatonic arpeggio, culminating in a celebration ring and warm chord.
 
 **Piano.** Ten rainbow keys across the bottom of the screen (five to eight on
 a phone, so each key stays big enough for a small finger).
