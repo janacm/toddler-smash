@@ -70,8 +70,10 @@ Use `observeGame(context)` from `scripts/browser-helpers.mjs` before creating
 test pages, then `holdEscape` or `holdForPanel`. A fixed sleep just over three
 seconds can release before a delayed timer tick, leaving the panel open and
 turning a later R press into New player. Wait for `panel.visible` to change
-with a bounded timeout and release held input in `finally`. Keep scene
-observation in browser-test setup rather than adding a production debug API.
+with a bounded timeout and release held input in `finally`; `holdForPanel` asserts
+that the elapsed hold time meets the 3-second hold requirement minus a tolerance
+margin. Keep scene observation in browser-test setup rather than adding a production
+debug API.
 
 The same run exercises `scripts/animal-pass.mjs`: D/S animal shortcuts,
 ordinary mouse and touch encounters, Bedtime styling, held-key repeats,

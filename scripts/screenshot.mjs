@@ -15,7 +15,7 @@ import { dirname, join } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { progressionPass } from './progression-pass.mjs'
 import { animalPass } from './animal-pass.mjs'
-import { holdEscape as holdEscapeOn, holdForPanel, observeGame } from './browser-helpers.mjs'
+import { holdEscape as holdEscapeOn, holdForPanel, observeGame, waitForRenderFrame } from './browser-helpers.mjs'
 
 // Not vite's default 4173, which other copies of the game may already be
 // serving. --strictPort below makes a clash fail instead of silently
@@ -127,6 +127,7 @@ try {
 
   // Grown-up panel: hold Escape, switch to Bedtime + Smash, hide it, mash.
   await holdEscape()
+  await waitForRenderFrame(page)
   await page.screenshot({ path: sibling('panel') })
   await page.keyboard.press('b')
   await page.keyboard.press('1')
@@ -208,6 +209,7 @@ try {
       }), () => cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }))
     }
     await holdCorners()
+    await waitForRenderFrame(phone)
     await phone.screenshot({ path: sibling('mobile-panel') })
 
     await context.close()
