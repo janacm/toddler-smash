@@ -22,6 +22,8 @@ export default defineConfig({
         'src/challenges/layout.ts',
         'src/challenges/rewards.ts',
         'src/updates.ts',
+        'src/discovery/scratchModel.ts',
+        'src/discovery/albumModel.ts',
       ],
       // Per file, so one untested module can't hide behind well-tested ones.
       thresholds: {

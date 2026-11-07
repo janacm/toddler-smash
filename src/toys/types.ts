@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import type { SpritePool, TextPool } from '../pool'
 import type { Synth } from '../audio'
+import type { BadgeId } from '../discovery/types'
 
 /**
  * One press, tap, or click. Everything the game reacts to arrives as one of
@@ -42,6 +43,8 @@ export interface ToyContext {
   height: number
   /** A palette colour. Pass a seed to keep a burst visually coherent. */
   color(seed?: number): number
+  /** Unlock a sticker album badge. */
+  discover?(id: BadgeId): void
 }
 
 /**

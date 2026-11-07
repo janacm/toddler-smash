@@ -102,6 +102,13 @@ src/
     layout.ts        shared grid, navigation, hit tests and crossed waypoints
     controller.ts    picture-only puzzles, demonstrations, cursor and garden
     rewards.ts       capped, cancellable Piano echo queue
+  discovery/
+    types.ts         BadgeId (6 badges), ScratchCardId, definitions
+    scratchModel.ts  pure ScratchGrid coverage math & ScratchCardModel playlist
+    albumModel.ts    pure AlbumModel badge collection & RainbowRun detector
+    illustrations.ts procedural dinosaur, shark, and night sky illustrations
+    scratchCard.ts   mystery scratch card, mask erasure, auto-bloom celebration
+    tray.ts          bottom dock, breathing stamp slots, interactive victory dance
   modes/             sub-games
     types.ts         Mode
     index.ts         MODES registry (order = panel number keys)

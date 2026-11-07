@@ -56,8 +56,34 @@ the letter or number pressed, or a shape for any other key. Old drawing fades
 away over about half a minute, so the screen never fills up and there's
 nothing to clear.
 
+Drawing also features a mystery scratch-off card in the center of the canvas.
+As small fingers scribble across the pearlescent coating, the mask rubs away to
+reveal a secret illustration (a friendly dinosaur in a glade, an ocean reef
+shark, or a starlit night sky). Clearing about three-quarters of the card triggers
+an auto-bloom celebration: the mask dissolves, stars burst, a pentatonic fanfare
+plays, and a discovery badge unlocks into the child's album before cycling to the
+next mystery card.
+
 Every note is on the same five-note scale, so there are no wrong notes, and
 mashing still sounds like music.
+
+## Sticker album and discovery badges
+
+A gentle dock along the bottom of the screen (or positioned right above the keys
+in Piano) displays the child's collection of discovered stamps:
+- **Dinosaur**: Unlocked by meeting a dinosaur (or pressing D in Smash).
+- **Shark**: Unlocked by meeting a reef shark (or pressing S in Smash).
+- **Rainbow**: Unlocked by playing a 5-note pentatonic run on the Piano.
+- **Leaf, Wave, Moon**: Unlocked by unmasking each mystery scratch card in Drawing.
+
+Empty slots are faint silhouette discs that never intercept taps or get in the
+way of play. Unlocked badges become animated breathing stamps. Tapping any
+collected badge makes it leap to the center of the screen for a victory dance
+with its signature voice and star sparkles, returning smoothly to its slot (a second
+tap cancels cleanly).
+
+Progress is session-only: it resets on page reload or by pressing **R**
+(New player) in the grown-up menu.
 
 ## Hidden puzzles and creative powers
 

@@ -29,6 +29,7 @@ export const animalKeys: Toy = {
 }
 
 function visit(animal: Animal, e: SmashEvent, ctx: ToyContext): void {
+  ctx.discover?.(animal)
   const night = currentMood().night
   const suffix = night ? '-night' : ''
   const reaction = e.index % 3

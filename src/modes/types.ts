@@ -38,4 +38,6 @@ export interface Mode {
   paintSegment?(from: { x: number; y: number }, to: { x: number; y: number }, ctx: ToyContext): void
   /** Demonstrate a piano note without treating it as player input or an echo. */
   replayNote?(index: number, ctx: ToyContext): void
+  /** Reset session-only discovery state for New Player (grown-up panel R). */
+  resetDiscovery?(): void
 }
