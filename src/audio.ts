@@ -3,7 +3,7 @@ import { CONFIG, type Mood } from './config'
 type MoodAudio = Mood['audio']
 
 /** Toy voices share the same pentatonic notes, mood volume and voice cap. */
-export type Voice = 'blip' | 'piano' | 'dinosaur' | 'bubble'
+export type Voice = 'blip' | 'piano' | 'dinosaur' | 'bubble' | 'pop'
 
 /** Harmonic partials of the piano voice and their relative loudness. */
 const PIANO_PARTIALS: [number, number][] = [
@@ -99,6 +99,10 @@ export class Synth {
     }
     if (voice === 'dinosaur' || voice === 'bubble') {
       this.playAnimal(ctx, master, freq, voice, level)
+      return
+    }
+    if (voice === 'pop') {
+      this.playPop(ctx, master, freq, level)
       return
     }
 
@@ -271,6 +275,55 @@ export class Synth {
       }
     } catch {
       this.voices = Math.max(0, this.voices - 1)
+    }
+  }
+
+  /** A woody/rubbery percussive pop with a quick pitch glide and damped ring. */
+  private playPop(ctx: AudioContext, master: GainNode, freq: number, level: number): void {
+    const nodes: AudioNode[] = []
+    let osc: OscillatorNode | null = null
+    let counted = false
+    let finished = false
+    const cleanup = (interrupt = false) => {
+      if (finished) return
+      finished = true
+      if (counted) this.voices = Math.max(0, this.voices - 1)
+      if (osc) {
+        osc.onended = null
+        if (interrupt) {
+          try { osc.stop() } catch { /* not started or already stopped */ }
+        }
+      }
+      for (const node of nodes) {
+        try { node.disconnect() } catch { /* already torn down */ }
+      }
+    }
+
+    try {
+      const now = ctx.currentTime
+      const dur = Math.max(0.04, 0.08 * (this.mood.noteMs / 620))
+
+      const gain = ctx.createGain()
+      nodes.push(gain)
+      gain.gain.setValueAtTime(0, now)
+      gain.gain.linearRampToValueAtTime(0.85 * level, now + 0.003)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
+      gain.connect(master)
+
+      osc = ctx.createOscillator()
+      nodes.push(osc)
+      osc.type = 'triangle'
+      osc.frequency.setValueAtTime(freq * 1.8, now)
+      osc.frequency.exponentialRampToValueAtTime(Math.max(1, freq), now + 0.022)
+      osc.connect(gain)
+
+      this.voices++
+      counted = true
+      osc.onended = () => cleanup()
+      osc.start(now)
+      osc.stop(now + dur)
+    } catch {
+      cleanup(true)
     }
   }
 
