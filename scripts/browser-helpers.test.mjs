@@ -83,14 +83,50 @@ test('holdEscape passes key down and key up handlers', async () => {
   assert.deepEqual(events, ['down:Escape', 'up:Escape'])
 })
 
-test('waitForRenderFrame evaluates a function on page', async () => {
-  let evaluated = false
+test('holdForPanel starts timing only after start() resolves', async () => {
+  let released = false
   const page = {
-    evaluate: async (fn) => {
-      evaluated = true
-      assert.equal(typeof fn, 'function')
-    },
+    evaluate: async () => false,
+    waitForFunction: async () => {},
   }
-  await waitForRenderFrame(page)
-  assert.equal(evaluated, true)
+  await assert.rejects(
+    holdForPanel(
+      page,
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 60))
+      },
+      async () => {
+        released = true
+      },
+      { holdMs: 50, marginMs: 10 },
+    ),
+    /expected panel hold to take at least 40ms/,
+  )
+  assert.equal(released, true)
+})
+
+test('waitForRenderFrame stays pending until requestAnimationFrame fires', async () => {
+  const originalRaf = globalThis.requestAnimationFrame
+  let frameCallback = null
+  let settled = false
+  globalThis.requestAnimationFrame = (cb) => {
+    frameCallback = cb
+    return 1
+  }
+  try {
+    const page = {
+      evaluate: async (fn) => fn(),
+    }
+    const pending = waitForRenderFrame(page).then(() => {
+      settled = true
+    })
+    await Promise.resolve()
+    assert.equal(typeof frameCallback, 'function')
+    assert.equal(settled, false, 'waitForRenderFrame should remain pending before rAF fires')
+    frameCallback(16.67)
+    await pending
+    assert.equal(settled, true)
+  } finally {
+    globalThis.requestAnimationFrame = originalRaf
+  }
 })
