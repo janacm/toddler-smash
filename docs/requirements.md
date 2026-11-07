@@ -33,6 +33,7 @@ is the only person who changes settings.
 | G4 | **Every sub-game has its own round button** in the top-right corner that the child can tap. Sub-games are never nested inside each other. | `switcher.ts` (one button per entry in `MODES`) | screenshots |
 | G5 | The child switches sub-games only by tapping those buttons, never by a key, so mashing can't flip games. The grown-up can hide the buttons. | `PlayScene.handleSmash`, panel `C` | review |
 | G6 | Smash includes friendly dinosaurs and sharks in the random tap/click rotation. D always summons a dinosaur and S a shark, alongside the pressed letter. Animals stomp, hop or swim with footprints or bubbles and quiet synthesized voices; Bedtime uses softer colours and slower motion. All effects share the existing sprite and voice caps. | `toys/animals.ts`, `animalTextures.ts`, `audio.ts`, `pool.ts` | animal keyboard/touch/Bedtime screenshots and mash checks |
+| G6a | Smash includes dedicated motor schema toys aligned with early childhood physical development: Trajectory (rebounding cosmic orbs with squash-and-stretch and woody bounce pop), Rotation (celestial pinwheels ejecting centrifugal sparkle dust), and Connection (constellation snapping with elastic luminous threads). All toys share existing sprite pool caps, pentatonic tuning, and voice limits. | `toys/trajectory.ts`, `toys/rotation.ts`, `toys/connection.ts`, `toys/schemaMath.ts`, `textures.ts`, `audio.ts` | unit tests, screenshots under mashing |
 
 ## Hidden progression
 
