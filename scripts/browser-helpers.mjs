@@ -30,10 +30,10 @@ export async function holdForPanel(page, start, release, options = {}) {
   const marginMs = opts.marginMs ?? opts.toleranceMs ?? opts.toleranceMargin ?? 250
 
   const before = await page.evaluate(() => window.__smashGame.scene.getScene('play').panel.visible)
-  const startedAt = Date.now()
-  await start()
   let elapsedMs
   try {
+    const startResult = await start()
+    const startedAt = typeof startResult === 'number' ? startResult : Date.now()
     await page.waitForFunction(
       (previous) => window.__smashGame.scene.getScene('play').panel.visible !== previous,
       before,
