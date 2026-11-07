@@ -38,18 +38,20 @@ is the only person who changes settings.
 
 | # | Requirement | Where | Checked by |
 | --- | --- | --- | --- |
-| H1 | Each game starts in free play. Selecting a firefly at three successive locations reveals its entrance; unrelated input breaks the trail. Once discovered, selecting the entrance reopens it. | `challenges/controller.ts`, `model.ts` | `model.test.ts`, progression screenshots |
-| H2 | Each game has three optional tiers with two distinct authored puzzles per tier. Success advances immediately; errors restart only the current attempt. No automatic increase based on elapsed time or total presses. | `challenges/model.ts` | `model.test.ts`, all six rounds in `scripts/progression-pass.mjs` |
-| H3 | Smash progresses from silhouette matching to alternating patterns to remembering three shapes; Piano copies two, three, then four notes; Drawing follows straight, bent, then closed routes on a shared 3×3 grid. | `challenges/model.ts`, `controller.ts` | model tests, keyboard and touch progression passes |
+| H1 | Each game starts in free play. Selecting a firefly at three successive locations reveals its entrance; unrelated input breaks the trail. Once discovered, selecting the entrance reopens it. | `challenges/controller.ts`, `model.ts` | `model.test.ts`, progression screenshots, `docs/playtesting.md` |
+| H2 | Each game has three optional tiers with two distinct authored puzzles per tier. Success advances immediately; errors restart only the current attempt. No automatic increase based on elapsed time or total presses. | `challenges/model.ts` | `model.test.ts`, all six rounds in `scripts/progression-pass.mjs`, `docs/playtesting.md` |
+| H3 | Smash progresses from silhouette matching to alternating patterns to remembering three shapes; Piano copies two, three, then four notes; Drawing follows straight, bent, then closed routes on a shared 3×3 grid. | `challenges/model.ts`, `controller.ts` | model tests, keyboard and touch progression passes, `docs/playtesting.md` |
 | H4 | Every entrance, puzzle, replay, reward and return control supports keyboard, mouse and touch. Arrows move a visible cursor; Space/Enter selects. Drawing arrows paint adjacent grid segments. Outward arrows at the board edge reach picture controls; Tab cycles controls. Held keys remain quiet. | `input.ts`, `challenges/controller.ts`, `layout.ts` | input/layout tests, progression passes |
-| H5 | Picture demonstrations animate and sound; replay restarts the demonstration, and play can interrupt it. A back picture or Backspace returns immediately to free play. | `challenges/controller.ts` | progression passes, screenshots |
-| H6 | Solving six rounds earns a creative power: Smash connects at most 24 garden stars, recycling the oldest; Piano adds one quiet pentatonic echo after 600 ms with at most four pending echoes and no recursive echoes; Drawing mirrors rainbow strokes and stickers across the canvas centre. | `challenges/controller.ts`, `rewards.ts`, `modes/piano.ts`, `modes/drawing.ts`, `CONFIG.challenges` | reward tests, playground screenshots |
+| H5 | Picture demonstrations animate and sound; replay restarts the demonstration, and play can interrupt it. A back picture or Backspace returns immediately to free play. | `challenges/controller.ts` | progression passes, screenshots, `docs/playtesting.md` |
+| H6 | Solving six rounds earns a creative power: Smash connects at most 24 garden stars, recycling the oldest; Piano adds one quiet pentatonic echo after 600 ms with at most four pending echoes and no recursive echoes; Drawing mirrors rainbow strokes and stickers across the canvas centre. | `challenges/controller.ts`, `rewards.ts`, `modes/piano.ts`, `modes/drawing.ts`, `CONFIG.challenges` | reward tests, playground screenshots, `docs/playtesting.md` |
 | H7 | Discoveries and completed rounds are independent per game and live only in the current launch. Switching games returns to free play while retaining discoveries; resize and mood changes retain progress. No account or saved progress. | `PlayScene.ts`, `challenges/model.ts` | model tests, switch/resize/mood/reload progression checks |
 | H8 | Logical puzzle input arrives before cosmetic throttling, including Bedtime. Unrelated key mashing and simultaneous Drawing fingers cannot accumulate partial solutions. Drawing requires the ordered route, including closure. | `input.ts`, `challenges/controller.ts`, `model.ts` | input/model tests, Bedtime and multi-touch progression checks |
 
 The pacing target is about 20–40 seconds per tier for a child who understands
 the puzzle, with no required waiting. Child playtesting must assess discovery,
 challenge and pacing; automated checks establish control behaviour only.
+See [docs/playtesting.md](playtesting.md) for the observational protocol,
+developmental rubrics, pacing benchmarks, and session logging template.
 
 ## Moods
 

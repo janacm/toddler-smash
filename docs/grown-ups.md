@@ -99,7 +99,9 @@ grown-up menu. Game, mood and corner-button settings remain saved.
 
 The target is roughly 20–40 seconds per tier once the child understands the
 puzzle. Discovery and difficulty need observation during play; the automated
-checks cannot establish whether a child finds the puzzles engaging.
+checks cannot establish whether a child finds the puzzles engaging. For the
+observational protocol, rubrics, and feedback logging template, see
+[playtesting.md](playtesting.md).
 
 ## Moods
 
