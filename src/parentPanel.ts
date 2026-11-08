@@ -177,9 +177,9 @@ export class ParentPanel {
       if (state.desktopUpdate?.status === 'ready') {
         row([{ label: `Update to v${state.desktopUpdate.version} (restart)`, action: { kind: 'desktopUpdate' } }])
       } else if (state.desktopUpdate?.status === 'downloading') {
-        row([{ label: `Downloading update v${state.desktopUpdate.version}...`, action: { kind: 'desktopUpdate' } }])
+        y += text(`Downloading update v${state.desktopUpdate.version}…`, 14, COLORS.text).height + GAP
       } else if (state.desktopUpdate?.status === 'installing') {
-        row([{ label: 'Updating...', action: { kind: 'desktopUpdate' } }])
+        y += text('Updating…', 14, COLORS.text).height + GAP
       }
       row([{ label: 'Quit', action: { kind: 'quit' } }])
       if (state.lockStatus) {

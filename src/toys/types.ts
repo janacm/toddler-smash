@@ -1,6 +1,9 @@
 import Phaser from 'phaser'
 import type { SpritePool, TextPool } from '../pool'
 import type { Synth } from '../audio'
+import type { BadgeId } from '../discovery/types'
+import type { ComboHit } from '../combo'
+import type { Mood } from '../config'
 
 /**
  * One press, tap, or click. Everything the game reacts to arrives as one of
@@ -42,6 +45,20 @@ export interface ToyContext {
   height: number
   /** A palette colour. Pass a seed to keep a burst visually coherent. */
   color(seed?: number): number
+  /** Unlock a sticker album badge. */
+  discover?(id: BadgeId): void
+  /** Check candidate action against current thought companion target. */
+  checkMatch?(action: {
+    colorIndex?: number
+    shape?: string
+    animal?: string
+    noteIndex?: number
+    char?: string
+  }): void
+  /** Where this press sits in the current streak; drives pitch and juice. */
+  combo: ComboHit
+  /** The active mood, so toys can scale motion and decay (Bedtime is calmer). */
+  mood: Mood
 }
 
 /**

@@ -8,8 +8,7 @@ on:
     inputs:
       tag:
         description: 'Tag name for release (e.g. v0.1.0)'
-        required: false
-        default: ''
+        required: true
 
 permissions:
   contents: write
@@ -28,6 +27,8 @@ jobs:
           - platform: windows-latest
             args: ''
     runs-on: ${{ matrix.platform }}
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
 
@@ -37,6 +38,21 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Sync desktop version from release tag
+        shell: bash
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          echo "Setting desktop version to $VERSION (from $RELEASE_TAG)"
+          node -e "
+            const fs = require('fs');
+            const conf = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json', 'utf8'));
+            conf.version = '$VERSION';
+            fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(conf, null, 2) + '\n');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '$VERSION';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -55,9 +71,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name != '' && github.ref_name || inputs.tag }}
-          releaseName: 'Toddler Smash ${{ github.ref_name != "" && github.ref_name || inputs.tag }}'
-          releaseBody: 'Release ${{ github.ref_name != "" && github.ref_name || inputs.tag }} with automatic in-app updates.'
+          tagName: ${{ env.RELEASE_TAG }}
+          releaseName: 'Toddler Smash ${{ env.RELEASE_TAG }}'
+          releaseBody: 'Release ${{ env.RELEASE_TAG }} with automatic in-app updates.'
           releaseDraft: false
           prerelease: false
           uploadUpdaterJson: true

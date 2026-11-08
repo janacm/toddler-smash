@@ -82,7 +82,7 @@ export function onDesktopUpdateChange(listener: (state: DesktopUpdateState) => v
 export async function checkAndDownloadUpdate(
   backend: DesktopUpdaterBackend = defaultDesktopUpdaterBackend,
 ): Promise<DesktopUpdateState> {
-  if (currentState.status === 'ready') return currentState
+  if (currentState.status === 'ready' || currentState.status === 'installing') return currentState
   if (activePromise) {
     await activePromise
     return currentState
@@ -126,10 +126,16 @@ export async function checkAndDownloadUpdate(
 export async function applyDesktopUpdate(
   backend: DesktopUpdaterBackend = defaultDesktopUpdaterBackend,
 ): Promise<boolean> {
-  if (currentState.status === 'ready' && currentHandle) {
-    setState({ status: 'installing', version: currentHandle.version })
+  if (currentState.status !== 'ready' || !currentHandle || activePromise) {
+    return false
+  }
+
+  const handle = currentHandle
+  setState({ status: 'installing', version: handle.version })
+
+  const runInstall = async () => {
     try {
-      await currentHandle.install()
+      await handle.install()
       backend.restart()
       return true
     } catch (err) {
@@ -139,14 +145,11 @@ export async function applyDesktopUpdate(
     }
   }
 
-  if (currentState.status === 'downloading' && activePromise) {
-    await activePromise
-    if (getDesktopUpdateState().status === 'ready' && currentHandle) {
-      return applyDesktopUpdate(backend)
-    }
-  }
-
-  return false
+  const promise = runInstall().finally(() => {
+    activePromise = undefined
+  })
+  activePromise = promise
+  return promise
 }
 
 /**
@@ -160,7 +163,7 @@ export function watchForDesktopUpdates(
   let stopped = false
 
   const trigger = () => {
-    if (stopped || !navigator.onLine || activePromise || currentState.status === 'ready') return
+    if (stopped || !navigator.onLine || activePromise || currentState.status === 'ready' || currentState.status === 'installing') return
     checkAndDownloadUpdate(backend).catch(() => {})
   }
 

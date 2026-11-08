@@ -1,8 +1,16 @@
 import Phaser from 'phaser'
 import { CONFIG } from '../config'
 import { EchoQueue } from '../challenges/rewards'
+import { currentMood } from '../settings'
+import { RainbowRun } from '../discovery/albumModel'
 import type { Toy, ToyContext } from '../toys/types'
 import { keyIndex, pianoKeyCount } from './pianoLayout'
+import {
+  ChoralPhraseDetector,
+  getAnimalForPianoKey,
+  type AnimalFaceKind,
+} from './pianoChoralLogic'
+import { ChoralEchoQueue } from './choralEchoQueue'
 import type { Mode } from './types'
 
 /**
@@ -18,25 +26,106 @@ import type { Mode } from './types'
 interface PianoKey {
   img: Phaser.GameObjects.Image
   label: Phaser.GameObjects.Text
+  face: Phaser.GameObjects.Image
+  animal: AnimalFaceKind
   x: number
   top: number
   restY: number
   labelY: number
+  faceY: number
 }
 
 let keys: PianoKey[] = []
 let playground = false
 let echoes: EchoQueue | undefined
+let puzzleActive = false
+let phraseDetector: ChoralPhraseDetector | undefined
+let choralQueue: ChoralEchoQueue | undefined
+const rainbowRun = new RainbowRun()
 
 function setPlayground(active: boolean): void {
   playground = active
   if (!active) echoes?.cancel()
+  if (active) {
+    choralQueue?.cancel()
+    phraseDetector?.reset()
+  }
+}
+
+function setPuzzleActive(active: boolean): void {
+  puzzleActive = active
+  if (active) {
+    choralQueue?.cancel()
+    phraseDetector?.reset()
+  }
+}
+
+function playChoralEchoStep(
+  noteIndex: number,
+  harmonyIndex: number,
+  animal: AnimalFaceKind,
+  gain: number,
+  ctx: ToyContext,
+): void {
+  const key = keys[noteIndex]
+  const night = currentMood().night
+  const nightSuffix = night ? '-night' : ''
+
+  if (key) {
+    ctx.scene.tweens.killTweensOf([key.img, key.label, key.face])
+    key.img.y = key.restY
+    key.label.y = key.labelY
+    key.face.y = key.faceY
+    ctx.scene.tweens.add({
+      targets: [key.img, key.label, key.face],
+      y: '+=12',
+      duration: 100,
+      yoyo: true,
+      ease: 'Quad.easeOut',
+    })
+    const singTexture = `animalFace-${animal}-sing${nightSuffix}`
+    const normalTexture = `animalFace-${animal}${nightSuffix}`
+    key.face.setTexture(singTexture)
+    ctx.scene.time.delayedCall(220, () => {
+      if (key.face && key.face.active) {
+        key.face.setTexture(normalTexture)
+      }
+    })
+  }
+
+  ctx.synth.play(noteIndex, 'choral', gain)
+  ctx.synth.play(harmonyIndex, 'choral', gain * 0.8)
+
+  const x = key ? key.x : ctx.width / 2
+  const top = key ? key.top : ctx.height * 0.6
+  const note = ctx.pool.spawn('note', x, top - 20)
+  note.setTint(ctx.color(noteIndex))
+  note.setAlpha(gain)
+  note.setScale(0.45)
+  ctx.scene.tweens.add({
+    targets: note,
+    x: x + ctx.rng.between(-40, 40),
+    y: top - ctx.rng.between(150, 240),
+    angle: ctx.rng.between(-20, 20),
+    duration: 1200,
+    ease: 'Sine.easeOut',
+  })
+  ctx.pool.retire(note, 800, 400)
 }
 
 function buildKeys(ctx: ToyContext): () => void {
   setPlayground(false)
   const entryEchoes = new EchoQueue((index, gain) => playKey(index, ctx, gain), CONFIG.challenges)
   echoes = entryEchoes
+
+  phraseDetector = new ChoralPhraseDetector(CONFIG.choralEcho)
+  choralQueue = new ChoralEchoQueue(
+    (noteIndex, harmonyIndex, animal, gain) => {
+      playChoralEchoStep(noteIndex, harmonyIndex, animal, gain, ctx)
+    },
+    CONFIG.choralEcho,
+  )
+
   const { heightFrac, gapPx } = CONFIG.piano
   const n = pianoKeyCount(ctx.width)
   // Number labels only mean something when they match the number row.
@@ -45,12 +134,18 @@ function buildKeys(ctx: ToyContext): () => void {
   const keyW = (ctx.width - margin * 2 - gapPx * (n - 1)) / n
   const keyH = ctx.height * heightFrac
   const top = ctx.height - keyH - ctx.height * 0.04
+  const night = currentMood().night
+  const nightSuffix = night ? '-night' : ''
 
   keys = []
   for (let i = 0; i < n; i++) {
     const x = margin + i * (keyW + gapPx) + keyW / 2
     const restY = top + keyH / 2
     const labelY = top + keyH - Math.min(keyW * 0.45, 44)
+    const faceY = top + keyH * 0.38
+    const faceSize = Math.min(keyW * 0.52, 44)
+    const animal = getAnimalForPianoKey(i)
+    const faceTexture = `animalFace-${animal}${nightSuffix}`
 
     const img = ctx.scene.add.image(x, restY, 'pianoKey').setDisplaySize(keyW, keyH).setTint(ctx.color(i)).setDepth(-100)
     const label = ctx.scene.add
@@ -65,30 +160,41 @@ function buildKeys(ctx: ToyContext): () => void {
       .setDepth(-99)
       .setVisible(showLabels)
 
+    const face = ctx.scene.add
+      .image(x, faceY, faceTexture)
+      .setDisplaySize(faceSize, faceSize)
+      .setDepth(-98)
+
     // Rise into place one after another when the piano appears.
     const drop = keyH * 0.6
     img.y += drop
     label.y += drop
+    face.y += drop
     ctx.scene.tweens.add({
-      targets: [img, label],
+      targets: [img, label, face],
       y: `-=${drop}`,
       delay: i * 35,
       duration: 380,
       ease: 'Back.easeOut',
     })
 
-    keys.push({ img, label, x, top, restY, labelY })
+    keys.push({ img, label, face, animal, x, top, restY, labelY, faceY })
   }
 
   const entryKeys = keys
   return () => {
     setPlayground(false)
     entryEchoes.cancel()
+    choralQueue?.cancel()
+    phraseDetector?.reset()
     if (echoes === entryEchoes) echoes = undefined
+    choralQueue = undefined
+    phraseDetector = undefined
     for (const key of entryKeys) {
-      ctx.scene.tweens.killTweensOf([key.img, key.label])
+      ctx.scene.tweens.killTweensOf([key.img, key.label, key.face])
       key.img.destroy()
       key.label.destroy()
+      key.face.destroy()
     }
     if (keys === entryKeys) keys = []
   }
@@ -103,11 +209,12 @@ function playKey(i: number, ctx: ToyContext, gainScale = 1): void {
   ctx.synth.play(i, 'piano', gainScale)
 
   // Dip the key. Resetting first means a mashed key never drifts down.
-  ctx.scene.tweens.killTweensOf([key.img, key.label])
+  ctx.scene.tweens.killTweensOf([key.img, key.label, key.face])
   key.img.y = key.restY
   key.label.y = key.labelY
+  key.face.y = key.faceY
   ctx.scene.tweens.add({
-    targets: [key.img, key.label],
+    targets: [key.img, key.label, key.face],
     y: '+=12',
     duration: 80,
     yoyo: true,
@@ -142,8 +249,20 @@ const pianoKey: Toy = {
     const color = ctx.color(i)
     playKey(i, ctx)
 
+    if (rainbowRun.push(i)) {
+      ctx.discover?.('rainbow')
+    }
+
     // Only player notes schedule echoes. Replaying the echo cannot recurse.
-    if (playground) echoes?.schedule(i)
+    if (playground) {
+      echoes?.schedule(i)
+    } else if (!puzzleActive && choralQueue && phraseDetector) {
+      choralQueue.cancel()
+      const phrase = phraseDetector.recordNote(i, performance.now())
+      if (phrase) {
+        choralQueue.schedulePhrase(phrase)
+      }
+    }
 
     // Letters ride up alongside, so a pressed A still shows an A.
     if (e.isLetter) {
@@ -164,5 +283,7 @@ export const piano: Mode = {
   toys: [pianoKey],
   enter: buildKeys,
   setPlayground,
+  setPuzzleActive,
   replayNote: playKey,
+  resetDiscovery: () => rainbowRun.reset(),
 }

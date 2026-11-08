@@ -1,4 +1,5 @@
 import type Phaser from 'phaser'
+import type { AnimalFaceKind } from './modes/pianoChoralLogic'
 
 type Point = { x: number; y: number }
 type Curve = readonly [number, number, number, number, number, number]
@@ -43,6 +44,26 @@ export function createAnimalTextures(scene: Phaser.Scene): void {
       drawShark(g, shark, excited)
       g.generateTexture(`shark${excited ? '-grin' : ''}${suffix}`, 256, 256)
     }
+  }
+
+  // Animal faces for piano keys and thought companion targets
+  const animals: readonly AnimalFaceKind[] = ['frog', 'kitten', 'bird', 'puppy'] as const
+  for (const night of [false, true]) {
+    const nightSuffix = night ? '-night' : ''
+    for (const singing of [false, true]) {
+      const singSuffix = singing ? '-sing' : ''
+      for (const kind of animals) {
+        g.clear()
+        if (kind === 'frog') drawFrogFace(g, night, singing)
+        else if (kind === 'kitten') drawKittenFace(g, night, singing)
+        else if (kind === 'bird') drawBirdFace(g, night, singing)
+        else drawPuppyFace(g, night, singing)
+        g.generateTexture(`animalFace-${kind}${singSuffix}${nightSuffix}`, 128, 128)
+      }
+    }
+    g.clear()
+    drawCompanionDino(g, night)
+    g.generateTexture(`companion-dino${nightSuffix}`, 128, 128)
   }
 
   // Small companion effects stay white so the toy can use the mood palette.
@@ -216,4 +237,298 @@ function line(g: Phaser.GameObjects.Graphics, colour: number, width: number, poi
   g.strokePoints(points, false, false)
   g.fillStyle(colour)
   for (const end of [points[0], points[points.length - 1]]) g.fillCircle(end.x, end.y, width / 2)
+}
+
+function drawFrogFace(g: Phaser.GameObjects.Graphics, night: boolean, singing: boolean): void {
+  const skin = night ? 0x8ab99e : 0x76c86a
+  const outline = night ? 0x324d43 : 0x224b33
+  const cheek = night ? 0xc79e9f : 0xf7a399
+  const inside = night ? 0xc5d6c2 : 0xdef0b6
+
+  // Eye domes
+  g.fillStyle(skin)
+  g.lineStyle(4, outline)
+  g.fillCircle(38, 42, 17)
+  g.strokeCircle(38, 42, 17)
+  g.fillCircle(90, 42, 17)
+  g.strokeCircle(90, 42, 17)
+
+  // Head
+  g.fillEllipse(64, 72, 88, 64)
+  g.strokeEllipse(64, 72, 88, 64)
+
+  // Eyes
+  g.fillStyle(0xffffff)
+  g.fillCircle(38, 42, 12)
+  g.fillCircle(90, 42, 12)
+  g.fillStyle(outline)
+  g.fillCircle(40, 42, 6)
+  g.fillCircle(88, 42, 6)
+  g.fillStyle(0xffffff)
+  g.fillCircle(42, 40, 2.5)
+  g.fillCircle(90, 40, 2.5)
+
+  // Rosy cheeks
+  g.fillStyle(cheek, 0.75)
+  g.fillCircle(30, 74, 9)
+  g.fillCircle(98, 74, 9)
+
+  // Mouth
+  if (singing) {
+    g.fillStyle(outline)
+    g.fillEllipse(64, 80, 18, 22)
+    g.fillStyle(inside)
+    g.fillEllipse(64, 84, 12, 10)
+  } else {
+    g.lineStyle(4, outline)
+    g.beginPath()
+    g.arc(64, 68, 20, Math.PI * 0.2, Math.PI * 0.8)
+    g.strokePath()
+  }
+}
+
+function drawKittenFace(g: Phaser.GameObjects.Graphics, night: boolean, singing: boolean): void {
+  const skin = night ? 0xb89f8c : 0xf9b362
+  const outline = night ? 0x423630 : 0x5c3317
+  const earInside = night ? 0xd9b3be : 0xffcbd5
+  const cheek = night ? 0xc9949c : 0xfca090
+  const nose = night ? 0xb06b7d : 0xe0607e
+
+  // Ears
+  g.fillStyle(skin)
+  g.lineStyle(4, outline)
+  g.fillTriangle(24, 52, 32, 18, 56, 38)
+  g.strokeTriangle(24, 52, 32, 18, 56, 38)
+  g.fillTriangle(104, 52, 96, 18, 72, 38)
+  g.strokeTriangle(104, 52, 96, 18, 72, 38)
+
+  // Inner ear
+  g.fillStyle(earInside)
+  g.fillTriangle(30, 48, 36, 26, 52, 40)
+  g.fillTriangle(98, 48, 92, 26, 76, 40)
+
+  // Head
+  g.fillStyle(skin)
+  g.fillEllipse(64, 70, 84, 66)
+  g.strokeEllipse(64, 70, 84, 66)
+
+  // Eyes
+  g.fillStyle(0xffffff)
+  g.fillEllipse(46, 62, 16, 20)
+  g.fillEllipse(82, 62, 16, 20)
+  g.fillStyle(outline)
+  g.fillEllipse(46, 63, 8, 14)
+  g.fillEllipse(82, 63, 8, 14)
+  g.fillStyle(0xffffff)
+  g.fillCircle(48, 60, 2.5)
+  g.fillCircle(84, 60, 2.5)
+
+  // Whiskers
+  g.lineStyle(2.5, outline, 0.7)
+  g.lineBetween(32, 72, 14, 70)
+  g.lineBetween(32, 77, 16, 81)
+  g.lineBetween(96, 72, 114, 70)
+  g.lineBetween(96, 77, 112, 81)
+
+  // Cheeks & nose
+  g.fillStyle(cheek, 0.7)
+  g.fillCircle(33, 73, 8)
+  g.fillCircle(95, 73, 8)
+  g.fillStyle(nose)
+  g.fillTriangle(60, 72, 68, 72, 64, 76)
+
+  // Mouth
+  if (singing) {
+    g.fillStyle(outline)
+    g.fillEllipse(64, 82, 16, 18)
+    g.fillStyle(cheek)
+    g.fillEllipse(64, 85, 10, 8)
+  } else {
+    g.lineStyle(3, outline)
+    g.beginPath()
+    g.arc(58, 78, 7, 0, Math.PI * 0.85)
+    g.strokePath()
+    g.beginPath()
+    g.arc(70, 78, 7, Math.PI * 0.15, Math.PI)
+    g.strokePath()
+  }
+}
+
+function drawBirdFace(g: Phaser.GameObjects.Graphics, night: boolean, singing: boolean): void {
+  const skin = night ? 0x7da8bd : 0x5bbce4
+  const outline = night ? 0x2c4350 : 0x1e4f68
+  const beakColor = night ? 0xd4a04d : 0xfcb034
+  const cheek = night ? 0xba8a91 : 0xf9a399
+  const crestColor = night ? 0xc9b27d : 0xffd15c
+
+  // Crest
+  g.fillStyle(crestColor)
+  g.lineStyle(3, outline)
+  g.fillTriangle(58, 36, 64, 18, 70, 36)
+  g.strokeTriangle(58, 36, 64, 18, 70, 36)
+  g.fillTriangle(66, 38, 74, 24, 78, 40)
+  g.strokeTriangle(66, 38, 74, 24, 78, 40)
+
+  // Head
+  g.fillStyle(skin)
+  g.lineStyle(4, outline)
+  g.fillEllipse(64, 68, 78, 74)
+  g.strokeEllipse(64, 68, 78, 74)
+
+  // Eyes
+  g.fillStyle(0xffffff)
+  g.fillCircle(44, 60, 13)
+  g.fillCircle(84, 60, 13)
+  g.fillStyle(outline)
+  g.fillCircle(46, 60, 7)
+  g.fillCircle(82, 60, 7)
+  g.fillStyle(0xffffff)
+  g.fillCircle(48, 58, 3)
+  g.fillCircle(84, 58, 3)
+
+  // Cheeks
+  g.fillStyle(cheek, 0.7)
+  g.fillCircle(32, 72, 8)
+  g.fillCircle(96, 72, 8)
+
+  // Beak
+  g.fillStyle(beakColor)
+  g.lineStyle(3, outline)
+  if (singing) {
+    g.fillTriangle(54, 70, 74, 70, 64, 62)
+    g.strokeTriangle(54, 70, 74, 70, 64, 62)
+    g.fillStyle(outline)
+    g.fillEllipse(64, 75, 14, 12)
+    g.fillStyle(beakColor)
+    g.fillTriangle(56, 78, 72, 78, 64, 86)
+    g.strokeTriangle(56, 78, 72, 78, 64, 86)
+  } else {
+    g.fillTriangle(54, 68, 74, 68, 64, 80)
+    g.strokeTriangle(54, 68, 74, 68, 64, 80)
+  }
+}
+
+function drawPuppyFace(g: Phaser.GameObjects.Graphics, night: boolean, singing: boolean): void {
+  const skin = night ? 0xaa9481 : 0xdba679
+  const ears = night ? 0x7a6352 : 0xa0673d
+  const outline = night ? 0x382c24 : 0x482b18
+  const snout = night ? 0xcfc1b2 : 0xf5ddc6
+  const nose = night ? 0x281e18 : 0x3a2215
+  const cheek = night ? 0xb8888b : 0xf79999
+
+  // Floppy ears
+  g.fillStyle(ears)
+  g.lineStyle(4, outline)
+  g.fillEllipse(26, 64, 26, 52)
+  g.strokeEllipse(26, 64, 26, 52)
+  g.fillEllipse(102, 64, 26, 52)
+  g.strokeEllipse(102, 64, 26, 52)
+
+  // Head
+  g.fillStyle(skin)
+  g.fillEllipse(64, 68, 80, 72)
+  g.strokeEllipse(64, 68, 80, 72)
+
+  // Eyes
+  g.fillStyle(0xffffff)
+  g.fillCircle(46, 56, 11)
+  g.fillCircle(82, 56, 11)
+  g.fillStyle(outline)
+  g.fillCircle(47, 56, 6)
+  g.fillCircle(81, 56, 6)
+  g.fillStyle(0xffffff)
+  g.fillCircle(49, 54, 2.5)
+  g.fillCircle(83, 54, 2.5)
+
+  // Snout
+  g.fillStyle(snout)
+  g.lineStyle(3, outline)
+  g.fillEllipse(64, 78, 44, 32)
+  g.strokeEllipse(64, 78, 44, 32)
+
+  // Nose
+  g.fillStyle(nose)
+  g.fillEllipse(64, 72, 16, 11)
+
+  // Cheeks
+  g.fillStyle(cheek, 0.65)
+  g.fillCircle(36, 75, 7)
+  g.fillCircle(92, 75, 7)
+
+  // Mouth / tongue
+  if (singing) {
+    g.fillStyle(outline)
+    g.fillEllipse(64, 84, 15, 18)
+    g.fillStyle(cheek)
+    g.fillEllipse(64, 88, 10, 9)
+  } else {
+    g.lineStyle(2.5, outline)
+    g.lineBetween(64, 77, 64, 83)
+    g.beginPath()
+    g.arc(58, 83, 6, 0, Math.PI * 0.9)
+    g.strokePath()
+    g.beginPath()
+    g.arc(70, 83, 6, Math.PI * 0.1, Math.PI)
+    g.strokePath()
+  }
+}
+
+function drawCompanionDino(g: Phaser.GameObjects.Graphics, night: boolean): void {
+  const p = night ? NIGHT_DINO : DAY_DINO
+
+  // Spikes on back
+  g.fillStyle(p.accent)
+  g.fillTriangle(38, 38, 30, 46, 42, 50)
+  g.fillTriangle(34, 54, 26, 62, 38, 66)
+  g.fillTriangle(32, 70, 24, 78, 36, 82)
+
+  // Tail
+  g.fillStyle(p.skin)
+  g.lineStyle(4, p.outline)
+  g.beginPath()
+  g.arc(38, 88, 22, Math.PI * 0.6, Math.PI * 1.3)
+  g.strokePath()
+
+  // Body
+  g.fillStyle(p.skin)
+  g.fillEllipse(64, 82, 58, 52)
+  g.strokeEllipse(64, 82, 58, 52)
+
+  // Pale belly
+  g.fillStyle(p.belly)
+  g.fillEllipse(66, 84, 38, 38)
+
+  // Feet
+  g.fillStyle(p.skin)
+  g.fillEllipse(48, 104, 22, 14)
+  g.strokeEllipse(48, 104, 22, 14)
+  g.fillEllipse(80, 104, 22, 14)
+  g.strokeEllipse(80, 104, 22, 14)
+
+  // Head
+  g.fillStyle(p.skin)
+  g.fillEllipse(66, 44, 54, 46)
+  g.strokeEllipse(66, 44, 54, 46)
+
+  // Eye
+  g.fillStyle(0xffffff)
+  g.fillCircle(72, 40, 14)
+  g.fillStyle(p.outline)
+  g.fillCircle(75, 41, 7)
+  g.fillStyle(0xffffff)
+  g.fillCircle(77, 38, 3)
+
+  // Snout / nostril
+  g.fillStyle(p.outline, 0.7)
+  g.fillCircle(87, 46, 2)
+
+  // Blushing cheek
+  g.fillStyle(p.cheek, 0.75)
+  g.fillEllipse(60, 52, 12, 7)
+
+  // Smiling mouth
+  g.lineStyle(3, p.outline)
+  g.beginPath()
+  g.arc(72, 48, 12, Math.PI * 0.1, Math.PI * 0.65)
+  g.strokePath()
 }

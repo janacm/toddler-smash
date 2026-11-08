@@ -162,7 +162,7 @@ describe('desktopUpdates', () => {
     expect(backend.restart).toHaveBeenCalledTimes(1)
   })
 
-  it('handles applyDesktopUpdate while download is in progress', async () => {
+  it('refuses applyDesktopUpdate while download is in progress and requires ready state', async () => {
     let finishDownload!: () => void
     const handle: DesktopUpdateHandle = {
       version: '0.2.0',
@@ -178,14 +178,55 @@ describe('desktopUpdates', () => {
     await Promise.resolve()
     expect(getDesktopUpdateState().status).toBe('downloading')
 
-    const applyPromise = applyDesktopUpdate(backend)
-    finishDownload()
+    // While downloading, applyDesktopUpdate returns false without queueing restart
+    const appliedPrematurely = await applyDesktopUpdate(backend)
+    expect(appliedPrematurely).toBe(false)
+    expect(handle.install).not.toHaveBeenCalled()
 
+    finishDownload()
     await checkPromise
-    const applied = await applyPromise
+    expect(getDesktopUpdateState().status).toBe('ready')
+
+    // Now that it is ready, user selection succeeds
+    const applied = await applyDesktopUpdate(backend)
     expect(applied).toBe(true)
     expect(handle.install).toHaveBeenCalledTimes(1)
     expect(backend.restart).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps installing under active guard so online events during install do not overwrite state', async () => {
+    let finishInstall!: () => void
+    const handle: DesktopUpdateHandle = {
+      version: '0.2.0',
+      download: vi.fn().mockResolvedValue(undefined),
+      install: vi.fn(() => new Promise<void>((resolve) => { finishInstall = resolve })),
+    }
+    const backend: DesktopUpdaterBackend = {
+      check: vi.fn().mockResolvedValue(handle),
+      restart: vi.fn(),
+    }
+
+    await checkAndDownloadUpdate(backend)
+    expect(getDesktopUpdateState().status).toBe('ready')
+
+    const stopWatching = watchForDesktopUpdates(backend, DESKTOP_UPDATE_INTERVAL_MS)
+    expect(backend.check).toHaveBeenCalledTimes(1) // ready guard skipped duplicate check
+
+    const installPromise = applyDesktopUpdate(backend)
+    expect(getDesktopUpdateState().status).toBe('installing')
+
+    // Simulate online event while installation is pending
+    window.dispatchEvent(new Event('online'))
+    await flush()
+
+    // check() must not have been called again and status remains installing
+    expect(backend.check).toHaveBeenCalledTimes(1)
+    expect(getDesktopUpdateState().status).toBe('installing')
+
+    finishInstall()
+    await installPromise
+    expect(backend.restart).toHaveBeenCalledTimes(1)
+    stopWatching()
   })
 
   it('applyDesktopUpdate returns false if no update is ready or downloading', async () => {
