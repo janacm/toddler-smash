@@ -41,6 +41,7 @@ npm run shot       # build output → headless Chromium → shots/*.png
 npm run test:updates # cached browser → repeated releases, offline and recovery
 npm test           # Vitest unit tests
 npm run test:coverage # same, failing below the coverage thresholds (CI runs this)
+npm run test:docs  # verify pull request docs and agent guidelines update
 npm run test:rust  # desktop keyboard-lock rules (cargo test)
 ```
 
@@ -70,8 +71,10 @@ Use `observeGame(context)` from `scripts/browser-helpers.mjs` before creating
 test pages, then `holdEscape` or `holdForPanel`. A fixed sleep just over three
 seconds can release before a delayed timer tick, leaving the panel open and
 turning a later R press into New player. Wait for `panel.visible` to change
-with a bounded timeout and release held input in `finally`. Keep scene
-observation in browser-test setup rather than adding a production debug API.
+with a bounded timeout and release held input in `finally`; `holdForPanel` asserts
+that the elapsed hold time meets the 3-second hold requirement minus a tolerance
+margin. Keep scene observation in browser-test setup rather than adding a production
+debug API.
 
 The same run exercises `scripts/animal-pass.mjs`: D/S animal shortcuts,
 ordinary mouse and touch encounters, Bedtime styling, held-key repeats,
@@ -95,6 +98,7 @@ src/
   safeArea.ts        notch / home-indicator insets from CSS env()
   splash.ts          loading splash: mood colours + saved-mood script that
                      vite.config.ts injects into index.html; hideSplash
+  combo.ts           pure combo tracker, arpeggio and chord helpers (unit-tested)
   desktop.ts         Tauri bridge: isDesktop, quit, keyboard-lock status
   scenes/PlayScene.ts  the only scene
   challenges/
@@ -225,9 +229,16 @@ Breaking these breaks the actual requirement, so don't "clean them up":
   reallocated on the next keypress, which is the churn we're avoiding.
 - **Keep audio on the pentatonic scale** (`CONFIG.audio.scaleSemitones`). It is
   the reason random mashing sounds musical instead of painful. Adding a note
-  outside the scale will make thirty simultaneous presses dissonant.
+  outside the scale will make thirty simultaneous presses dissonant. Synth
+  methods (`play`, `playArpeggio`, `playWarmChord`, `playCue`) remain strictly
+  consonant and scale-derived.
 - **Respect `maxVoices`.** Uncapped oscillators clip into distortion under
-  mashing.
+  mashing. Even during peak combo celebrations, the warm chord is four voices
+  and respects the voice cap.
+- **Combo streak and celebration**: Smash rewards fast presses within
+  `CONFIG.combo.windowMs` with an ascending arpeggio and a crescendo celebration
+  at `maxCombo`. Piano and Drawing keep their own notes, and celebration sprites
+  spawn strictly through `ctx.pool`.
 - **Ignore `ev.repeat` in keydown.** A held key fires ~30x/sec; a forearm on the
   keyboard should produce one burst per key, then quiet.
 - **No new scenes, menus, or modal states** without a way out that a
@@ -241,6 +252,10 @@ Breaking these breaks the actual requirement, so don't "clean them up":
 - **In the desktop app, the grown-up panel's Q is the only way out.** Window
   close and app exit are refused unless `quit` was called. Don't add another
   exit a child could hit.
+- **Every pull request must update docs and agent instructions.** Changes must
+  reflect new or altered requirements in `docs/` (`docs/requirements.md` or
+  user guides) and agent conventions in `AGENTS.md` (or `CLAUDE.md`). CI gates
+  pull requests on `npm run test:docs`.
 
 ## Web deploy
 
@@ -351,6 +366,7 @@ To type-check the Windows code from a Mac:
 | --- | --- |
 | "slower / floatier / calmer" | `config.ts` → `moods.*.timeScale`, `lifetime` |
 | "more things on screen" | `config.ts` → `limits.maxSprites` |
+| "more / fewer animal visits" | `config.ts` → `moods.*.animalSpawnWeight` |
 | "quieter / different sound" | `config.ts` → `moods.*.audio` |
 | "different colours" | `config.ts` → `moods.*.palette` |
 | "bedtime should be darker / slower" | `config.ts` → `moods.bedtime` |
@@ -362,8 +378,10 @@ To type-check the Windows code from a Mac:
 | "stop key X doing a browser thing" | `src/input.ts` |
 | "the grown-up menu should have X" | `src/parentPanel.ts` + `PlayScene.runPanelAction` |
 | "looks wrong on a phone" | `safeArea.ts`, `config.ts` → `piano`, then `mobile*.png` |
+| "combo / streak feel / celebration" | `config.ts` → `combo`, `PlayScene.ts` |
 | "stop key X doing an OS thing" | `src-tauri/src/lockdown/` |
 | "the loading screen / logo should do X" | `index.html` (`#splash` markup and CSS), `config.ts` → `splash`, then `splash*.png` |
+| "check docs and agent rules in PRs" | `scripts/verify-docs.mjs` + `.github/workflows/ci.yml` |
 
 ## Testing what actually matters
 
@@ -382,6 +400,10 @@ value; that's what the screenshots are for. The checks, in order:
    `npm run test:coverage` is the same run with a coverage gate: each logic
    module listed in `vitest.config.ts` must stay at 90% of lines and 85%
    of branches and functions, or CI fails.
+   Node test runner suites (`node --test scripts/*.test.mjs`) verify deploy HTML
+   normalization, browser hold/rAF assertions, and pull request doc/agent gates.
+   On pull requests, `npm run test:docs` verifies that docs and agent instructions
+   were updated.
 3. `npm run test:rust` — the desktop keyboard-lock rules for both macOS and
    Windows, runnable on any OS.
 4. `npm run shot` — renders, and no console errors.
@@ -411,3 +433,5 @@ If you change mash-tolerance behaviour, raise the key count in
   moods, prep before playtime, getting the latest version.
 - [docs/desktop.md](docs/desktop.md) — desktop install, what's blocked and
   what can't be, troubleshooting, building, how the lock works.
+- [docs/playtesting.md](docs/playtesting.md) — observational protocol, rubrics,
+  pacing benchmarks, and session logging template for child playtesting (2- and 4-year-olds).

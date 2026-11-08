@@ -41,6 +41,9 @@ export const trajectory: Toy = {
     const baseScale = ctx.rng.realInRange(0.75, 1.15)
     orb.setScale(baseScale)
 
+    // Prompt audio on launch climbs the combo arpeggio immediately
+    ctx.synth.playArpeggio(ctx.combo.step)
+
     const flightMs = Math.max(100, Math.min(1800, ray.flightDurationMs))
 
     ctx.scene.tweens.add({

@@ -44,6 +44,24 @@ export const CONFIG = {
     scaleSemitones: [0, 2, 4, 7, 9],
     rootHz: 261.63, // middle C
     octaves: 3,
+    /** Minimum ms between the soft physical cues (floor bounce), so mashing can't click-spam. */
+    cueThrottleMs: 140,
+  },
+
+  /**
+   * Combo pitch arpeggios. Presses within `windowMs` of each other climb one
+   * pentatonic step each; the `maxCombo`th press is the peak, which fires a
+   * celebration and a warm chord, then the streak starts over.
+   */
+  combo: {
+    windowMs: 900,
+    maxCombo: 6,
+    /** Presses closer than this are jitter and don't advance the streak. */
+    minIntervalMs: 35,
+    celebration: {
+      rings: 4,
+      shimmerCount: 10,
+    },
   },
 
   /** The piano sub-game. */
@@ -145,7 +163,23 @@ export const CONFIG = {
       minSpawnIntervalMs: 45,
       /** Draw a starry sky and a moon behind everything. */
       night: false,
-      audio: { volume: 0.24, wave: 'triangle', noteMs: 620, pianoMs: 1400, octaveShift: 0 },
+      /** Relative weight for dinosaur and shark in the random rotation (each). */
+      animalSpawnWeight: 1,
+      audio: {
+        volume: 0.24,
+        wave: 'triangle',
+        noteMs: 620,
+        pianoMs: 1400,
+        octaveShift: 0,
+        /** Snappy, responsive attack. */
+        attackMs: 12,
+        /** Loudness of the fifth overtone on blips: a rich body. */
+        harmonicGain: 0.25,
+      },
+      /** Scales burst speed, spin and floor bounce. */
+      motion: { speedScale: 1, spinScale: 1, bounceScale: 1 },
+      /** How long toys linger before fading. */
+      decay: { glyphMs: 2600, shapeMs: 2200, rippleMs: 900 },
     },
     /** Dim, slow, low and quiet. Pastels on navy; nothing fast or loud. */
     bedtime: {
@@ -157,7 +191,20 @@ export const CONFIG = {
       timeScale: 0.5,
       minSpawnIntervalMs: 160,
       night: true,
-      audio: { volume: 0.13, wave: 'sine', noteMs: 1200, pianoMs: 2200, octaveShift: -1 },
+      animalSpawnWeight: 1,
+      audio: {
+        volume: 0.13,
+        wave: 'sine',
+        noteMs: 1200,
+        pianoMs: 2200,
+        octaveShift: -1,
+        /** A soft, pillowy swell with no clicking attack. */
+        attackMs: 80,
+        /** Nearly pure fundamental: whisper-quiet overtone. */
+        harmonicGain: 0.04,
+      },
+      motion: { speedScale: 0.55, spinScale: 0.3, bounceScale: 0.35 },
+      decay: { glyphMs: 3800, shapeMs: 3400, rippleMs: 1400 },
     },
   },
 } as const

@@ -1,9 +1,15 @@
+import type { GameObjects } from 'phaser'
 import { CONFIG } from '../config'
 import { findConstellationLinks, segmentTransform, type ConstellationAnchor } from './schemaMath'
 import type { Toy } from './types'
 
+interface LiveAnchor {
+  anchor: ConstellationAnchor
+  star: GameObjects.Image
+}
+
 const MAX_ANCHORS = 8
-const anchors: ConstellationAnchor[] = []
+const anchors: LiveAnchor[] = []
 
 /**
  * Connecting Schema: Constellation snapping where celestial stars link
@@ -27,9 +33,23 @@ export const connection: Toy = {
     })
 
     const now = Date.now()
+    // Prune stale or retired/recycled anchors
+    while (
+      anchors.length > 0 &&
+      (!anchors[0].star.active ||
+        !anchors[0].star.visible ||
+        now - anchors[0].anchor.time > CONFIG.schemas.constellationAnchorAgeMs)
+    ) {
+      anchors.shift()
+    }
+
+    const activeCandidates = anchors
+      .filter(a => a.star.active && a.star.visible)
+      .map(a => a.anchor)
+
     const links = findConstellationLinks(
       { x: e.x, y: e.y },
-      anchors,
+      activeCandidates,
       {
         minDist: CONFIG.schemas.constellationMinDist,
         maxDist: CONFIG.schemas.constellationMaxDist,
@@ -57,8 +77,8 @@ export const connection: Toy = {
         ctx.pool.retire(thread, 1400, 400)
       }
 
-      ctx.synth.play(e.index, 'blip')
-      ctx.synth.play(e.index + 4, 'blip')
+      ctx.synth.playArpeggio(ctx.combo.step)
+      ctx.synth.play(e.index + 4, 'blip', 0.6)
     } else {
       const ring = ctx.pool.spawn('ring', e.x, e.y)
       ring.setTint(ctx.color(e.index))
@@ -78,12 +98,15 @@ export const connection: Toy = {
       })
       ctx.pool.retire(ring, 800, 200)
 
-      ctx.synth.play(e.index, 'blip')
+      ctx.synth.playArpeggio(ctx.combo.step)
     }
 
-    ctx.pool.retire(star, 1800, 500)
+    ctx.pool.retire(star, CONFIG.schemas.constellationAnchorAgeMs, 500)
 
-    anchors.push({ x: e.x, y: e.y, time: now, colorIndex: e.index })
+    anchors.push({
+      anchor: { x: e.x, y: e.y, time: now, colorIndex: e.index },
+      star,
+    })
     if (anchors.length > MAX_ANCHORS) {
       anchors.shift()
     }

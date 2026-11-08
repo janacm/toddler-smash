@@ -1,4 +1,3 @@
-import { CONFIG } from '../config'
 import type { Toy } from './types'
 
 /**
@@ -18,10 +17,11 @@ export const ripple: Toy = {
 
       ctx.scene.tweens.add({
         targets: ring,
-        scale: ctx.rng.realInRange(2.2, 3.8),
+        // Rings grow with the streak, so a hot streak looks bigger.
+        scale: ctx.rng.realInRange(2.2, 3.8) * (1 + ctx.combo.ratio * 0.4),
         alpha: 0,
         delay: i * 110,
-        duration: CONFIG.lifetime.rippleMs,
+        duration: ctx.mood.decay.rippleMs,
         ease: 'Cubic.easeOut',
         onComplete: () => {
           ring.setVisible(false)
@@ -30,6 +30,6 @@ export const ripple: Toy = {
       })
     }
 
-    ctx.synth.play(ctx.rng.between(0, ctx.synth.noteCount - 1))
+    ctx.synth.playArpeggio(ctx.combo.step)
   },
 }

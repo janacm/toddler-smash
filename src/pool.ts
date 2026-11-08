@@ -65,7 +65,8 @@ export class SpritePool {
     this.scene.tweens.add({
       targets: img,
       alpha: 0,
-      scale: img.scale * 0.8,
+      scaleX: img.scaleX * 0.8,
+      scaleY: img.scaleY * 0.8,
       delay: delayMs,
       duration: fadeMs,
       ease: 'Quad.easeIn',
