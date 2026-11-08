@@ -45,7 +45,8 @@ In free play, a persistent, animated firefly perches on the 3×3 challenge grid:
 - **Trail Dynamics**: When node 0 is selected, a subtle connecting trail line draws toward node 2.
   Selecting node 2 draws toward node 6. Selecting node 6 unlocks the game entrance.
 - **Strict Trail Sensitivity**: Any tap, click, or keyboard press that does not hit the active
-  firefly perch immediately breaks the trail and resets `entranceStep = 0`.
+  firefly perch immediately breaks the trail and resets `entranceStep = 0`. Ordinary unrelated
+  play input breaks the trail, whereas navigation keys (arrows, Tab) do not break the trail.
 - **Permanent Entrance**: Once unlocked, a glowing portal frame remains anchored at node 0 for the
   duration of the session. A single tap re-enters the puzzle view.
 
@@ -54,7 +55,7 @@ In free play, a persistent, animated firefly perches on the 3×3 challenge grid:
 | Dimension | 2-Year-Old (Sensory-Motor / Exploratory) | 4-Year-Old (Goal-Directed / Pattern-Seeking) |
 | :--- | :--- | :--- |
 | **Visual Salience** | Easily distracted by flying letters, ripples, and bouncing shapes. Firefly's gentle sinusoidal alpha pulse may blend into background clutter. | Rapidly discriminates the persistent, glowing character from ephemeral toys. Directs visual gaze toward it. |
-| **Motor Targeting** | High frequency, multi-finger slapping, or palm presses. Lower targeting precision; may miss the 35px aura hitbox. | Intentional single-finger index tap or coordinated mouse click on the bug body. |
+| **Motor Targeting** | High frequency, multi-finger slapping, or palm presses. Lower targeting precision; may miss the dynamic aura hitbox (`layout.radius * 1.25`, ranging from 27.5px to 42.5px; 35px is the visual aura glow). | Intentional single-finger index tap or coordinated mouse click on the bug body. |
 | **Trail Sensitivity Friction** | **High Risk**: A 2-year-old who hits Perch 0 almost always taps somewhere else on the screen within 500 ms, inadvertently resetting `entranceStep` back to 0. | **Low Risk**: Able to inhibit immediate mashing, visually follow the hop to Perch 2, and trace the connecting line. |
 | **Entrance Discovery** | Primarily serendipitous discovery or through Level 2/3 parental modeling. | Capable of Level 0 organic discovery within 1–3 minutes of initial exploration. |
 | **Portal Retention** | Unlikely to remember that the framed firefly at Perch 0 is a gateway; treats it as another reactive toy. | Recognizes the doorway frame at Perch 0 as a distinct portal and intentionally re-enters after returning to free play. |
@@ -64,7 +65,7 @@ In free play, a persistent, animated firefly perches on the 3×3 challenge grid:
 - **Score F0 (Ignored)**: Child plays for 3+ minutes without looking at or tapping the firefly.
 - **Score F1 (Accidental Tap / Trail Broken)**: Child taps Perch 0, but immediately mashes elsewhere; trail resets before Perch 1 is noticed.
 - **Score F2 (Attentive Hop)**: Child taps Perch 0, watches the hop to Perch 2, and attempts to follow, but misses or breaks the trail before Perch 6.
-- **Score F3 (Guided Entrance)**: Child successfully enters after Level 1 or 2 parental orienting.
+- **Score F3 (Guided Entrance)**: Child successfully enters after Level 1, 2, or 3 parental orienting / co-play demonstration.
 - **Score F4 (Autonomous Discovery)**: Child follows Perch 0 → 2 → 6 unassisted.
 - **Score F5 (Retained Navigation)**: Child returns to free play and subsequently taps the portal to re-enter without prompting.
 
@@ -78,8 +79,8 @@ for a child who grasps the mechanic.
 ### 3.1 Pacing Categories
 
 - **Rushed / Spurious (<15s / tier)**: Indicates uncontrolled mashing or accidental touches rather
-  than cognitive comprehension. (Watch whether the child is looking at the screen).
-- **Target Flow (20–40s / tier)**: Healthy balance: child attends to the demonstration, pauses to
+  than cognitive comprehension. (Note: older 4-year-olds on Tier 1 silhouette matching may intentionally solve in 10–15s; check visual gaze).
+- **Target Flow (15–40s / tier)**: Healthy balance: child attends to the demonstration, pauses to
   evaluate choices, and deliberately executes the correct answer.
 - **Deliberative Exploration (40–60s / tier)**: Child hesitates or watches 1–2 replays, but
   maintains sustained, calm attention. Common and healthy for 2-year-olds on Tier 1.
@@ -138,7 +139,7 @@ for a child who grasps the mechanic.
   - Requires turning a 90° corner without cutting diagonally across the grid.
   - Benchmark: 25–40s. Look for corner overshooting or premature diagonal shortcuts.
 - **Tier 3 (Closed 9-Node Perimeter Loops — Rounds 5 & 6)**:
-  - Requires continuous single-finger tracing through all perimeter nodes back to the start.
+  - Requires single-finger tracing through all perimeter nodes back to the start (or tapping the sequential waypoints in order).
   - *2-Year-Old*: Extremely difficult due to fine motor endurance and multi-touch tendencies.
   - *4-Year-Old*: Highly engaging puzzle; feels like drawing a box. Target: 30–45s.
 
@@ -149,8 +150,9 @@ for a child who grasps the mechanic.
 ### 4.1 Audiovisual Demonstrations
 
 The engine automatically plays demonstrations upon entering a round or tapping replay:
-- **Pacing**: 650 ms per step (Daytime) or 1300 ms (Bedtime).
-- **Interruptibility**: Any player input immediately cancels the demo and enters play mode.
+- **Pacing**: Approximately 722 ms per step (Daytime) or 1300 ms (Bedtime), calculated as
+  `CONFIG.challenges.demoStepMs / currentMood().timeScale`.
+- **Interruptibility**: Ordinary play input or selection (letters, shapes, clicking/tapping nodes or canvas) cancels the demo and enters play mode. Navigation keys (arrows, Tab) move the cursor or focus without canceling the demonstration.
 
 **Observation Checklist**:
 1. *Do children wait for the demo to finish?*
@@ -183,10 +185,11 @@ The engine automatically plays demonstrations upon entering a round or tapping r
     re-entering via the portal resumes the current tier immediately).
 
 #### Center Three-Flower Tier Indicator
-- **Affordance**: Three circular floral star glyphs that light up as tiers are completed:
-  - Tier 1 complete (Round 2): Flower 1 blooms.
-  - Tier 2 complete (Round 4): Flower 2 blooms.
-  - Tier 3 complete (Round 6): Flower 3 blooms, triggering playground unlock.
+- **Affordance**: Three circular floral star glyphs show the current tier:
+  - Tier 1 begins: Flower 1 is already lit.
+  - Tier 1 complete (Round 2): Flower 2 lights up.
+  - Tier 2 complete (Round 4): Flower 3 lights up.
+  - Tier 3 complete (Round 6): The playground unlocks; all three flowers remain lit.
 - **Observation Focus**:
   - Do children notice the blooming flowers?
   - Does the visual progress indicator provide positive reinforcement without numerical scores?
@@ -264,9 +267,9 @@ Copy and paste this template when logging live play sessions with children.
 | **Tier 3 (R5)** | 00:00 | 0 | [ Full / Interrupted ] | [ Yes / No ] | [ ... ] |
 | **Tier 3 (R6)** | 00:00 | 0 | [ Full / Interrupted ] | [ Yes / No ] | [ ... ] |
 
-- **Tier 1 Total Pacing**: [ mm:ss ] — [ Rushed (<15s) | Target (20-40s) | Deliberative (40-60s) | Friction (>60s) ]
-- **Tier 2 Total Pacing**: [ mm:ss ] — [ Rushed (<15s) | Target (20-40s) | Deliberative (40-60s) | Friction (>60s) ]
-- **Tier 3 Total Pacing**: [ mm:ss ] — [ Rushed (<15s) | Target (20-40s) | Deliberative (40-60s) | Friction (>60s) ]
+- **Tier 1 Total Pacing**: [ mm:ss ] — [ Rushed (<15s) | Target (15-40s) | Deliberative (40-60s) | Friction (>60s) ]
+- **Tier 2 Total Pacing**: [ mm:ss ] — [ Rushed (<15s) | Target (15-40s) | Deliberative (40-60s) | Friction (>60s) ]
+- **Tier 3 Total Pacing**: [ mm:ss ] — [ Rushed (<15s) | Target (15-40s) | Deliberative (40-60s) | Friction (>60s) ]
 
 ---
 
