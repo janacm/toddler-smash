@@ -87,6 +87,14 @@ try {
 
   await page.screenshot({ path: OUT })
 
+  // Fire a clean 6-press combo streak to photograph the crescendo celebration.
+  for (const k of 'COMBO!'.split('')) {
+    await page.keyboard.press(k)
+    await sleep(80)
+  }
+  await sleep(180)
+  await page.screenshot({ path: sibling('combo-daytime') })
+
   // The child's buttons sit top-right, 108px apart, in `MODES` order: smash,
   // piano, drawing. Bump MODE_COUNT when a sub-game is added.
   const MODE_COUNT = 3
@@ -140,6 +148,16 @@ try {
   await page.mouse.click(640, 400)
   await sleep(900)
   await page.screenshot({ path: sibling('bedtime') })
+
+  // Bedtime combo crescendo celebration: wait for the previous combo to expire,
+  // then space inputs above Bedtime's 160 ms spawn throttle but within the 900 ms combo window.
+  await sleep(950)
+  for (const k of 'SLEEPY'.split('')) {
+    await page.keyboard.press(k)
+    await sleep(180)
+  }
+  await sleep(150)
+  await page.screenshot({ path: sibling('combo-bedtime') })
 
   await mobilePass()
   // The baseline page is finished; stop rendering it during the later passes.
@@ -263,7 +281,7 @@ try {
     for (const p of problems) console.error('  -', p)
     process.exitCode = 1
   } else {
-    const names = ['splash', 'splash-bedtime', 'mobile-splash', 'piano', 'drawing', 'drawing-faded', 'panel', 'bedtime', 'mobile', 'mobile-piano', 'mobile-drawing', 'mobile-panel']
+    const names = ['splash', 'splash-bedtime', 'mobile-splash', 'piano', 'drawing', 'drawing-faded', 'panel', 'bedtime', 'combo-daytime', 'combo-bedtime', 'mobile', 'mobile-piano', 'mobile-drawing', 'mobile-panel']
     console.log(`ok — no page errors. screenshots: ${[OUT, ...names.map(sibling)].join(', ')}`)
   }
 } finally {

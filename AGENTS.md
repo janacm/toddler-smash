@@ -98,6 +98,7 @@ src/
   safeArea.ts        notch / home-indicator insets from CSS env()
   splash.ts          loading splash: mood colours + saved-mood script that
                      vite.config.ts injects into index.html; hideSplash
+  combo.ts           pure combo tracker, arpeggio and chord helpers (unit-tested)
   desktop.ts         Tauri bridge: isDesktop, quit, keyboard-lock status
   scenes/PlayScene.ts  the only scene
   challenges/
@@ -224,9 +225,16 @@ Breaking these breaks the actual requirement, so don't "clean them up":
   reallocated on the next keypress, which is the churn we're avoiding.
 - **Keep audio on the pentatonic scale** (`CONFIG.audio.scaleSemitones`). It is
   the reason random mashing sounds musical instead of painful. Adding a note
-  outside the scale will make thirty simultaneous presses dissonant.
+  outside the scale will make thirty simultaneous presses dissonant. Synth
+  methods (`play`, `playArpeggio`, `playWarmChord`, `playCue`) remain strictly
+  consonant and scale-derived.
 - **Respect `maxVoices`.** Uncapped oscillators clip into distortion under
-  mashing.
+  mashing. Even during peak combo celebrations, the warm chord is four voices
+  and respects the voice cap.
+- **Combo streak and celebration**: Smash rewards fast presses within
+  `CONFIG.combo.windowMs` with an ascending arpeggio and a crescendo celebration
+  at `maxCombo`. Piano and Drawing keep their own notes, and celebration sprites
+  spawn strictly through `ctx.pool`.
 - **Ignore `ev.repeat` in keydown.** A held key fires ~30x/sec; a forearm on the
   keyboard should produce one burst per key, then quiet.
 - **No new scenes, menus, or modal states** without a way out that a
@@ -366,6 +374,7 @@ To type-check the Windows code from a Mac:
 | "stop key X doing a browser thing" | `src/input.ts` |
 | "the grown-up menu should have X" | `src/parentPanel.ts` + `PlayScene.runPanelAction` |
 | "looks wrong on a phone" | `safeArea.ts`, `config.ts` → `piano`, then `mobile*.png` |
+| "combo / streak feel / celebration" | `config.ts` → `combo`, `PlayScene.ts` |
 | "stop key X doing an OS thing" | `src-tauri/src/lockdown/` |
 | "the loading screen / logo should do X" | `index.html` (`#splash` markup and CSS), `config.ts` → `splash`, then `splash*.png` |
 | "check docs and agent rules in PRs" | `scripts/verify-docs.mjs` + `.github/workflows/ci.yml` |

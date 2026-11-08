@@ -1,4 +1,5 @@
 import { CONFIG, type Mood } from './config'
+import { comboChordIndices, comboNoteIndex } from './combo'
 
 type MoodAudio = Mood['audio']
 
@@ -47,6 +48,8 @@ export class Synth {
   private voices = 0
   private noteTable: number[] = []
   private mood: MoodAudio = CONFIG.moods.daytime.audio
+  private lastCueAt = Number.NEGATIVE_INFINITY
+  private activeVoiceCleanups: Array<() => void> = []
 
   constructor() {
     const { scaleSemitones, rootHz, octaves } = CONFIG.audio
@@ -121,6 +124,8 @@ export class Synth {
     try {
       const now = ctx.currentTime
       const dur = this.mood.noteMs / 1000
+      // Daytime is snappy; Bedtime swells in so there is never a click.
+      const attack = Math.min(this.mood.attackMs / 1000, dur / 2)
 
       const osc = ctx.createOscillator()
       osc.type = this.mood.wave
@@ -134,11 +139,11 @@ export class Synth {
 
       const gain = ctx.createGain()
       gain.gain.setValueAtTime(0, now)
-      gain.gain.linearRampToValueAtTime(0.9 * level, now + 0.012) // fast attack: feels responsive
+      gain.gain.linearRampToValueAtTime(0.9 * level, now + attack)
       gain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
 
       const gain2 = ctx.createGain()
-      gain2.gain.value = 0.25
+      gain2.gain.value = this.mood.harmonicGain
 
       osc.connect(gain)
       osc2.connect(gain2)
@@ -148,6 +153,15 @@ export class Synth {
       this.voices++
       const done = () => {
         this.voices = Math.max(0, this.voices - 1)
+        const idx = this.activeVoiceCleanups.indexOf(done)
+        if (idx !== -1) this.activeVoiceCleanups.splice(idx, 1)
+        try {
+          osc.onended = null
+          osc.stop()
+          osc2.stop()
+        } catch {
+          /* already stopped or not started */
+        }
         try {
           osc.disconnect()
           osc2.disconnect()
@@ -157,6 +171,7 @@ export class Synth {
           /* already torn down */
         }
       }
+      this.activeVoiceCleanups.push(done)
       osc.onended = done
 
       osc.start(now)
@@ -166,6 +181,53 @@ export class Synth {
     } catch {
       this.voices = Math.max(0, this.voices - 1)
     }
+  }
+
+  /**
+   * Note `step` of the ascending combo arpeggio (C, D, E, G, A, C...). The base
+   * is the bottom of the table, so a full streak stays on the pentatonic scale.
+   */
+  playArpeggio(step: number, voice: Voice = 'blip', gainScale = 1): void {
+    this.play(comboNoteIndex(step, 0, this.noteTable.length), voice, gainScale)
+  }
+
+  /**
+   * Ensure there is enough voice capacity to play `needed` notes without
+   * hitting the global `maxVoices` limit, retiring the oldest voices if needed.
+   */
+  reserveVoiceCapacity(needed: number): void {
+    const maxAllowed = Math.max(0, CONFIG.limits.maxVoices - needed)
+    while (this.voices > maxAllowed && this.activeVoiceCleanups.length > 0) {
+      const oldest = this.activeVoiceCleanups.shift()
+      oldest?.()
+    }
+    if (this.voices > maxAllowed) {
+      this.voices = maxAllowed
+    }
+  }
+
+  /**
+   * A warm pentatonic chord (root, third, fifth, octave) strummed 24 ms apart.
+   * Four voices, so it fits under `maxVoices` alongside the arpeggio note.
+   */
+  playWarmChord(baseIndex = 0, gainScale = 0.85): void {
+    this.reserveVoiceCapacity(4)
+    comboChordIndices(baseIndex).forEach((note, i) => {
+      window.setTimeout(() => this.play(note, 'blip', gainScale * 0.6), i * 24)
+    })
+  }
+
+  /**
+   * A quiet cue for a physical event (a shape landing). Throttled so a mashed
+   * keyboard can't click-spam, and scaled by the mood so Bedtime stays hushed.
+   */
+  playCue(type: 'bounce' | 'retire', gainScale = 0.2): void {
+    const now = performance.now()
+    if (now - this.lastCueAt < CONFIG.audio.cueThrottleMs) return
+    this.lastCueAt = now
+    const moodFactor = this.mood.volume / CONFIG.moods.daytime.audio.volume
+    if (type === 'bounce') this.play(2, 'bubble', gainScale * moodFactor)
+    else this.play(7, 'blip', gainScale * moodFactor)
   }
 
   /**
@@ -185,10 +247,15 @@ export class Synth {
     const oscs: OscillatorNode[] = []
     let counted = false
     let finished = false
+    const cleanupVoice = () => cleanup(true)
     const cleanup = (interrupt = false) => {
       if (finished) return
       finished = true
-      if (counted) this.voices = Math.max(0, this.voices - 1)
+      if (counted) {
+        this.voices = Math.max(0, this.voices - 1)
+        const idx = this.activeVoiceCleanups.indexOf(cleanupVoice)
+        if (idx !== -1) this.activeVoiceCleanups.splice(idx, 1)
+      }
       for (const osc of oscs) {
         osc.onended = null
         if (interrupt) {
@@ -249,6 +316,7 @@ export class Synth {
 
       this.voices++
       counted = true
+      this.activeVoiceCleanups.push(cleanupVoice)
       oscs[0].onended = () => cleanup()
       for (const osc of oscs) {
         osc.start(now)
@@ -290,8 +358,20 @@ export class Synth {
       })
 
       this.voices++
-      oscs[0].onended = () => {
+      const done = (interrupt = false) => {
         this.voices = Math.max(0, this.voices - 1)
+        const idx = this.activeVoiceCleanups.indexOf(doneVoice)
+        if (idx !== -1) this.activeVoiceCleanups.splice(idx, 1)
+        for (const osc of oscs) {
+          osc.onended = null
+          if (interrupt) {
+            try {
+              osc.stop()
+            } catch {
+              /* already stopped or not started */
+            }
+          }
+        }
         for (const node of nodes) {
           try {
             node.disconnect()
@@ -300,6 +380,9 @@ export class Synth {
           }
         }
       }
+      const doneVoice = () => done(true)
+      this.activeVoiceCleanups.push(doneVoice)
+      oscs[0].onended = () => done()
       for (const osc of oscs) {
         osc.start(now)
         osc.stop(now + dur)

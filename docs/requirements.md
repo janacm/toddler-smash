@@ -33,6 +33,7 @@ is the only person who changes settings.
 | G4 | **Every sub-game has its own round button** in the top-right corner that the child can tap. Sub-games are never nested inside each other. | `switcher.ts` (one button per entry in `MODES`) | screenshots |
 | G5 | The child switches sub-games only by tapping those buttons, never by a key, so mashing can't flip games. The grown-up can hide the buttons. | `PlayScene.handleSmash`, panel `C` | review |
 | G6 | Smash includes friendly dinosaurs and sharks in the random tap/click rotation (balanced via mood-configurable spawn weights in `CONFIG.moods` so they delight without overcrowding shapes and critters). D always summons a dinosaur and S a shark, alongside the pressed letter. Animals stomp, hop or swim with footprints or bubbles and quiet synthesized voices (including mobile-friendly harmonic overtones for low stomps); Bedtime uses softer colours and slower motion. All effects share the existing sprite and voice caps. | `toys/animals.ts`, `animalTextures.ts`, `audio.ts`, `pool.ts`, `config.ts` | animal keyboard/touch/Bedtime screenshots and mash checks |
+| G7 | Smash rewards fast presses. Presses within 900 ms of each other climb a pentatonic arpeggio (C, D, E, G, A, C). The sixth press celebrates with big rings, a shimmer of stars and dots and a warm chord, then the streak starts over. Piano and Drawing keep their own notes, and the streak resets on a game or mood change and when the grown-up panel opens. Celebration sprites come from the sprite pool and the chord is four voices, so the caps still hold. | `combo.ts`, `CONFIG.combo`, `PlayScene.handleSmash` / `celebrateCombo`, `audio.ts` (`playArpeggio`, `playWarmChord`), `toys/` | `combo.test.ts`, `audio.test.ts`, `config.test.ts`, `latest.png` |
 
 ## Hidden progression
 
@@ -58,7 +59,7 @@ developmental rubrics, pacing benchmarks, and session logging template.
 | # | Requirement | Where | Checked by |
 | --- | --- | --- | --- |
 | M1 | **Daytime** (default): bright, clear and calm, never overstimulating or flashing. | `CONFIG.moods.daytime` | `latest.png` |
-| M2 | **Bedtime**: dark sky, pastels, slower motion, fewer things on screen, quieter and lower notes. | `CONFIG.moods.bedtime` | `config.test.ts` (calmer than daytime), `bedtime.png` |
+| M2 | **Bedtime**: dark sky, pastels, slower motion, fewer things on screen, quieter and lower notes. Sounds swell in softly (80 ms attack vs 12 ms) with almost no overtone, shapes launch slower, spin less, bounce softly and linger longer, and the combo celebration spreads and fades more gently. | `CONFIG.moods.bedtime` (`audio`, `motion`, `decay`), `audio.ts`, `toys/` | `config.test.ts` (calmer than daytime), `audio.test.ts`, `bedtime.png` |
 | M3 | A mood applies to every sub-game. Only the grown-up can change it, so Bedtime stays Bedtime. | `PlayScene.applyMood` | review |
 
 ## Grown-up controls
