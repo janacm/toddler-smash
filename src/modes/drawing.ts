@@ -1,6 +1,8 @@
 import Phaser from 'phaser'
 import { CONFIG } from '../config'
 import { SHAPE_KEYS } from '../textures'
+import { ScratchCard } from '../discovery/scratchCard'
+import { ScratchCardModel } from '../discovery/scratchModel'
 import type { SmashEvent, StrokeEvent, Toy, ToyContext } from '../toys/types'
 import { brushPx, noteForY, strokePoints } from './drawingMath'
 import type { Mode } from './types'
@@ -30,6 +32,10 @@ let playground = false
 const strokes = new Map<number, Stroke>()
 let strokeCount = 0
 
+const scratchCardModel = new ScratchCardModel()
+let card: ScratchCard | undefined
+let wasCelebrating = false
+
 function strokeColor(ctx: ToyContext, s: Stroke): number {
   const t = s.travelled / CONFIG.drawing.colorEveryPx
   const i = Math.floor(t)
@@ -45,7 +51,11 @@ function dab(ctx: ToyContext, s: Stroke, x: number, y: number, batched: boolean)
   const scale = brushPx(ctx.width, ctx.height) / BRUSH_TEXTURE_PX
   const tint = strokeColor(ctx, s)
   target.stamp(BRUSH, undefined, x, y, { scale, tint, skipBatch: batched })
-  if (playground) target.stamp(BRUSH, undefined, ctx.width - x, y, { scale, tint, skipBatch: batched })
+  card?.scratch(x, y, batched, ctx)
+  if (playground) {
+    target.stamp(BRUSH, undefined, ctx.width - x, y, { scale, tint, skipBatch: batched })
+    card?.scratch(ctx.width - x, y, batched, ctx)
+  }
 }
 
 function begin(ctx: ToyContext, pointerId: number, x: number, y: number): Stroke {
@@ -182,6 +192,9 @@ function enter(ctx: ToyContext): () => void {
   const rt = ctx.scene.add.renderTexture(0, 0, width, height).setOrigin(0).setDepth(-200)
   canvas = rt
 
+  card = new ScratchCard(ctx, scratchCardModel, 72, wasCelebrating)
+  wasCelebrating = false
+
   const fade = ctx.scene.time.addEvent({
     delay: CONFIG.drawing.fadeEveryMs,
     loop: true,
@@ -199,6 +212,8 @@ function enter(ctx: ToyContext): () => void {
   return () => {
     fade.remove()
     strokes.clear()
+    wasCelebrating = card?.destroy() ?? false
+    card = undefined
     if (canvas === rt) {
       canvas = undefined
       setPlayground(false)
@@ -216,4 +231,10 @@ export const drawing: Mode = {
   stroke,
   setPlayground,
   paintSegment,
+  resetDiscovery: () => {
+    card?.destroy()
+    card = undefined
+    scratchCardModel.reset()
+    wasCelebrating = false
+  },
 }

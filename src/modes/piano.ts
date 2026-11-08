@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { CONFIG } from '../config'
 import { EchoQueue } from '../challenges/rewards'
+import { RainbowRun } from '../discovery/albumModel'
 import type { Toy, ToyContext } from '../toys/types'
 import { keyIndex, pianoKeyCount } from './pianoLayout'
 import type { Mode } from './types'
@@ -27,6 +28,7 @@ interface PianoKey {
 let keys: PianoKey[] = []
 let playground = false
 let echoes: EchoQueue | undefined
+const rainbowRun = new RainbowRun()
 
 function setPlayground(active: boolean): void {
   playground = active
@@ -142,6 +144,10 @@ const pianoKey: Toy = {
     const color = ctx.color(i)
     playKey(i, ctx)
 
+    if (rainbowRun.push(i)) {
+      ctx.discover?.('rainbow')
+    }
+
     // Only player notes schedule echoes. Replaying the echo cannot recurse.
     if (playground) echoes?.schedule(i)
 
@@ -165,4 +171,5 @@ export const piano: Mode = {
   enter: buildKeys,
   setPlayground,
   replayNote: playKey,
+  resetDiscovery: () => rainbowRun.reset(),
 }

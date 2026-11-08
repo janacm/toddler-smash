@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { createAnimalTextures } from './animalTextures'
+import { buildIllustrations } from './discovery/illustrations'
 
 /**
  * All artwork is drawn at runtime with Phaser's Graphics API and baked into
@@ -92,6 +93,73 @@ export function buildTextures(scene: Phaser.Scene): void {
   g.fillRect(0, 0, 4, 4)
   g.generateTexture('pixel', 4, 4)
 
+  // Badge stamp rim: golden outer ring with dark backing plate
+  reset()
+  g.fillStyle(0xf59e0b, 1)
+  g.fillCircle(c, c, c - 4)
+  g.lineStyle(6, 0xfde68a, 1)
+  g.strokeCircle(c, c, c - 8)
+  g.fillStyle(0x1e293b, 0.88)
+  g.fillCircle(c, c, c - 15)
+  g.generateTexture('badge-rim', SIZE, SIZE)
+
+  // Badge locked slot: soft translucent disc with dashed ring and star
+  reset()
+  g.fillStyle(0xffffff, 0.12)
+  g.fillCircle(c, c, c - 6)
+  g.lineStyle(4, 0xffffff, 0.3)
+  g.strokeCircle(c, c, c - 6)
+  g.fillStyle(0xffffff, 0.28)
+  drawStar(g, c, c, 5, 18, 8)
+  g.generateTexture('badge-slot', SIZE, SIZE)
+
+  // Badge icons
+  reset()
+  const arcColors = [0xef4444, 0xf59e0b, 0x10b981, 0x3b82f6]
+  for (let i = 0; i < 4; i++) {
+    g.lineStyle(8, arcColors[i], 1)
+    g.beginPath()
+    g.arc(c, c + 22, 44 - i * 9, Math.PI, 0)
+    g.strokePath()
+  }
+  g.fillStyle(0xffffff, 1)
+  g.fillCircle(c - 36, c + 22, 14)
+  g.fillCircle(c - 24, c + 16, 12)
+  g.fillCircle(c + 36, c + 22, 14)
+  g.fillCircle(c + 24, c + 16, 12)
+  g.generateTexture('badge-icon-rainbow', SIZE, SIZE)
+
+  reset()
+  g.fillStyle(0x22c55e, 1)
+  g.fillEllipse(c, c, 28, 64)
+  for (let i = -2; i <= 2; i++) {
+    const ly = c + i * 14
+    g.fillEllipse(c - 16, ly, 20, 9)
+    g.fillEllipse(c + 16, ly, 20, 9)
+  }
+  g.fillRect(c - 2.5, c + 24, 5, 24)
+  g.generateTexture('badge-icon-leaf', SIZE, SIZE)
+
+  reset()
+  g.fillStyle(0x06b6d4, 1)
+  g.fillEllipse(c, c + 14, 72, 38)
+  g.fillStyle(0x0284c7, 1)
+  g.fillCircle(c + 6, c - 6, 24)
+  g.fillStyle(0xffffff, 1)
+  g.fillCircle(c - 15, c - 16, 13)
+  g.fillCircle(c - 3, c - 24, 11)
+  g.fillCircle(c + 12, c - 22, 9)
+  g.generateTexture('badge-icon-wave', SIZE, SIZE)
+
+  reset()
+  g.fillStyle(0xfbbf24, 1)
+  g.fillCircle(c - 6, c, 36)
+  g.fillStyle(0x1e293b, 1)
+  g.fillCircle(c + 10, c - 7, 30)
+  g.fillStyle(0xffffff, 1)
+  drawStar(g, c + 24, c - 16, 5, 14, 6)
+  g.generateTexture('badge-icon-moon', SIZE, SIZE)
+
   // Luminous cosmic orb for trajectory toy.
   reset()
   g.fillStyle(0xffffff, 0.12)
@@ -133,6 +201,7 @@ export function buildTextures(scene: Phaser.Scene): void {
 
   g.destroy()
   createAnimalTextures(scene)
+  buildIllustrations(scene)
 }
 
 function drawStar(

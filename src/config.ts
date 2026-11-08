@@ -86,6 +86,19 @@ export const CONFIG = {
     feedbackIntervalMs: 90,
   },
 
+  /** Progressive scratch-off unmasking & visual sticker album. */
+  discovery: {
+    coverageThreshold: 0.75,
+    gridCols: 20,
+    gridRows: 16,
+    bloomParticles: 18,
+    bloomNotes: [0, 2, 4, 7, 9, 12] as readonly number[],
+    cardPauseMs: 3500,
+    trayHeight: 64,
+    badgeStampSize: 52,
+    mobileBadgeStampSize: 42,
+  },
+
   /** Motor schema toys: trajectory, rotation, and constellation connections. */
   schemas: {
     trajectorySpeedMin: 420,

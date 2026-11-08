@@ -12,6 +12,9 @@ import { currentMood, saveSettings, settings } from '../settings'
 import { ModeSwitcher } from '../switcher'
 import { ParentPanel, type PanelAction, type PanelState } from '../parentPanel'
 import { safeAreaInsets } from '../safeArea'
+import { AlbumModel } from '../discovery/albumModel'
+import { DiscoveryTray } from '../discovery/tray'
+import type { BadgeId } from '../discovery/types'
 import { MODES, findMode, type Mode } from '../modes'
 import { playSmash, type SmashEvent, type ToyContext } from '../toys'
 
@@ -40,6 +43,8 @@ export class PlayScene extends Phaser.Scene {
   private leaveMode?: () => void
   private switcher!: ModeSwitcher
   private progress = new Progression()
+  private album = new AlbumModel()
+  private tray!: DiscoveryTray
   private challenge?: ChallengeController
   private blockedPointers = new Set<number>()
   private comboTracker = new ComboTracker(CONFIG.combo)
@@ -55,6 +60,12 @@ export class PlayScene extends Phaser.Scene {
     this.text = new TextPool(this)
     this.switcher = new ModeSwitcher(this, MODES)
     this.panel = new ParentPanel(this)
+    this.tray = new DiscoveryTray(this, this.album, () => ({
+      pool: this.pool,
+      synth: this.synth,
+      rng: this.rng,
+      color: (seed) => this.color(seed),
+    }))
     this.mode = findMode(settings.mode)
 
     this.drawHint()
@@ -101,6 +112,7 @@ export class PlayScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.teardownInput?.()
       this.challenge?.destroy()
+      this.tray.destroy()
       this.leaveMode?.()
       window.removeEventListener('touchend', unlockAudio)
       window.removeEventListener('click', unlockAudio)
@@ -126,7 +138,14 @@ export class PlayScene extends Phaser.Scene {
         return true
       }
     }
-    return this.safely(() => this.challenge?.action(action)) ?? false
+    const challengeHandled = this.safely(() => this.challenge?.action(action)) ?? false
+    if (challengeHandled) return true
+
+    if (e.source === 'pointer') {
+      const badge = this.tray.hit(e.x, e.y)
+      if (badge) return true
+    }
+    return false
   }
 
   private handleSmash(e: SmashEvent): void {
@@ -145,6 +164,8 @@ export class PlayScene extends Phaser.Scene {
         this.setMode(picked)
         return
       }
+      const badge = this.tray.hit(e.x, e.y)
+      if (badge) return
     }
 
     // Only Smash climbs the arpeggio. Piano and Drawing keep their own notes,
@@ -221,6 +242,11 @@ export class PlayScene extends Phaser.Scene {
       width: this.scale.width,
       height: this.scale.height,
       color: (seed) => this.color(seed),
+      discover: (id: BadgeId) => {
+        if (this.album.discover(id)) {
+          this.tray.refresh()
+        }
+      },
       combo,
       mood: currentMood(),
     }
@@ -248,6 +274,7 @@ export class PlayScene extends Phaser.Scene {
     saveSettings()
     this.enterMode()
     this.layoutSwitcher()
+    this.layoutTray()
     this.synth.chime()
   }
 
@@ -273,6 +300,16 @@ export class PlayScene extends Phaser.Scene {
     this.drawBackground()
     this.enterMode()
     this.layoutSwitcher()
+    this.layoutTray()
+  }
+
+  private layoutTray(): void {
+    this.tray.layout({
+      width: this.scale.width,
+      height: this.scale.height,
+      mode: this.mode.name,
+      night: currentMood().night,
+    })
   }
 
   private enterMode(): void {
@@ -374,6 +411,7 @@ export class PlayScene extends Phaser.Scene {
     }
     this.panel.show(this.panelState())
     this.challenge?.pause(true)
+    this.tray.cancelDance()
     if (isDesktop) {
       void keyboardLocked().then((on) => {
         this.lockStatus = on
@@ -427,9 +465,14 @@ export class PlayScene extends Phaser.Scene {
         break
       case 'resetProgress':
         this.progress.reset()
+        this.leaveMode?.()
+        this.leaveMode = undefined
+        for (const m of MODES) m.resetDiscovery?.()
+        this.album.reset()
+        this.tray.refresh()
         this.comboTracker.reset()
         this.challenge?.destroy()
-        this.challenge = this.createChallenge()
+        this.enterMode()
         this.challenge?.pause(true)
         break
       case 'fullscreen': {
