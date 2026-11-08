@@ -374,6 +374,17 @@ To type-check the Windows code from a Mac:
 `rustup target add x86_64-pc-windows-msvc && cd src-tauri && cargo check --target x86_64-pc-windows-msvc`
 (the build script needs an `llvm-rc` on PATH).
 
+### Code signing, notarization and releases
+
+Automated signing, notarization, and updater releases run via
+`.github/workflows/desktop-release.yml` on version tags (`v*`) or manual
+`workflow_dispatch`. PR and CI runs (`ci.yml`) test compilation and packaging
+with `--no-sign` without accessing signing credentials. On macOS, Gatekeeper
+notarization requires Hardened Runtime with JIT entitlements in
+`src-tauri/entitlements.plist`. On Windows, Authenticode signing supports PFX
+certificate store import and Microsoft Trusted Signing via
+`azure/artifact-signing-action@v1`.
+
 ## Common requests → where they land
 
 | Request | File |
@@ -394,6 +405,7 @@ To type-check the Windows code from a Mac:
 | "looks wrong on a phone" | `safeArea.ts`, `config.ts` → `piano`, then `mobile*.png` |
 | "combo / streak feel / celebration" | `config.ts` → `combo`, `PlayScene.ts` |
 | "stop key X doing an OS thing" | `src-tauri/src/lockdown/` |
+| "code signing / notarization / desktop releases" | `src-tauri/tauri.conf.json`, `.github/workflows/desktop-release.yml`, `docs/desktop.md` |
 | "the loading screen / logo should do X" | `index.html` (`#splash` markup and CSS), `config.ts` → `splash`, then `splash*.png` |
 | "check docs and agent rules in PRs" | `scripts/verify-docs.mjs` + `.github/workflows/ci.yml` |
 

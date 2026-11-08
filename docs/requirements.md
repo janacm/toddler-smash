@@ -90,6 +90,7 @@ developmental rubrics, pacing benchmarks, and session logging template.
 | D1 | A Windows and Mac desktop app that a toddler can't leave: blocks the Windows and menu keys, Alt-Tab, Cmd-Q, Cmd-Tab, Spotlight, media keys and similar. Asking for the Mac Accessibility permission is acceptable. | `src-tauri/` | `npm run test:rust`, CI on macOS and Windows |
 | D2 | In the desktop app, the grown-up menu's Quit is the only way out. | `src-tauri/src/lib.rs` | review |
 | D3 | In the desktop app, updates download silently in the background without popups or interruptions during play. When ready, the grown-up menu shows an update option and releases native keyboard locks before restarting into the new release. | `src/desktopUpdates.ts`, `src-tauri/src/lib.rs`, `tauri.conf.json` | `desktopUpdates.test.ts`, `npm run test:coverage` |
+| D4 | Desktop release bundles are configured for automated signing and notarization: Apple Developer ID Application signing and Apple notarization on macOS (`.dmg`), and Authenticode signing with RFC 3161 timestamping on Windows (`.msi` and `.exe`). Unsigned builds validate gracefully in CI without secrets. | `src-tauri/tauri.conf.json`, `src-tauri/entitlements.plist`, `gon.json`, `.github/workflows/desktop-release.yml` | CI desktop matrix build, `docs/desktop.md` |
 
 ## Process & Documentation
 

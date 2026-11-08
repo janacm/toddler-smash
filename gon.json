@@ -1,0 +1,22 @@
+{
+  "source": [
+    "src-tauri/target/release/bundle/macos/Toddler Smash.app"
+  ],
+  "bundle_id": "com.toddlersmash.app",
+  "apple_id": {
+    "username": "@env:APPLE_ID",
+    "password": "@env:APPLE_PASSWORD",
+    "provider": "@env:APPLE_TEAM_ID"
+  },
+  "sign": {
+    "application_identity": "@env:APPLE_SIGNING_IDENTITY",
+    "entitlements": "src-tauri/entitlements.plist"
+  },
+  "dmg": {
+    "output_path": "src-tauri/target/release/bundle/dmg/Toddler Smash.dmg",
+    "volume_name": "Toddler Smash"
+  },
+  "zip": {
+    "output_path": "src-tauri/target/release/bundle/macos/Toddler-Smash-macOS.zip"
+  }
+}

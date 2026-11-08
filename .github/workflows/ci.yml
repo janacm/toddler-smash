@@ -61,6 +61,7 @@ jobs:
       matrix:
         os: [macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -75,6 +76,34 @@ jobs:
         with:
           workspaces: src-tauri
       - run: npm run test:rust
+
+      # Desktop CI builds validate compilation and packaging with --no-sign.
+      # Production signing, notarization, and updater releases run in desktop-release.yml.
+      - name: Build Unsigned Desktop Bundle
+        env:
+          CI: true
+        run: npm run desktop:build -- --no-sign
+
+      # Upload desktop artifacts
+      - name: Upload macOS Desktop Artifacts
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-macos
+          path: src-tauri/target/release/bundle/dmg/*.dmg
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload Windows Desktop Artifacts
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-windows
+          path: |
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: ignore
+          retention-days: 7
 
   deploy:
     name: Deploy production
