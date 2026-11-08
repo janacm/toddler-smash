@@ -8,13 +8,17 @@ type Animal = 'dinosaur' | 'shark'
 /** Ordinary taps can meet either animal; D and S make favourites repeatable. */
 export const dinosaur: Toy = {
   name: 'dinosaur',
-  weight: 3,
+  get weight() {
+    return currentMood()?.animalSpawnWeight ?? 1
+  },
   play: (e, ctx) => visit('dinosaur', e, ctx),
 }
 
 export const shark: Toy = {
   name: 'shark',
-  weight: 3,
+  get weight() {
+    return currentMood()?.animalSpawnWeight ?? 1
+  },
   play: (e, ctx) => visit('shark', e, ctx),
 }
 

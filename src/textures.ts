@@ -160,6 +160,45 @@ export function buildTextures(scene: Phaser.Scene): void {
   drawStar(g, c + 24, c - 16, 5, 14, 6)
   g.generateTexture('badge-icon-moon', SIZE, SIZE)
 
+  // Luminous cosmic orb for trajectory toy.
+  reset()
+  g.fillStyle(0xffffff, 0.12)
+  g.fillCircle(c, c, 60)
+  g.fillStyle(0xffffff, 0.28)
+  g.fillCircle(c, c, 44)
+  g.fillStyle(0xffffff, 0.65)
+  g.fillCircle(c, c, 28)
+  g.fillStyle(0xffffff, 1.0)
+  g.fillCircle(c, c, 14)
+  g.generateTexture('orbGlow', SIZE, SIZE)
+
+  // Celestial 4-blade pinwheel for rotation toy.
+  reset()
+  for (let k = 0; k < 4; k++) {
+    const alpha = (k * Math.PI) / 2
+    const vane = [
+      new Phaser.Math.Vector2(c + 10 * Math.cos(alpha - 0.2), c + 10 * Math.sin(alpha - 0.2)),
+      new Phaser.Math.Vector2(c + 34 * Math.cos(alpha + 0.35), c + 34 * Math.sin(alpha + 0.35)),
+      new Phaser.Math.Vector2(c + 52 * Math.cos(alpha), c + 52 * Math.sin(alpha)),
+      new Phaser.Math.Vector2(c + 28 * Math.cos(alpha - 0.15), c + 28 * Math.sin(alpha - 0.15)),
+    ]
+    g.fillStyle(0xffffff, 0.85)
+    g.fillPoints(vane, true)
+    g.fillStyle(0xffffff, 1.0)
+    g.fillCircle(c + 52 * Math.cos(alpha), c + 52 * Math.sin(alpha), 4)
+  }
+  g.fillStyle(0xffffff, 1.0)
+  g.fillCircle(c, c, 12)
+  g.generateTexture('pinwheel', SIZE, SIZE)
+
+  // Elastic pill connector for constellation connection toy.
+  reset()
+  g.fillStyle(0xffffff, 0.4)
+  g.fillRoundedRect(0, 0, 64, 16, 8)
+  g.fillStyle(0xffffff, 0.95)
+  g.fillRoundedRect(4, 4, 56, 8, 4)
+  g.generateTexture('elasticSegment', 64, 16)
+
   g.destroy()
   createAnimalTextures(scene)
   buildIllustrations(scene)

@@ -94,7 +94,7 @@ export class ScratchCard {
     this.maskRT.setAlpha(1)
   }
 
-  scratch(x: number, y: number, batched: boolean, ctx: ToyContext): boolean {
+  scratch(x: number, y: number, _batched: boolean, ctx: ToyContext): boolean {
     if (this.isCelebrating) return false
 
     const radius = scratchRadiusPx(brushPx(ctx.width, ctx.height))
@@ -116,7 +116,6 @@ export class ScratchCard {
     this.maskRT.stamp('circle', undefined, lx, ly, {
       scale,
       erase: true,
-      skipBatch: batched,
     })
 
     const nx = lx / width

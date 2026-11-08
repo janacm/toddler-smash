@@ -29,6 +29,7 @@ export class DiscoveryTray {
   private slots: SlotView[] = []
   private activeDance?: {
     badgeId: BadgeId
+    rim: Phaser.GameObjects.Image
     cancel: () => void
   }
 
@@ -170,6 +171,15 @@ export class DiscoveryTray {
   }
 
   hit(x: number, y: number): BadgeDefinition | undefined {
+    if (this.activeDance) {
+      const { rim, badgeId } = this.activeDance
+      const hitRadius = Math.max(30, rim.displayWidth * 0.6)
+      if (Math.hypot(x - rim.x, y - rim.y) <= hitRadius) {
+        this.cancelDance()
+        const slot = this.slots.find(s => s.badge.id === badgeId)
+        return slot?.badge
+      }
+    }
     for (const slot of this.slots) {
       if (!slot.unlocked) continue
       const dist = Math.hypot(x - slot.x, y - slot.y)
@@ -236,6 +246,7 @@ export class DiscoveryTray {
 
     this.activeDance = {
       badgeId: slot.badge.id,
+      rim,
       cancel,
     }
 

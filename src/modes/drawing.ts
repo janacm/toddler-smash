@@ -232,6 +232,8 @@ export const drawing: Mode = {
   setPlayground,
   paintSegment,
   resetDiscovery: () => {
+    card?.destroy()
+    card = undefined
     scratchCardModel.reset()
     wasCelebrating = false
   },
