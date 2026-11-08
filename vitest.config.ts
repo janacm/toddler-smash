@@ -10,6 +10,7 @@ export default defineConfig({
       // that draws with Phaser or plays WebAudio is checked by `npm run shot`
       // instead. A new Phaser-free module with logic in it belongs here.
       include: [
+        'src/combo.ts',
         'src/config.ts',
         'src/gestures.ts',
         'src/input.ts',
@@ -18,10 +19,13 @@ export default defineConfig({
         'src/modes/drawingMath.ts',
         'src/modes/pianoLayout.ts',
         'src/toys/play.ts',
+        'src/toys/schemaMath.ts',
         'src/challenges/model.ts',
         'src/challenges/layout.ts',
         'src/challenges/rewards.ts',
         'src/updates.ts',
+        'src/discovery/scratchModel.ts',
+        'src/discovery/albumModel.ts',
         'src/modes/pianoChoralLogic.ts',
         'src/modes/choralEchoQueue.ts',
         'src/companion/thoughtBubbleLogic.ts',

@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { CONFIG } from '../config'
 import { EchoQueue } from '../challenges/rewards'
 import { currentMood } from '../settings'
+import { RainbowRun } from '../discovery/albumModel'
 import type { Toy, ToyContext } from '../toys/types'
 import { keyIndex, pianoKeyCount } from './pianoLayout'
 import {
@@ -37,12 +38,22 @@ interface PianoKey {
 let keys: PianoKey[] = []
 let playground = false
 let echoes: EchoQueue | undefined
+let puzzleActive = false
 let phraseDetector: ChoralPhraseDetector | undefined
 let choralQueue: ChoralEchoQueue | undefined
+const rainbowRun = new RainbowRun()
 
 function setPlayground(active: boolean): void {
   playground = active
   if (!active) echoes?.cancel()
+  if (active) {
+    choralQueue?.cancel()
+    phraseDetector?.reset()
+  }
+}
+
+function setPuzzleActive(active: boolean): void {
+  puzzleActive = active
   if (active) {
     choralQueue?.cancel()
     phraseDetector?.reset()
@@ -238,10 +249,14 @@ const pianoKey: Toy = {
     const color = ctx.color(i)
     playKey(i, ctx)
 
+    if (rainbowRun.push(i)) {
+      ctx.discover?.('rainbow')
+    }
+
     // Only player notes schedule echoes. Replaying the echo cannot recurse.
     if (playground) {
       echoes?.schedule(i)
-    } else if (choralQueue && phraseDetector) {
+    } else if (!puzzleActive && choralQueue && phraseDetector) {
       choralQueue.cancel()
       const phrase = phraseDetector.recordNote(i, performance.now())
       if (phrase) {
@@ -268,5 +283,7 @@ export const piano: Mode = {
   toys: [pianoKey],
   enter: buildKeys,
   setPlayground,
+  setPuzzleActive,
   replayNote: playKey,
+  resetDiscovery: () => rainbowRun.reset(),
 }

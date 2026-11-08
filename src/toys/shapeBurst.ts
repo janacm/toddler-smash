@@ -14,6 +14,10 @@ export const shapeBurst: Toy = {
   play(e, ctx) {
     const count = ctx.rng.between(4, 8)
     const floor = ctx.height - 40
+    // Bedtime launches slower, spins less and settles softly, and lingers longer.
+    const { speedScale, spinScale, bounceScale } = ctx.mood.motion
+    const spinMax = CONFIG.motion.spinMax * spinScale
+    const bounceHeight = 60 * CONFIG.motion.bounceDamping * bounceScale
 
     for (let i = 0; i < count; i++) {
       const shape = SHAPE_KEYS[ctx.rng.between(0, SHAPE_KEYS.length - 1)]
@@ -22,7 +26,7 @@ export const shapeBurst: Toy = {
       img.setScale(ctx.rng.realInRange(0.35, 0.85))
 
       const angle = ctx.rng.realInRange(-Math.PI * 0.9, -Math.PI * 0.1)
-      const speed = ctx.rng.between(CONFIG.motion.burstSpeedMin, CONFIG.motion.burstSpeedMax)
+      const speed = ctx.rng.between(CONFIG.motion.burstSpeedMin, CONFIG.motion.burstSpeedMax) * speedScale
       const vx = Math.cos(angle) * speed
       const vy = Math.sin(angle) * speed
 
@@ -52,10 +56,12 @@ export const shapeBurst: Toy = {
             duration: flightMs * 0.58,
             ease: 'Sine.easeIn',
             onComplete: () => {
-              // One small bounce. Two looks busy, none looks broken.
+              // One small bounce. Two looks busy, none looks broken. The cue is
+              // throttled inside the synth, so a landing burst makes one soft tap.
+              ctx.synth.playCue('bounce', 0.2)
               ctx.scene.tweens.add({
                 targets: img,
-                y: floor - 60 * CONFIG.motion.bounceDamping,
+                y: floor - bounceHeight,
                 duration: 260,
                 ease: 'Sine.easeOut',
                 yoyo: true,
@@ -67,14 +73,15 @@ export const shapeBurst: Toy = {
 
       ctx.scene.tweens.add({
         targets: img,
-        angle: ctx.rng.between(-CONFIG.motion.spinMax, CONFIG.motion.spinMax),
+        angle: ctx.rng.between(-spinMax, spinMax),
         duration: flightMs,
         ease: 'Linear',
       })
 
-      ctx.pool.retire(img, CONFIG.lifetime.shapeMs)
+      ctx.pool.retire(img, ctx.mood.decay.shapeMs)
     }
 
-    ctx.synth.play(ctx.rng.between(0, ctx.synth.noteCount - 1))
+    // Fast streaks climb the arpeggio instead of picking a random note.
+    ctx.synth.playArpeggio(ctx.combo.step)
   },
 }

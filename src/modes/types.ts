@@ -34,8 +34,12 @@ export interface Mode {
   stroke?(e: StrokeEvent, ctx: ToyContext): void
   /** Toggle an earned creative power without rebuilding or clearing scenery. */
   setPlayground?(active: boolean, ctx: ToyContext): void
+  /** Notify mode when a guided challenge/puzzle is active so background toys quiet down. */
+  setPuzzleActive?(active: boolean): void
   /** Paint one deliberate keyboard movement using the same brush as touch. */
   paintSegment?(from: { x: number; y: number }, to: { x: number; y: number }, ctx: ToyContext): void
   /** Demonstrate a piano note without treating it as player input or an echo. */
   replayNote?(index: number, ctx: ToyContext): void
+  /** Reset session-only discovery state for New Player (grown-up panel R). */
+  resetDiscovery?(): void
 }

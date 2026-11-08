@@ -99,4 +99,12 @@ describe('ChoralPhraseDetector', () => {
     expect(detector.recordNote(1, 200)).toBeNull()
     expect(detector.recordNote(2, 300)).not.toBeNull()
   })
+
+  it('respects custom harmonyInterval setting', () => {
+    const detector = new ChoralPhraseDetector({ maxGapMs: 1200, harmonyInterval: 3 })
+    detector.recordNote(0, 100)
+    detector.recordNote(2, 200)
+    const phrase = detector.recordNote(4, 300)
+    expect(phrase?.harmonies).toEqual([3, 5, 7])
+  })
 })

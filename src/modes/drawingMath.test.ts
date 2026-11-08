@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CONFIG } from '../config'
-import { brushPx, noteForY, strokePoints } from './drawingMath'
+import { brushPx, cardRect, noteForY, scratchRadiusPx, strokePoints } from './drawingMath'
 
 describe('brushPx', () => {
   it('scales with the short side of the screen', () => {
@@ -48,3 +48,35 @@ describe('noteForY', () => {
     expect(noteForY(10, 0)).toBe(0)
   })
 })
+
+describe('cardRect', () => {
+  it('centers the card within the available area', () => {
+    const rect = cardRect(1000, 800, 80)
+    expect(rect.x).toBeGreaterThan(0)
+    expect(rect.y).toBeGreaterThan(0)
+    expect(rect.width).toBeLessThanOrEqual(520)
+    expect(rect.height).toBeLessThanOrEqual(380)
+    expect(rect.x + rect.width / 2).toBeCloseTo(500, 0)
+    expect(rect.y + rect.height / 2).toBeCloseTo(360, 0)
+  })
+
+  it('preserves the 520:380 aspect ratio', () => {
+    const rect = cardRect(400, 700)
+    expect(rect.width / rect.height).toBeCloseTo(520 / 380, 1)
+  })
+
+  it('handles small viewports safely', () => {
+    const rect = cardRect(200, 150, 50)
+    expect(rect.width).toBeGreaterThan(0)
+    expect(rect.height).toBeGreaterThan(0)
+  })
+})
+
+describe('scratchRadiusPx', () => {
+  it('scales with brush width with a reasonable floor', () => {
+    expect(scratchRadiusPx(10)).toBe(16)
+    expect(scratchRadiusPx(20)).toBe(30)
+    expect(scratchRadiusPx(30)).toBe(45)
+  })
+})
+

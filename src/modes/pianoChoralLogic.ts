@@ -24,6 +24,7 @@ export interface PhraseDetectorOptions {
   phraseMaxGapMs?: number
   phraseLength?: number
   phraseLen?: number
+  harmonyInterval?: number
 }
 
 /**
@@ -34,10 +35,12 @@ export class ChoralPhraseDetector {
   private buffer: Array<{ note: number; time: number }> = []
   private readonly maxGapMs: number
   private readonly phraseLength: number
+  private readonly harmonyInterval: number
 
   constructor(options?: PhraseDetectorOptions) {
     this.maxGapMs = options?.maxGapMs ?? options?.phraseMaxGapMs ?? 1200
     this.phraseLength = options?.phraseLength ?? options?.phraseLen ?? 3
+    this.harmonyInterval = options?.harmonyInterval ?? 2
   }
 
   recordNote(noteIndex: number, timeMs: number, isEcho = false): ChoralPhrase | null {
@@ -56,9 +59,9 @@ export class ChoralPhraseDetector {
       const slice = this.buffer.slice(-this.phraseLength)
       const notes: [number, number, number] = [slice[0].note, slice[1].note, slice[2].note]
       const harmonies: [number, number, number] = [
-        calculatePentatonicHarmony(notes[0]),
-        calculatePentatonicHarmony(notes[1]),
-        calculatePentatonicHarmony(notes[2]),
+        calculatePentatonicHarmony(notes[0], this.harmonyInterval),
+        calculatePentatonicHarmony(notes[1], this.harmonyInterval),
+        calculatePentatonicHarmony(notes[2], this.harmonyInterval),
       ]
       const animals: [AnimalFaceKind, AnimalFaceKind, AnimalFaceKind] = [
         getAnimalForPianoKey(notes[0]),

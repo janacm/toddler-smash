@@ -62,7 +62,13 @@ export class ThoughtCompanion {
   }
 
   setVisible(visible: boolean): void {
+    const wasVisible = this.container.visible
     this.container.setVisible(visible)
+    if (visible && !wasVisible && !this.autoCycleTimer && !this.celebrating) {
+      this.autoCycleTimer = setTimeout(() => {
+        this.cycleThought()
+      }, CONFIG.thoughtBubble.autoCycleMs)
+    }
   }
 
   get visible(): boolean {
@@ -94,6 +100,9 @@ export class ThoughtCompanion {
 
     this.container.setPosition(x, y)
     this.body.setTexture(`companion-dino${night ? '-night' : ''}`)
+    if (this.target) {
+      this.updateTargetDisplay(this.target, currentMood().palette)
+    }
   }
 
   /**
@@ -155,15 +164,23 @@ export class ThoughtCompanion {
         item.setAlpha(0)
       })
       this.scene.tweens.add({
-        targets: [this.trailDot1, this.trailDot2],
-        scale: 1,
+        targets: this.trailDot1,
+        scale: 0.28,
+        alpha: 0.85,
+        duration: 250,
+        ease: 'Back.easeOut',
+      })
+      this.scene.tweens.add({
+        targets: this.trailDot2,
+        scale: 0.42,
         alpha: 0.9,
         duration: 250,
         ease: 'Back.easeOut',
       })
       this.scene.tweens.add({
         targets: this.bubble,
-        scale: 1,
+        scaleX: 64 / 128,
+        scaleY: 50 / 96,
         alpha: 0.95,
         duration: 320,
         delay: 80,
@@ -180,7 +197,7 @@ export class ThoughtCompanion {
     } else {
       this.trailDot1.setScale(0.28).setAlpha(0.85)
       this.trailDot2.setScale(0.42).setAlpha(0.9)
-      this.bubble.setScale(1).setAlpha(0.95)
+      this.bubble.setScale(64 / 128, 50 / 96).setAlpha(0.95)
       this.icon.setScale(CONFIG.thoughtBubble.targetScale).setAlpha(1)
     }
 
@@ -230,7 +247,12 @@ export class ThoughtCompanion {
   }
 
   private cycleThought(): void {
-    if (this.celebrating || !this.container.visible) return
+    if (this.celebrating || !this.container.visible) {
+      this.autoCycleTimer = setTimeout(() => {
+        this.cycleThought()
+      }, CONFIG.thoughtBubble.autoCycleMs)
+      return
+    }
 
     const bubbleItems = [this.bubble, this.trailDot1, this.trailDot2, this.icon]
     this.scene.tweens.add({
