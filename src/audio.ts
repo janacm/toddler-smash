@@ -14,6 +14,22 @@ const PIANO_PARTIALS: [number, number][] = [
 ]
 
 /**
+ * Harmonic partials of the dinosaur voice and their relative loudness.
+ *
+ * Phone and tablet speakers roll off sharply below ~150 Hz, which leaves pure
+ * low-frequency rumble (Daytime 65-110 Hz, Bedtime 33-55 Hz) inaudible on
+ * handheld devices. Octave overtones (1 and 2) provide mid-frequency presence
+ * in the 200-450 Hz range so small speaker drivers convey the roar and stomp,
+ * while pure octave intervals preserve pentatonic consonance and Bedtime calm.
+ */
+export const DINOSAUR_PARTIALS: [number, number][] = [
+  [0.25, 0.5],
+  [0.5, 0.25],
+  [1, 0.18],
+  [2, 0.07],
+]
+
+/**
  * A tiny WebAudio synth. No audio files — every sound is generated, so the repo
  * stays pure text and an agent can change how the game *sounds* by editing
  * numbers instead of sourcing assets.
@@ -152,10 +168,18 @@ export class Synth {
     }
   }
 
-  /** Soft animal reactions: octave-only pitches, with character in the envelope. */
+  /**
+   * Soft animal reactions: octave-only pitches, with character in the envelope.
+   * Dinosaur uses `DINOSAUR_PARTIALS` (sub-bass 0.25, bass 0.5, and overtones 1 and 2)
+   * so the stomp and rumble translate clearly on small phone/tablet speakers while
+   * remaining gentle, pleasant, and pentatonic in Bedtime.
+   */
   private playAnimal(
-    ctx: AudioContext, master: GainNode, freq: number,
-    voice: 'dinosaur' | 'bubble', level: number,
+    ctx: AudioContext,
+    master: GainNode,
+    freq: number,
+    voice: 'dinosaur' | 'bubble',
+    level: number,
   ): void {
     const nodes: AudioNode[] = []
     const oscs: OscillatorNode[] = []
@@ -168,26 +192,37 @@ export class Synth {
       for (const osc of oscs) {
         osc.onended = null
         if (interrupt) {
-          try { osc.stop() } catch { /* not started or already stopped */ }
+          try {
+            osc.stop()
+          } catch {
+            /* not started or already stopped */
+          }
         }
       }
       for (const node of nodes) {
-        try { node.disconnect() } catch { /* already torn down */ }
+        try {
+          node.disconnect()
+        } catch {
+          /* already torn down */
+        }
       }
     }
 
     try {
       const now = ctx.currentTime
       const dinosaur = voice === 'dinosaur'
-      const dur = this.mood.noteMs / 1000 * (dinosaur ? 1 : 0.5)
+      const dur = (this.mood.noteMs / 1000) * (dinosaur ? 1 : 0.5)
       const gain = ctx.createGain()
       nodes.push(gain)
       gain.gain.setValueAtTime(0, now)
       if (dinosaur) {
         // A low, gently wobbling "rrrum"; no noisy or startling roar.
         for (const [time, amount] of [
-          [0.08, 0.55], [0.26, 0.25], [0.4, 0.45],
-          [0.57, 0.2], [0.7, 0.3],
+          [0.08, 0.55],
+          [0.26, 0.25],
+          [0.4, 0.45],
+          [0.57, 0.2],
+          [0.7, 0.3],
         ]) {
           gain.gain.linearRampToValueAtTime(amount * level, now + dur * time)
         }
@@ -198,7 +233,7 @@ export class Synth {
       gain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
       gain.connect(master)
 
-      const partials = dinosaur ? [[0.25, 0.75], [0.5, 0.2]] : [[1, 1]]
+      const partials: [number, number][] = dinosaur ? DINOSAUR_PARTIALS : [[1, 1]]
       for (const [ratio, amount] of partials) {
         const osc = ctx.createOscillator()
         nodes.push(osc)

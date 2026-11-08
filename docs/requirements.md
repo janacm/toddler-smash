@@ -32,7 +32,7 @@ is the only person who changes settings.
 | G3 | Drawing: drag to paint with several fingers at once; keys stamp stickers; old drawing fades, so the screen never fills and nothing needs clearing. | `modes/drawing.ts`, `drawingMath.ts` | `drawingMath.test.ts`, `drawing*.png`, `mobile-drawing.png` |
 | G4 | **Every sub-game has its own round button** in the top-right corner that the child can tap. Sub-games are never nested inside each other. | `switcher.ts` (one button per entry in `MODES`) | screenshots |
 | G5 | The child switches sub-games only by tapping those buttons, never by a key, so mashing can't flip games. The grown-up can hide the buttons. | `PlayScene.handleSmash`, panel `C` | review |
-| G6 | Smash includes friendly dinosaurs and sharks in the random tap/click rotation. D always summons a dinosaur and S a shark, alongside the pressed letter. Animals stomp, hop or swim with footprints or bubbles and quiet synthesized voices; Bedtime uses softer colours and slower motion. All effects share the existing sprite and voice caps. | `toys/animals.ts`, `animalTextures.ts`, `audio.ts`, `pool.ts` | animal keyboard/touch/Bedtime screenshots and mash checks |
+| G6 | Smash includes friendly dinosaurs and sharks in the random tap/click rotation (balanced via mood-configurable spawn weights in `CONFIG.moods` so they delight without overcrowding shapes and critters). D always summons a dinosaur and S a shark, alongside the pressed letter. Animals stomp, hop or swim with footprints or bubbles and quiet synthesized voices (including mobile-friendly harmonic overtones for low stomps); Bedtime uses softer colours and slower motion. All effects share the existing sprite and voice caps. | `toys/animals.ts`, `animalTextures.ts`, `audio.ts`, `pool.ts`, `config.ts` | animal keyboard/touch/Bedtime screenshots and mash checks |
 
 ## Hidden progression
 
@@ -83,6 +83,12 @@ developmental rubrics, pacing benchmarks, and session logging template.
 | W7 | Every merge to main automatically deploys the tested web artifact after web, macOS and Windows CI pass. Pull requests never publish. Serialize uploads and skip superseded commits so older CI runs cannot overwrite a newer release. Check the canonical site's published bytes and cache headers; failed verification fails the deploy job. | `.github/workflows/ci.yml`, `scripts/verify-deploy.mjs`, GitHub Actions deployment secret/variable | workflow lint, successful main deployment and live artifact comparison |
 | D1 | A Windows and Mac desktop app that a toddler can't leave: blocks the Windows and menu keys, Alt-Tab, Cmd-Q, Cmd-Tab, Spotlight, media keys and similar. Asking for the Mac Accessibility permission is acceptable. | `src-tauri/` | `npm run test:rust`, CI on macOS and Windows |
 | D2 | In the desktop app, the grown-up menu's Quit is the only way out. | `src-tauri/src/lib.rs` | review |
+
+## Process & Documentation
+
+| # | Requirement | Where | Checked by |
+| --- | --- | --- | --- |
+| P5 | Every pull request must update both documentation (`docs/` or `README.md`) and agent instructions (`AGENTS.md` or `CLAUDE.md`). CI verifies these updates before merging. | `scripts/verify-docs.mjs`, `.github/workflows/ci.yml` | `scripts/verify-docs.test.mjs`, `npm run test:docs` on PRs |
 
 ## Out of scope
 

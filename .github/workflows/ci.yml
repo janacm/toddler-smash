@@ -15,6 +15,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -22,6 +24,12 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: node --test scripts/deploy-html.test.mjs
+      - run: node --test scripts/browser-helpers.test.mjs
+      - run: node --test scripts/verify-docs.test.mjs
+      # Pull requests must update both docs/ and AGENTS.md/CLAUDE.md.
+      - name: Verify docs and agent guidelines updated
+        if: github.event_name == 'pull_request'
+        run: npm run test:docs
       # Unit tests, failing if coverage of the logic modules drops below the
       # thresholds in vitest.config.ts.
       - run: npm run test:coverage

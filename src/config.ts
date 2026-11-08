@@ -132,6 +132,8 @@ export const CONFIG = {
       minSpawnIntervalMs: 45,
       /** Draw a starry sky and a moon behind everything. */
       night: false,
+      /** Relative weight for dinosaur and shark in the random rotation (each). */
+      animalSpawnWeight: 1,
       audio: { volume: 0.24, wave: 'triangle', noteMs: 620, pianoMs: 1400, octaveShift: 0 },
     },
     /** Dim, slow, low and quiet. Pastels on navy; nothing fast or loud. */
@@ -144,6 +146,7 @@ export const CONFIG = {
       timeScale: 0.5,
       minSpawnIntervalMs: 160,
       night: true,
+      animalSpawnWeight: 1,
       audio: { volume: 0.13, wave: 'sine', noteMs: 1200, pianoMs: 2200, octaveShift: -1 },
     },
   },
