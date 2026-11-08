@@ -420,3 +420,5 @@ If you change mash-tolerance behaviour, raise the key count in
   moods, prep before playtime, getting the latest version.
 - [docs/desktop.md](docs/desktop.md) — desktop install, what's blocked and
   what can't be, troubleshooting, building, how the lock works.
+- [docs/playtesting.md](docs/playtesting.md) — observational protocol, rubrics,
+  pacing benchmarks, and session logging template for child playtesting (2- and 4-year-olds).
