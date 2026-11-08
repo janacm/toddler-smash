@@ -39,7 +39,13 @@ shapes that arc and bounce, ripples, or now and then a googly-eyed blob.
 Friendly dinosaurs and sharks also visit: dinosaurs stomp and hop, while
 sharks swim through bubbles. In Smash free play, **D** always calls a dinosaur
 and **S** a shark, alongside the pressed letter. Taps and clicks can meet
-either animal. Their colours, motion and sounds soften in Bedtime.
+either animal. Their colours, motion and sounds soften in Bedtime. Fast
+mashing also builds a musical streak: successive presses climb an ascending
+pentatonic arpeggio, culminating in a celebration ring and warm chord.
+Toddlers also explore movement, rotation, and connections: cosmic orbs
+fling across the screen and rebound off boundaries with woody bounce pops,
+spinning celestial pinwheels scatter sparkling dust outwards, and stars
+snap together with glowing elastic threads.
 
 **Piano.** Ten rainbow keys across the bottom of the screen (five to eight on
 a phone, so each key stays big enough for a small finger).
@@ -48,6 +54,9 @@ a phone, so each key stays big enough for a small finger).
 - Letters play the key under their spot on the keyboard, so Q is low and P is
   high, and the letter floats up.
 - A tap or click plays whichever key column it lands in, anywhere on screen.
+- Each key is stamped with a friendly animal face (frog, kitten, bird, puppy).
+  Playing a 3-note melodic phrase prompts the animal choir to sing back the
+  melody in a call-and-response pentatonic harmony.
 
 **Drawing.** Drag a finger (or hold the mouse button and move) to paint a fat
 line that slowly shifts through the rainbow and hums as it goes: higher up the
@@ -56,8 +65,42 @@ the letter or number pressed, or a shape for any other key. Old drawing fades
 away over about half a minute, so the screen never fills up and there's
 nothing to clear.
 
+Drawing also features a mystery scratch-off card in the center of the canvas.
+As small fingers scribble across the pearlescent coating, the mask rubs away to
+reveal a secret illustration (a friendly dinosaur in a glade, an ocean reef
+shark, or a starlit night sky). Clearing about three-quarters of the card triggers
+an auto-bloom celebration: the mask dissolves, stars burst, a pentatonic fanfare
+plays, and a discovery badge unlocks into the child's album before cycling to the
+next mystery card.
+
+**The thought-bubble companion.** A sweet little baby dinosaur sits in the
+top-left corner with a soft thought bubble showing a picture: a shape or animal
+in Smash, a note or animal key in Piano, or a colour in Drawing. If the child
+happens to match it, the companion does a joyful backflip, eats the icon, and
+showers sparkles with a happy chime. If they ignore it, nothing happens: there
+are no timers, no scores, and no sad faces, and the thought quietly changes on
+its own after a while.
+
 Every note is on the same five-note scale, so there are no wrong notes, and
 mashing still sounds like music.
+
+## Sticker album and discovery badges
+
+A gentle dock along the bottom of the screen (or positioned right above the keys
+in Piano) displays the child's collection of discovered stamps:
+- **Dinosaur**: Unlocked by meeting a dinosaur (or pressing D in Smash).
+- **Shark**: Unlocked by meeting a reef shark (or pressing S in Smash).
+- **Rainbow**: Unlocked by playing a 5-note pentatonic run on the Piano.
+- **Leaf, Wave, Moon**: Unlocked by unmasking each mystery scratch card in Drawing.
+
+Empty slots are faint silhouette discs that never intercept taps or get in the
+way of play. Unlocked badges become animated breathing stamps. Tapping any
+collected badge makes it leap to the center of the screen for a victory dance
+with its signature voice and star sparkles, returning smoothly to its slot (a second
+tap cancels cleanly).
+
+Progress is session-only: it resets on page reload or by pressing **R**
+(New player) in the grown-up menu.
 
 ## Hidden puzzles and creative powers
 
@@ -99,7 +142,9 @@ grown-up menu. Game, mood and corner-button settings remain saved.
 
 The target is roughly 20–40 seconds per tier once the child understands the
 puzzle. Discovery and difficulty need observation during play; the automated
-checks cannot establish whether a child finds the puzzles engaging.
+checks cannot establish whether a child finds the puzzles engaging. For the
+observational protocol, rubrics, and feedback logging template, see
+[playtesting.md](playtesting.md).
 
 ## Moods
 

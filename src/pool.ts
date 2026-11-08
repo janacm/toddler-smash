@@ -13,6 +13,7 @@ import { CONFIG } from './config'
 export class SpritePool {
   private ring: Phaser.GameObjects.Image[] = []
   private cursor = 0
+  onSpawn?: (texture: string, img: Phaser.GameObjects.Image) => void
 
   constructor(private scene: Phaser.Scene) {}
 
@@ -36,6 +37,7 @@ export class SpritePool {
     if (this.ring.length < CONFIG.limits.maxSprites) {
       const img = this.scene.add.image(x, y, texture)
       this.ring.push(img)
+      this.onSpawn?.(texture, img)
       return img
     }
 
@@ -45,6 +47,7 @@ export class SpritePool {
     this.scene.tweens.killTweensOf(img)
     img.setTexture(texture)
     img.setPosition(x, y)
+    img.setOrigin(0.5, 0.5)
     img.setScale(1)
     img.setAlpha(1)
     img.setAngle(0)
@@ -53,6 +56,7 @@ export class SpritePool {
     img.setTint(0xffffff)
     img.setVisible(true)
     img.setActive(true)
+    this.onSpawn?.(texture, img)
     return img
   }
 
@@ -64,7 +68,8 @@ export class SpritePool {
     this.scene.tweens.add({
       targets: img,
       alpha: 0,
-      scale: img.scale * 0.8,
+      scaleX: img.scaleX * 0.8,
+      scaleY: img.scaleY * 0.8,
       delay: delayMs,
       duration: fadeMs,
       ease: 'Quad.easeIn',

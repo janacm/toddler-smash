@@ -15,12 +15,12 @@ import { dirname, join } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { progressionPass } from './progression-pass.mjs'
 import { animalPass } from './animal-pass.mjs'
-import { holdEscape as holdEscapeOn, holdForPanel, observeGame } from './browser-helpers.mjs'
+import { holdEscape as holdEscapeOn, holdForPanel, observeGame, waitForRenderFrame } from './browser-helpers.mjs'
 
 // Not vite's default 4173, which other copies of the game may already be
 // serving. --strictPort below makes a clash fail instead of silently
 // screenshotting someone else's server.
-const PORT = Number(process.env.PORT) || 4391
+const PORT = Number(process.env.PORT ?? 4391)
 const URL = `http://127.0.0.1:${PORT}/`
 const OUT = process.argv[2] ?? 'shots/latest.png'
 
@@ -32,11 +32,12 @@ function sibling(name) {
 }
 
 const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], {
-  stdio: 'ignore',
+  stdio: ['ignore', 'inherit', 'inherit'],
   detached: false,
 })
 let serverExited = false
-server.on('exit', () => {
+server.on('exit', (code, sig) => {
+  console.log(`[screenshot.mjs] preview server exited with code=${code} sig=${sig}`)
   serverExited = true
 })
 
@@ -75,6 +76,10 @@ try {
   await page.goto(URL, { waitUntil: 'networkidle' })
   await splashGone(page)
 
+  // Thought-bubble companion sits happily in top-left
+  await sleep(350)
+  await page.screenshot({ path: sibling('companion') })
+
   // Mash it the way the actual user will: fast, arbitrary, overlapping.
   const keys = 'HELLO2468WORLD'.repeat(3).split('')
   for (const k of keys) {
@@ -86,6 +91,14 @@ try {
   await sleep(700)
 
   await page.screenshot({ path: OUT })
+
+  // Fire a clean 6-press combo streak to photograph the crescendo celebration.
+  for (const k of 'COMBO!'.split('')) {
+    await page.keyboard.press(k)
+    await sleep(80)
+  }
+  await sleep(180)
+  await page.screenshot({ path: sibling('combo-daytime') })
 
   // The child's buttons sit top-right, 108px apart, in `MODES` order: smash,
   // piano, drawing. Bump MODE_COUNT when a sub-game is added.
@@ -102,6 +115,15 @@ try {
   await page.mouse.click(300, 650)
   await sleep(500)
   await page.screenshot({ path: sibling('piano') })
+
+  // Play a 3-note phrase and photograph the animal choir singing back
+  await page.keyboard.press('1')
+  await sleep(150)
+  await page.keyboard.press('2')
+  await sleep(150)
+  await page.keyboard.press('3')
+  await sleep(650)
+  await page.screenshot({ path: sibling('piano-choral') })
 
   // Drawing: a few mouse scribbles, then keys for stickers. A second shot a
   // few seconds later checks the drawing fades.
@@ -127,6 +149,7 @@ try {
 
   // Grown-up panel: hold Escape, switch to Bedtime + Smash, hide it, mash.
   await holdEscape()
+  await waitForRenderFrame(page)
   await page.screenshot({ path: sibling('panel') })
   await page.keyboard.press('b')
   await page.keyboard.press('1')
@@ -139,6 +162,16 @@ try {
   await page.mouse.click(640, 400)
   await sleep(900)
   await page.screenshot({ path: sibling('bedtime') })
+
+  // Bedtime combo crescendo celebration: wait for the previous combo to expire,
+  // then space inputs above Bedtime's 160 ms spawn throttle but within the 900 ms combo window.
+  await sleep(950)
+  for (const k of 'SLEEPY'.split('')) {
+    await page.keyboard.press(k)
+    await sleep(180)
+  }
+  await sleep(150)
+  await page.screenshot({ path: sibling('combo-bedtime') })
 
   await mobilePass()
   // The baseline page is finished; stop rendering it during the later passes.
@@ -208,6 +241,7 @@ try {
       }), () => cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }))
     }
     await holdCorners()
+    await waitForRenderFrame(phone)
     await phone.screenshot({ path: sibling('mobile-panel') })
 
     await context.close()
@@ -261,7 +295,7 @@ try {
     for (const p of problems) console.error('  -', p)
     process.exitCode = 1
   } else {
-    const names = ['splash', 'splash-bedtime', 'mobile-splash', 'piano', 'drawing', 'drawing-faded', 'panel', 'bedtime', 'mobile', 'mobile-piano', 'mobile-drawing', 'mobile-panel']
+    const names = ['splash', 'splash-bedtime', 'mobile-splash', 'piano', 'drawing', 'drawing-faded', 'panel', 'bedtime', 'combo-daytime', 'combo-bedtime', 'mobile', 'mobile-piano', 'mobile-drawing', 'mobile-panel']
     console.log(`ok — no page errors. screenshots: ${[OUT, ...names.map(sibling)].join(', ')}`)
   }
 } finally {

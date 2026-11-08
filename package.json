@@ -14,10 +14,12 @@
     "desktop:build": "tauri build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:docs": "node scripts/verify-docs.mjs",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.3",
+    "@tauri-apps/plugin-updater": "^2.14.1",
     "phaser": "^3.90.0"
   },
   "devDependencies": {

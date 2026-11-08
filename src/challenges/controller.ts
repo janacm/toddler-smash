@@ -63,6 +63,7 @@ export class ChallengeController {
     this.timer.remove()
     this.graphics.destroy()
     this.mode.setPlayground?.(false, this.ctx())
+    this.mode.setPuzzleActive?.(false)
   }
 
   /** True means a picture control supplied the feedback, rather than a normal toy. */
@@ -247,6 +248,7 @@ export class ChallengeController {
     this.pointers.clear()
     this.multiTouch = false
     this.mode.setPlayground?.(this.state.view === 'playground', this.ctx())
+    this.mode.setPuzzleActive?.(this.state.view === 'puzzle')
     this.replay()
   }
 
@@ -265,6 +267,7 @@ export class ChallengeController {
     this.feedback(this.layout.back)
     this.progress.back(this.game)
     this.mode.setPlayground?.(false, this.ctx())
+    this.mode.setPuzzleActive?.(false)
     this.garden = []
     this.cursor = 4
     this.control = undefined

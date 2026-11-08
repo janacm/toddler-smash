@@ -108,9 +108,9 @@ macOS distribution requires three components:
 2. **Hardened Runtime & Entitlements**: Configured in `src-tauri/tauri.conf.json` (`hardenedRuntime: true`) with JIT entitlements in `src-tauri/entitlements.plist` (`com.apple.security.cs.allow-jit`, `com.apple.security.cs.allow-unsigned-executable-memory`).
 3. **Apple Notarization & Stapling**: Submitting the built `.app` and `.dmg` to Apple's Notary service (`xcrun notarytool`) and attaching the cryptographic ticket (`xcrun stapler`).
 
-#### GitHub Actions CI Setup
+#### GitHub Actions Release Setup
 
-The CI workflow `.github/workflows/ci.yml` automates signing and notarization on `macos-latest` runners whenever signing secrets are present in the repository. If secrets are not present (e.g. pull requests from external forks), CI automatically builds unsigned packages with `--no-sign` for build validation.
+The release workflow `.github/workflows/desktop-release.yml` automates signing and notarization on `macos-latest` runners whenever a release is triggered (via version tags `v*` or manual `workflow_dispatch`). Pull requests and CI validation in `.github/workflows/ci.yml` strictly build unsigned packages with `--no-sign` without accessing signing credentials.
 
 Required GitHub Repository Secrets:
 - `APPLE_CERTIFICATE`: Base64-encoded string of your exported `.p12` file containing the Developer ID Application certificate and private key.
@@ -196,7 +196,7 @@ Export your code-signing certificate and private key to a password-protected `.p
 - `WINDOWS_CERTIFICATE_PASSWORD`: Password for the `.pfx` file.
 - `WINDOWS_CERTIFICATE_THUMBPRINT`: (Optional) SHA-1 thumbprint if selecting an installed certificate.
 
-In CI, the runner imports the certificate into the `Cert:\CurrentUser\My` store, and `npm run desktop:build` automatically signs both `.msi` and `.exe` binaries with `signtool.exe`.
+In release builds (`desktop-release.yml`), the runner imports the certificate into the `Cert:\CurrentUser\My` store, extracts its thumbprint into `bundle.windows.certificateThumbprint`, and automatically signs both `.msi` and `.exe` binaries with `signtool.exe`.
 
 #### 2. Microsoft Trusted Signing (Cloud HSM / Azure)
 
@@ -208,7 +208,7 @@ Required GitHub Repository Secrets:
 - `AZURE_TRUSTED_SIGNING_ACCOUNT`: Trusted Signing account name.
 - `AZURE_TRUSTED_SIGNING_PROFILE`: Certificate profile name.
 
-CI builds unsigned installers (`npm run desktop:build -- --no-sign`), then invokes `azure/trusted-signing-action` to sign the `.msi` and `.exe` artifacts with cloud HSM keys.
+The release workflow builds unsigned installers (`npm run desktop:build -- --no-sign`), then invokes `azure/artifact-signing-action@v1` to sign the `.msi` and `.exe` artifacts with cloud HSM keys.
 
 #### Local Windows Signing & Verification
 
@@ -262,3 +262,42 @@ grown-up menu.
 
 To block another key, add it to the rules in `rules.rs` and add a test next
 to the existing ones.
+
+## In-app automatic updates
+
+Desktop installations feature automatic, cryptographically verified in-app
+updates powered by Tauri's official updater plugin (`@tauri-apps/plugin-updater`
+and `tauri-plugin-updater`):
+
+### Toddler-friendly update rules
+
+1. **Silent background download:** The app periodically checks the update
+   manifest (`latest.json` on GitHub Releases) and reconnect events in the
+   background (`src/desktopUpdates.ts`). When a signed release is found, it
+   downloads the update payload without displaying any modal dialogue, system
+   toast, or audible prompt.
+2. **Zero interruption during play:** Active toddler play sessions are never
+   interrupted by update prompts or unexpected app exits. The child can keep
+   mashing, drawing, and playing undisturbed.
+3. **Parent-controlled restart:** When an update has finished downloading and
+   verifying, the grown-up menu (hold Escape for 3 seconds) shows:
+   `Update to vX.Y.Z (restart)` along with the keyboard shortcut `U`.
+4. **Clean lockdown release on restart:** The native `restart` command in
+   `src-tauri/src/lib.rs` restores the operating system keyboard state (releasing
+   the CGEventTap on macOS and restoring Sticky/Filter Keys and low-level hooks on
+   Windows) and sets the `QUITTING` flag before triggering `app.restart()`,
+   preventing stray keystrokes from leaking into the desktop.
+
+### Release signing and publishing
+
+1. **Signing Keys:** Releases are signed with Minisign Ed25519 keys generated
+   via `npx @tauri-apps/cli signer generate`.
+   - The public key is embedded in `src-tauri/tauri.conf.json` (`plugins.updater.pubkey`).
+   - The private key is stored as the `TAURI_SIGNING_PRIVATE_KEY` repository secret
+     in GitHub Actions (with optional `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`).
+2. **Release Workflow:** `.github/workflows/desktop-release.yml` triggers on version
+   tags (`v*`) or manual `workflow_dispatch`. It builds release bundles across macOS
+   (universal Apple Silicon and Intel targets) and Windows, signs the updater
+   archives (`.tar.gz` and `.nsis.zip`), compiles the `latest.json` manifest, and
+   attaches them to the GitHub Release via `tauri-apps/tauri-action`.
+
