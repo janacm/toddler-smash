@@ -86,6 +86,19 @@ export const CONFIG = {
     feedbackIntervalMs: 90,
   },
 
+  /** Motor schema toys: trajectory, rotation, and constellation connections. */
+  schemas: {
+    trajectorySpeedMin: 420,
+    trajectorySpeedMax: 650,
+    trajectoryRestitution: 0.72,
+    rotationSpeedRad: 18,
+    centrifugalBoost: 140,
+    constellationMaxDist: 340,
+    constellationMinDist: 35,
+    constellationMaxLinks: 2,
+    constellationAnchorAgeMs: 3200,
+  },
+
   /** The drawing sub-game. */
   drawing: {
     /** Brush width as a share of the screen's short side, with a floor. */

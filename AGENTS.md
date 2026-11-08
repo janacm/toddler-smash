@@ -117,11 +117,15 @@ src/
     types.ts         SmashEvent, Toy, ToyContext
     index.ts         TOYS registry (Smash's toys) + playSmash
     play.ts          picks a toy for a smash, swallows its errors (unit-tested)
+    schemaMath.ts    pure bounce ray, squash/stretch, dust and constellation math (unit-tested)
     letterPop.ts     ] one file per toy
     shapeBurst.ts    ]
     ripple.ts        ]
     critter.ts       ]
     animals.ts       D/S shortcuts and weighted dinosaur/shark reactions
+    trajectory.ts    rebounding cosmic orbs with squash-and-stretch
+    rotation.ts      spinning pinwheels ejecting centrifugal dust
+    connection.ts    elastic threads snapping constellation stars
 src-tauri/           desktop app (see "Desktop app" below)
 ```
 

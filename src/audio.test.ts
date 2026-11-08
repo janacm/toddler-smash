@@ -18,7 +18,14 @@ class MockGain extends MockNode {
 
 class MockOscillator extends MockNode {
   type = 'sine'
-  frequency = { value: 0 }
+  frequency = {
+    value: 0,
+    setValueAtTime: vi.fn(function (this: { value: number }, val: number) {
+      this.value = val
+    }),
+    linearRampToValueAtTime: vi.fn(),
+    exponentialRampToValueAtTime: vi.fn(),
+  }
   onended: (() => void) | null = null
   start = vi.fn()
   stop = vi.fn()
@@ -155,6 +162,58 @@ describe('animal synth voices', () => {
     vi.stubGlobal('window', { AudioContext: MockAudioContext })
     synth.play(0, 'bubble')
     expect(currentContext().oscs).toHaveLength(1)
+  })
+
+  it('pop voice stays on pentatonic frequency with triangle wave and woody envelope', () => {
+    const synth = new Synth()
+    synth.play(0, 'pop', 0.8)
+    const ctx = currentContext()
+    expect(ctx.oscs).toHaveLength(1)
+    const osc = ctx.oscs[0]
+    expect(osc.type).toBe('triangle')
+    const baseFreq = CONFIG.audio.rootHz
+    expect(osc.frequency.setValueAtTime).toHaveBeenCalledWith(baseFreq, 10)
+    expect(osc.start).toHaveBeenCalledWith(10)
+
+    const dur = Math.max(0.04, 0.08 * (CONFIG.moods.daytime.audio.noteMs / 620))
+    expect(osc.stop).toHaveBeenCalledWith(10 + dur)
+
+    const gain = ctx.gains[1]
+    expect(gain.gain.setValueAtTime).toHaveBeenCalledWith(0, 10)
+    expect(gain.gain.linearRampToValueAtTime).toHaveBeenCalledWith(0.85 * 0.8, 10.003)
+    expect(gain.gain.exponentialRampToValueAtTime).toHaveBeenCalledWith(0.0001, 10 + dur)
+  })
+
+  it('pop voice respects maxVoices and frees slot onended', () => {
+    const synth = new Synth()
+    for (let i = 0; i < CONFIG.limits.maxVoices; i++) synth.play(i, 'pop')
+    const ctx = currentContext()
+    expect(ctx.oscs).toHaveLength(CONFIG.limits.maxVoices)
+
+    // Over cap: ignored
+    synth.play(0, 'pop')
+    expect(ctx.oscs).toHaveLength(CONFIG.limits.maxVoices)
+
+    // Free first slot
+    const ended = ctx.oscs[0].onended!
+    ended()
+    synth.play(0, 'pop')
+    expect(ctx.oscs).toHaveLength(CONFIG.limits.maxVoices + 1)
+  })
+
+  it('pop voice cleans up properly on scheduling error', () => {
+    const synth = new Synth()
+    synth.unlock()
+    const ctx = currentContext()
+    const broken = new MockOscillator()
+    broken.start.mockImplementationOnce(() => { throw new Error('failed start') })
+    ctx.createOscillator.mockImplementationOnce(() => {
+      ctx.oscs.push(broken)
+      return broken
+    })
+    expect(() => synth.play(0, 'pop')).not.toThrow()
+    expect(broken.disconnect).toHaveBeenCalledOnce()
+    expect(broken.onended).toBeNull()
   })
 
   it('includes overtones in the 200-450 Hz range for phone speaker audibility across all pentatonic notes', () => {

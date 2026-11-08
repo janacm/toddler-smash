@@ -42,6 +42,10 @@ and **S** a shark, alongside the pressed letter. Taps and clicks can meet
 either animal. Their colours, motion and sounds soften in Bedtime. Fast
 mashing also builds a musical streak: successive presses climb an ascending
 pentatonic arpeggio, culminating in a celebration ring and warm chord.
+Toddlers also explore movement, rotation, and connections: cosmic orbs
+fling across the screen and rebound off boundaries with woody bounce pops,
+spinning celestial pinwheels scatter sparkling dust outwards, and stars
+snap together with glowing elastic threads.
 
 **Piano.** Ten rainbow keys across the bottom of the screen (five to eight on
 a phone, so each key stays big enough for a small finger).
