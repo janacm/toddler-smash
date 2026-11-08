@@ -8,6 +8,7 @@ import { installInput, type PlayAction } from '../input'
 import { Progression, type GameId } from '../challenges/model'
 import { ChallengeController } from '../challenges/controller'
 import { isDesktop, keyboardLocked, quitApp } from '../desktop'
+import { applyDesktopUpdate, getDesktopUpdateState, onDesktopUpdateChange } from '../desktopUpdates'
 import { currentMood, saveSettings, settings } from '../settings'
 import { ModeSwitcher } from '../switcher'
 import { ParentPanel, type PanelAction, type PanelState } from '../parentPanel'
@@ -121,12 +122,19 @@ export class PlayScene extends Phaser.Scene {
     window.addEventListener('touchend', unlockAudio)
     window.addEventListener('click', unlockAudio)
 
+    const unsubUpdates = isDesktop
+      ? onDesktopUpdateChange(() => {
+          if (this.panel.visible) this.panel.refresh(this.panelState())
+        })
+      : undefined
+
     this.scale.on('resize', () => {
       this.refresh()
       this.panel.refresh(this.panelState())
       this.layoutCompanion()
     })
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      unsubUpdates?.()
       this.teardownInput?.()
       this.challenge?.destroy()
       this.companion?.destroy()
@@ -479,6 +487,7 @@ export class PlayScene extends Phaser.Scene {
       isFullscreen: this.scale.isFullscreen,
       standalone: isStandalone,
       lockStatus: this.lockStatus,
+      desktopUpdate: isDesktop ? getDesktopUpdateState() : undefined,
     }
   }
 
@@ -490,6 +499,7 @@ export class PlayScene extends Phaser.Scene {
     if (key === 'c') return { kind: 'toggleChild' }
     if (key === 'r') return { kind: 'resetProgress' }
     if (key === 'f' && !isDesktop) return { kind: 'fullscreen' }
+    if (key === 'u' && isDesktop && getDesktopUpdateState().status === 'ready') return { kind: 'desktopUpdate' }
     if (key === 'q' && isDesktop) return { kind: 'quit' }
     return undefined
   }
@@ -531,6 +541,9 @@ export class PlayScene extends Phaser.Scene {
         else toggle()
         break
       }
+      case 'desktopUpdate':
+        applyDesktopUpdate().catch(() => {})
+        break
       case 'quit':
         quitApp()
         return

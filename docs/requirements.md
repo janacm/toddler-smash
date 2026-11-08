@@ -89,6 +89,7 @@ developmental rubrics, pacing benchmarks, and session logging template.
 | W7 | Every merge to main automatically deploys the tested web artifact after web, macOS and Windows CI pass. Pull requests never publish. Serialize uploads and skip superseded commits so older CI runs cannot overwrite a newer release. Check the canonical site's published bytes and cache headers; failed verification fails the deploy job. | `.github/workflows/ci.yml`, `scripts/verify-deploy.mjs`, GitHub Actions deployment secret/variable | workflow lint, successful main deployment and live artifact comparison |
 | D1 | A Windows and Mac desktop app that a toddler can't leave: blocks the Windows and menu keys, Alt-Tab, Cmd-Q, Cmd-Tab, Spotlight, media keys and similar. Asking for the Mac Accessibility permission is acceptable. | `src-tauri/` | `npm run test:rust`, CI on macOS and Windows |
 | D2 | In the desktop app, the grown-up menu's Quit is the only way out. | `src-tauri/src/lib.rs` | review |
+| D3 | In the desktop app, updates download silently in the background without popups or interruptions during play. When ready, the grown-up menu shows an update option and releases native keyboard locks before restarting into the new release. | `src/desktopUpdates.ts`, `src-tauri/src/lib.rs`, `tauri.conf.json` | `desktopUpdates.test.ts`, `npm run test:coverage` |
 
 ## Process & Documentation
 

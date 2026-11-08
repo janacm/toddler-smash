@@ -24,6 +24,7 @@ export default defineConfig({
         'src/challenges/layout.ts',
         'src/challenges/rewards.ts',
         'src/updates.ts',
+        'src/desktopUpdates.ts',
         'src/discovery/scratchModel.ts',
         'src/discovery/albumModel.ts',
         'src/modes/pianoChoralLogic.ts',

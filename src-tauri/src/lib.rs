@@ -19,6 +19,13 @@ fn quit(app: tauri::AppHandle) {
 }
 
 #[tauri::command]
+fn restart(app: tauri::AppHandle) {
+    QUITTING.store(true, Ordering::SeqCst);
+    lockdown::release();
+    app.restart();
+}
+
+#[tauri::command]
 fn keyboard_locked() -> bool {
     lockdown::is_active()
 }
@@ -45,8 +52,9 @@ fn cover_screen(window: &WebviewWindow) -> tauri::Result<()> {
 
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .enable_macos_default_menu(false)
-        .invoke_handler(tauri::generate_handler![quit, keyboard_locked])
+        .invoke_handler(tauri::generate_handler![quit, restart, keyboard_locked])
         .setup(|app| {
             let window = app
                 .get_webview_window("main")

@@ -4,6 +4,7 @@ import { isDesktop } from './desktop'
 import { PlayScene } from './scenes/PlayScene'
 import { hideSplash } from './splash'
 import { startWebUpdates } from './webUpdates'
+import { watchForDesktopUpdates } from './desktopUpdates'
 import { BUILD_ID } from './version'
 
 document.documentElement.dataset.buildId = BUILD_ID
@@ -25,6 +26,8 @@ window.addEventListener('unhandledrejection', (ev) => {
 // tauri:// pages can't host a service worker and don't need one.
 if (!isDesktop && 'serviceWorker' in navigator) {
   startWebUpdates()
+} else if (isDesktop) {
+  watchForDesktopUpdates()
 }
 
 const game = new Phaser.Game({
