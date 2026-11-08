@@ -101,6 +101,9 @@ src/
   combo.ts           pure combo tracker, arpeggio and chord helpers (unit-tested)
   desktop.ts         Tauri bridge: isDesktop, quit, keyboard-lock status
   scenes/PlayScene.ts  the only scene
+  companion/
+    thoughtBubbleLogic.ts  pure matching engine & target generator (unit-tested)
+    thoughtCompanion.ts    presentation: idle bob, backflip, eating, sparkles
   challenges/
     model.ts         session-only per-game discovery and six authored rounds
     layout.ts        shared grid, navigation, hit tests and crossed waypoints
@@ -117,7 +120,9 @@ src/
     types.ts         Mode
     index.ts         MODES registry (order = panel number keys)
     smash.ts         the original game: the toy registry below
-    piano.ts         rainbow piano, scenery + its own toy
+    piano.ts         rainbow piano, animal faces, scenery + its own toy
+    pianoChoralLogic.ts  animal keys, pentatonic harmony (+2), phrase detection
+    choralEchoQueue.ts   capped, cancellable 3-note choral response queue
     drawing.ts       finger painting on a slowly fading RenderTexture
     drawingMath.ts   pure stroke / brush / pitch helpers (unit-tested)
   toys/

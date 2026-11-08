@@ -70,6 +70,27 @@ export function buildTextures(scene: Phaser.Scene): void {
   g.fillRoundedRect(0, 0, 96, 256, 22)
   g.generateTexture('pianoKey', 96, 256)
 
+  // Soft thought bubble for pictorial requests
+  reset()
+  g.fillStyle(0xffffff, 0.96)
+  g.fillCircle(38, 50, 26)
+  g.fillCircle(64, 38, 30)
+  g.fillCircle(90, 50, 26)
+  g.fillCircle(50, 62, 24)
+  g.fillCircle(78, 62, 24)
+  g.lineStyle(3, 0xccd9ed, 0.7)
+  g.strokeCircle(38, 50, 26)
+  g.strokeCircle(64, 38, 30)
+  g.strokeCircle(90, 50, 26)
+  g.strokeCircle(50, 62, 24)
+  g.strokeCircle(78, 62, 24)
+  g.generateTexture('thoughtBubble', 128, 96)
+
+  // Trailing dot for thought bubble trail
+  reset()
+  g.fillCircle(16, 16, 14)
+  g.generateTexture('thoughtDot', 32, 32)
+
   // Four little keys: the picture on the child's piano button.
   reset()
   for (let i = 0; i < 4; i++) g.fillRoundedRect(14 + i * 26, 24, 22, 80, 6)

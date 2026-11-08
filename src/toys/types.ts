@@ -47,6 +47,14 @@ export interface ToyContext {
   color(seed?: number): number
   /** Unlock a sticker album badge. */
   discover?(id: BadgeId): void
+  /** Check candidate action against current thought companion target. */
+  checkMatch?(action: {
+    colorIndex?: number
+    shape?: string
+    animal?: string
+    noteIndex?: number
+    char?: string
+  }): void
   /** Where this press sits in the current streak; drives pitch and juice. */
   combo: ComboHit
   /** The active mood, so toys can scale motion and decay (Bedtime is calmer). */

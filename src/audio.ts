@@ -4,7 +4,7 @@ import { comboChordIndices, comboNoteIndex } from './combo'
 type MoodAudio = Mood['audio']
 
 /** Toy voices share the same pentatonic notes, mood volume and voice cap. */
-export type Voice = 'blip' | 'piano' | 'dinosaur' | 'bubble' | 'pop'
+export type Voice = 'blip' | 'piano' | 'dinosaur' | 'bubble' | 'pop' | 'choral'
 
 /** Harmonic partials of the piano voice and their relative loudness. */
 const PIANO_PARTIALS: [number, number][] = [
@@ -114,6 +114,10 @@ export class Synth {
     const freq = this.noteTable[((index % n) + n) % n] * Math.pow(2, this.mood.octaveShift)
     if (voice === 'piano') {
       this.playPiano(ctx, master, freq, level)
+      return
+    }
+    if (voice === 'choral') {
+      this.playChoral(ctx, master, freq, level)
       return
     }
     if (voice === 'dinosaur' || voice === 'bubble') {
@@ -445,6 +449,89 @@ export class Synth {
       osc.onended = () => cleanup()
       osc.start(now)
       osc.stop(now + dur)
+    } catch {
+      cleanup(true)
+    }
+  }
+
+  /**
+   * Two detuned sines with gentle vibrato and a vocal-like envelope.
+   * Used for call-and-response animal singing. Counts as one voice.
+   */
+  private playChoral(ctx: AudioContext, master: GainNode, freq: number, level: number): void {
+    const nodes: AudioNode[] = []
+    const oscs: OscillatorNode[] = []
+    let counted = false
+    let finished = false
+    const cleanupVoice = () => cleanup(true)
+    const cleanup = (interrupt = false) => {
+      if (finished) return
+      finished = true
+      if (counted) {
+        this.voices = Math.max(0, this.voices - 1)
+        const idx = this.activeVoiceCleanups.indexOf(cleanupVoice)
+        if (idx !== -1) this.activeVoiceCleanups.splice(idx, 1)
+      }
+      for (const osc of oscs) {
+        osc.onended = null
+        if (interrupt) {
+          try {
+            osc.stop()
+          } catch {
+            /* not started or already stopped */
+          }
+        }
+      }
+      for (const node of nodes) {
+        try {
+          node.disconnect()
+        } catch {
+          /* already torn down */
+        }
+      }
+    }
+
+    try {
+      const now = ctx.currentTime
+      const dur = 0.45 // ~450 ms decay
+
+      const gain = ctx.createGain()
+      nodes.push(gain)
+      gain.gain.setValueAtTime(0, now)
+      gain.gain.linearRampToValueAtTime(0.7 * level, now + 0.035) // ~35 ms attack
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
+      gain.connect(master)
+
+      // 4.5 Hz vibrato via LFO
+      const lfo = ctx.createOscillator()
+      const lfoGain = ctx.createGain()
+      nodes.push(lfo, lfoGain)
+      oscs.push(lfo)
+      lfo.type = 'sine'
+      lfo.frequency.value = 4.5
+      lfoGain.gain.value = 4 // ~4 Hz depth
+      lfo.connect(lfoGain)
+
+      // Two detuned sines (+3.5 cents and -3.5 cents)
+      const detunes = [3.5, -3.5]
+      for (const cents of detunes) {
+        const osc = ctx.createOscillator()
+        nodes.push(osc)
+        oscs.push(osc)
+        osc.type = 'sine'
+        osc.frequency.value = freq * Math.pow(2, cents / 1200)
+        lfoGain.connect(osc.frequency)
+        osc.connect(gain)
+      }
+
+      this.voices++
+      counted = true
+      this.activeVoiceCleanups.push(cleanupVoice)
+      oscs[1].onended = () => cleanup()
+      for (const osc of oscs) {
+        osc.start(now)
+        osc.stop(now + dur)
+      }
     } catch {
       cleanup(true)
     }

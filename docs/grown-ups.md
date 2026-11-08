@@ -54,6 +54,9 @@ a phone, so each key stays big enough for a small finger).
 - Letters play the key under their spot on the keyboard, so Q is low and P is
   high, and the letter floats up.
 - A tap or click plays whichever key column it lands in, anywhere on screen.
+- Each key is stamped with a friendly animal face (frog, kitten, bird, puppy).
+  Playing a 3-note melodic phrase prompts the animal choir to sing back the
+  melody in a call-and-response pentatonic harmony.
 
 **Drawing.** Drag a finger (or hold the mouse button and move) to paint a fat
 line that slowly shifts through the rainbow and hums as it goes: higher up the
@@ -69,6 +72,14 @@ shark, or a starlit night sky). Clearing about three-quarters of the card trigge
 an auto-bloom celebration: the mask dissolves, stars burst, a pentatonic fanfare
 plays, and a discovery badge unlocks into the child's album before cycling to the
 next mystery card.
+
+**The thought-bubble companion.** A sweet little baby dinosaur sits in the
+top-left corner with a soft thought bubble showing a picture: a shape or animal
+in Smash, a note or animal key in Piano, or a colour in Drawing. If the child
+happens to match it, the companion does a joyful backflip, eats the icon, and
+showers sparkles with a happy chime. If they ignore it, nothing happens: there
+are no timers, no scores, and no sad faces, and the thought quietly changes on
+its own after a while.
 
 Every note is on the same five-note scale, so there are no wrong notes, and
 mashing still sounds like music.

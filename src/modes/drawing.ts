@@ -56,6 +56,9 @@ function dab(ctx: ToyContext, s: Stroke, x: number, y: number, batched: boolean)
     target.stamp(BRUSH, undefined, ctx.width - x, y, { scale, tint, skipBatch: batched })
     card?.scratch(ctx.width - x, y, batched, ctx)
   }
+  const t = s.travelled / CONFIG.drawing.colorEveryPx
+  const colorIndex = Math.abs(Math.floor(s.seed + t)) % ctx.mood.palette.length
+  ctx.checkMatch?.({ colorIndex })
 }
 
 function begin(ctx: ToyContext, pointerId: number, x: number, y: number): Stroke {
@@ -99,6 +102,7 @@ function sticker(e: SmashEvent, ctx: ToyContext): void {
   const size = brushPx(ctx.width, ctx.height) * CONFIG.drawing.stickerSize
   const angle = ctx.rng.between(-20, 20)
   ctx.synth.play(e.index)
+  ctx.checkMatch?.({ colorIndex: Math.abs(e.index) % ctx.mood.palette.length })
 
   if (e.char) {
     const txt = ctx.text.spawn(e.char, e.x, e.y, Math.round(size))
