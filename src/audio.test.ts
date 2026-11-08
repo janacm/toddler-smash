@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Synth, type Voice } from './audio'
+import { DINOSAUR_PARTIALS, Synth, type Voice } from './audio'
 import { CONFIG } from './config'
 
 class MockNode {
@@ -63,9 +63,11 @@ describe('animal synth voices', () => {
     const highA = CONFIG.audio.rootHz * Math.pow(2, 2 + 9 / 12)
     const base = highA / 2 // Bedtime's octave shift.
     expect(ctx.oscs.map(osc => osc.frequency.value)).toEqual(
-      voice === 'dinosaur' ? [base / 4, base / 2] : [base],
+      voice === 'dinosaur' ? [base / 4, base / 2, base, base * 2] : [base],
     )
-    expect(ctx.oscs.map(osc => osc.type)).toEqual(voice === 'dinosaur' ? ['sine', 'sine'] : ['sine'])
+    expect(ctx.oscs.map(osc => osc.type)).toEqual(
+      voice === 'dinosaur' ? ['sine', 'sine', 'sine', 'sine'] : ['sine'],
+    )
     expect(ctx.gains[0].gain.value).toBe(CONFIG.moods.bedtime.audio.volume)
     const duration = CONFIG.moods.bedtime.audio.noteMs / 1000 * (voice === 'dinosaur' ? 1 : 0.5)
     for (const osc of ctx.oscs) {
@@ -80,7 +82,10 @@ describe('animal synth voices', () => {
     const synth = new Synth()
     synth.play(synth.noteCount, 'dinosaur')
     expect(currentContext().oscs.map(osc => [osc.type, osc.frequency.value])).toEqual([
-      ['triangle', CONFIG.audio.rootHz / 4], ['triangle', CONFIG.audio.rootHz / 2],
+      ['triangle', CONFIG.audio.rootHz / 4],
+      ['triangle', CONFIG.audio.rootHz / 2],
+      ['triangle', CONFIG.audio.rootHz],
+      ['triangle', CONFIG.audio.rootHz * 2],
     ])
   })
 
@@ -89,7 +94,7 @@ describe('animal synth voices', () => {
     const voices: Voice[] = ['piano', 'blip', 'dinosaur', ...Array<Voice>(5).fill('bubble')]
     voices.forEach(voice => synth.play(0, voice))
     const ctx = currentContext()
-    const expectedCount = 4 + 2 + 2 + 5
+    const expectedCount = 4 + 2 + 4 + 5
     expect(ctx.oscs).toHaveLength(expectedCount)
     synth.play(0, 'dinosaur')
     expect(ctx.oscs).toHaveLength(expectedCount)
@@ -102,6 +107,8 @@ describe('animal synth voices', () => {
     expect(ctx.oscs).toHaveLength(expectedCount + 1)
     expect(ctx.oscs[6].disconnect).toHaveBeenCalledOnce()
     expect(ctx.oscs[7].disconnect).toHaveBeenCalledOnce()
+    expect(ctx.oscs[8].disconnect).toHaveBeenCalledOnce()
+    expect(ctx.oscs[9].disconnect).toHaveBeenCalledOnce()
   })
 
   it('keeps existing voice accounting when setup fails before reserving a slot', () => {
@@ -134,7 +141,7 @@ describe('animal synth voices', () => {
     }
     for (const gain of ctx.gains.slice(1)) expect(gain.disconnect).toHaveBeenCalledOnce()
     for (let i = 0; i <= CONFIG.limits.maxVoices; i++) synth.play(i, 'bubble')
-    expect(ctx.oscs).toHaveLength(2 + CONFIG.limits.maxVoices)
+    expect(ctx.oscs).toHaveLength(4 + CONFIG.limits.maxVoices)
   })
 
   it('contains unavailable audio and ignores silent or invalid gain without allocating nodes', () => {
@@ -148,6 +155,58 @@ describe('animal synth voices', () => {
     vi.stubGlobal('window', { AudioContext: MockAudioContext })
     synth.play(0, 'bubble')
     expect(currentContext().oscs).toHaveLength(1)
+  })
+
+  it('includes overtones in the 200-450 Hz range for phone speaker audibility across all pentatonic notes', () => {
+    const synth = new Synth()
+    for (let i = 0; i < 5; i++) {
+      synth.play(i, 'dinosaur')
+      const ctx = currentContext()
+      const dinoOscs = ctx.oscs.slice(-DINOSAUR_PARTIALS.length)
+      const freqs = dinoOscs.map(osc => osc.frequency.value)
+
+      // Must include mid-range presence (>150 Hz) audible on small mobile speakers
+      const mobileAudibleFreqs = freqs.filter(f => f >= 150 && f <= 450)
+      expect(mobileAudibleFreqs.length).toBeGreaterThanOrEqual(1)
+
+      // Every partial frequency must be an exact pentatonic scale note or octave
+      for (const f of freqs) {
+        const root = CONFIG.audio.rootHz
+        const semitonesFromRoot = Math.round(12 * Math.log2(f / root))
+        const pitchClass = ((semitonesFromRoot % 12) + 12) % 12
+        expect(CONFIG.audio.scaleSemitones).toContain(pitchClass)
+      }
+    }
+  })
+
+  it('maintains audible overtones for Bedtime while using gentle sine waves and reduced volume', () => {
+    const synth = new Synth()
+    synth.setMood(CONFIG.moods.bedtime.audio)
+    for (let i = 0; i < 5; i++) {
+      synth.play(i, 'dinosaur')
+      const ctx = currentContext()
+      const dinoOscs = ctx.oscs.slice(-DINOSAUR_PARTIALS.length)
+      const freqs = dinoOscs.map(osc => osc.frequency.value)
+
+      // Even the lowest Bedtime notes (C3 at 130 Hz fundamental) have overtones >= 150 Hz
+      const mobileAudibleFreqs = freqs.filter(f => f >= 150 && f <= 450)
+      expect(mobileAudibleFreqs.length).toBeGreaterThanOrEqual(1)
+
+      // All Bedtime oscillators use gentle sine waves
+      for (const osc of dinoOscs) {
+        expect(osc.type).toBe('sine')
+      }
+    }
+  })
+
+  it('keeps sub-bass dominant while overtones remain subtle', () => {
+    // 0.25 ratio has highest gain, higher overtones taper off
+    expect(DINOSAUR_PARTIALS[0][0]).toBe(0.25)
+    expect(DINOSAUR_PARTIALS[0][1]).toBeGreaterThan(DINOSAUR_PARTIALS[1][1])
+    expect(DINOSAUR_PARTIALS[1][1]).toBeGreaterThan(DINOSAUR_PARTIALS[2][1])
+    expect(DINOSAUR_PARTIALS[2][1]).toBeGreaterThan(DINOSAUR_PARTIALS[3][1])
+    const totalGain = DINOSAUR_PARTIALS.reduce((sum, [, g]) => sum + g, 0)
+    expect(totalGain).toBeLessThanOrEqual(1)
   })
 })
 
@@ -207,6 +266,21 @@ describe('combo synth voices', () => {
     ])
     expect(ctx.gains[1].gain.linearRampToValueAtTime.mock.calls[0][0]).toBeCloseTo(0.9 * 0.85 * 0.6)
     expect(ctx.oscs.length / 2).toBeLessThanOrEqual(CONFIG.limits.maxVoices)
+  })
+
+  it('reserves capacity for the warm chord so prior active voices do not truncate chord notes', () => {
+    const synth = new Synth()
+    for (let i = 0; i < 6; i++) {
+      synth.play(i, 'blip')
+    }
+    const ctx = currentContext()
+    expect(ctx.oscs.length).toBe(12)
+
+    synth.playWarmChord(0)
+    timers.forEach(t => t.fn())
+    expect(ctx.oscs.length).toBe(20)
+    expect(ctx.oscs[0].stop).toHaveBeenCalled()
+    expect(ctx.oscs[1].stop).toHaveBeenCalled()
   })
 
   describe('cues', () => {

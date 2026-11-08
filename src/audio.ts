@@ -15,6 +15,22 @@ const PIANO_PARTIALS: [number, number][] = [
 ]
 
 /**
+ * Harmonic partials of the dinosaur voice and their relative loudness.
+ *
+ * Phone and tablet speakers roll off sharply below ~150 Hz, which leaves pure
+ * low-frequency rumble (Daytime 65-110 Hz, Bedtime 33-55 Hz) inaudible on
+ * handheld devices. Octave overtones (1 and 2) provide mid-frequency presence
+ * in the 200-450 Hz range so small speaker drivers convey the roar and stomp,
+ * while pure octave intervals preserve pentatonic consonance and Bedtime calm.
+ */
+export const DINOSAUR_PARTIALS: [number, number][] = [
+  [0.25, 0.5],
+  [0.5, 0.25],
+  [1, 0.18],
+  [2, 0.07],
+]
+
+/**
  * A tiny WebAudio synth. No audio files — every sound is generated, so the repo
  * stays pure text and an agent can change how the game *sounds* by editing
  * numbers instead of sourcing assets.
@@ -33,6 +49,7 @@ export class Synth {
   private noteTable: number[] = []
   private mood: MoodAudio = CONFIG.moods.daytime.audio
   private lastCueAt = Number.NEGATIVE_INFINITY
+  private activeVoiceCleanups: Array<() => void> = []
 
   constructor() {
     const { scaleSemitones, rootHz, octaves } = CONFIG.audio
@@ -136,6 +153,15 @@ export class Synth {
       this.voices++
       const done = () => {
         this.voices = Math.max(0, this.voices - 1)
+        const idx = this.activeVoiceCleanups.indexOf(done)
+        if (idx !== -1) this.activeVoiceCleanups.splice(idx, 1)
+        try {
+          osc.onended = null
+          osc.stop()
+          osc2.stop()
+        } catch {
+          /* already stopped or not started */
+        }
         try {
           osc.disconnect()
           osc2.disconnect()
@@ -145,6 +171,7 @@ export class Synth {
           /* already torn down */
         }
       }
+      this.activeVoiceCleanups.push(done)
       osc.onended = done
 
       osc.start(now)
@@ -165,10 +192,26 @@ export class Synth {
   }
 
   /**
+   * Ensure there is enough voice capacity to play `needed` notes without
+   * hitting the global `maxVoices` limit, retiring the oldest voices if needed.
+   */
+  reserveVoiceCapacity(needed: number): void {
+    const maxAllowed = Math.max(0, CONFIG.limits.maxVoices - needed)
+    while (this.voices > maxAllowed && this.activeVoiceCleanups.length > 0) {
+      const oldest = this.activeVoiceCleanups.shift()
+      oldest?.()
+    }
+    if (this.voices > maxAllowed) {
+      this.voices = maxAllowed
+    }
+  }
+
+  /**
    * A warm pentatonic chord (root, third, fifth, octave) strummed 24 ms apart.
    * Four voices, so it fits under `maxVoices` alongside the arpeggio note.
    */
   playWarmChord(baseIndex = 0, gainScale = 0.85): void {
+    this.reserveVoiceCapacity(4)
     comboChordIndices(baseIndex).forEach((note, i) => {
       window.setTimeout(() => this.play(note, 'blip', gainScale * 0.6), i * 24)
     })
@@ -187,42 +230,66 @@ export class Synth {
     else this.play(7, 'blip', gainScale * moodFactor)
   }
 
-  /** Soft animal reactions: octave-only pitches, with character in the envelope. */
+  /**
+   * Soft animal reactions: octave-only pitches, with character in the envelope.
+   * Dinosaur uses `DINOSAUR_PARTIALS` (sub-bass 0.25, bass 0.5, and overtones 1 and 2)
+   * so the stomp and rumble translate clearly on small phone/tablet speakers while
+   * remaining gentle, pleasant, and pentatonic in Bedtime.
+   */
   private playAnimal(
-    ctx: AudioContext, master: GainNode, freq: number,
-    voice: 'dinosaur' | 'bubble', level: number,
+    ctx: AudioContext,
+    master: GainNode,
+    freq: number,
+    voice: 'dinosaur' | 'bubble',
+    level: number,
   ): void {
     const nodes: AudioNode[] = []
     const oscs: OscillatorNode[] = []
     let counted = false
     let finished = false
+    const cleanupVoice = () => cleanup(true)
     const cleanup = (interrupt = false) => {
       if (finished) return
       finished = true
-      if (counted) this.voices = Math.max(0, this.voices - 1)
+      if (counted) {
+        this.voices = Math.max(0, this.voices - 1)
+        const idx = this.activeVoiceCleanups.indexOf(cleanupVoice)
+        if (idx !== -1) this.activeVoiceCleanups.splice(idx, 1)
+      }
       for (const osc of oscs) {
         osc.onended = null
         if (interrupt) {
-          try { osc.stop() } catch { /* not started or already stopped */ }
+          try {
+            osc.stop()
+          } catch {
+            /* not started or already stopped */
+          }
         }
       }
       for (const node of nodes) {
-        try { node.disconnect() } catch { /* already torn down */ }
+        try {
+          node.disconnect()
+        } catch {
+          /* already torn down */
+        }
       }
     }
 
     try {
       const now = ctx.currentTime
       const dinosaur = voice === 'dinosaur'
-      const dur = this.mood.noteMs / 1000 * (dinosaur ? 1 : 0.5)
+      const dur = (this.mood.noteMs / 1000) * (dinosaur ? 1 : 0.5)
       const gain = ctx.createGain()
       nodes.push(gain)
       gain.gain.setValueAtTime(0, now)
       if (dinosaur) {
         // A low, gently wobbling "rrrum"; no noisy or startling roar.
         for (const [time, amount] of [
-          [0.08, 0.55], [0.26, 0.25], [0.4, 0.45],
-          [0.57, 0.2], [0.7, 0.3],
+          [0.08, 0.55],
+          [0.26, 0.25],
+          [0.4, 0.45],
+          [0.57, 0.2],
+          [0.7, 0.3],
         ]) {
           gain.gain.linearRampToValueAtTime(amount * level, now + dur * time)
         }
@@ -233,7 +300,7 @@ export class Synth {
       gain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
       gain.connect(master)
 
-      const partials = dinosaur ? [[0.25, 0.75], [0.5, 0.2]] : [[1, 1]]
+      const partials: [number, number][] = dinosaur ? DINOSAUR_PARTIALS : [[1, 1]]
       for (const [ratio, amount] of partials) {
         const osc = ctx.createOscillator()
         nodes.push(osc)
@@ -249,6 +316,7 @@ export class Synth {
 
       this.voices++
       counted = true
+      this.activeVoiceCleanups.push(cleanupVoice)
       oscs[0].onended = () => cleanup()
       for (const osc of oscs) {
         osc.start(now)
@@ -290,8 +358,20 @@ export class Synth {
       })
 
       this.voices++
-      oscs[0].onended = () => {
+      const done = (interrupt = false) => {
         this.voices = Math.max(0, this.voices - 1)
+        const idx = this.activeVoiceCleanups.indexOf(doneVoice)
+        if (idx !== -1) this.activeVoiceCleanups.splice(idx, 1)
+        for (const osc of oscs) {
+          osc.onended = null
+          if (interrupt) {
+            try {
+              osc.stop()
+            } catch {
+              /* already stopped or not started */
+            }
+          }
+        }
         for (const node of nodes) {
           try {
             node.disconnect()
@@ -300,6 +380,9 @@ export class Synth {
           }
         }
       }
+      const doneVoice = () => done(true)
+      this.activeVoiceCleanups.push(doneVoice)
+      oscs[0].onended = () => done()
       for (const osc of oscs) {
         osc.start(now)
         osc.stop(now + dur)

@@ -43,11 +43,8 @@ export const letterPop: Toy = {
 
     ctx.text.retire(txt, ctx.mood.decay.glyphMs * 0.55)
 
-    // Pitch tracks position on screen: left is low, right is high. Sweeping a
-    // hand across the keyboard produces a rising run rather than random notes.
-    // A fast streak lifts the pitch a step at a time (the synth wraps it).
-    const note = Math.floor((e.x / ctx.width) * ctx.synth.noteCount) + ctx.combo.step
-    ctx.synth.play(note)
+    // Pitch tracks the ascending combo arpeggio across successive hits.
+    ctx.synth.playArpeggio(ctx.combo.step)
 
     // A few sparkles so the glyph has some weight behind it.
     for (let i = 0; i < 6; i++) {
