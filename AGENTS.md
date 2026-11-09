@@ -340,6 +340,8 @@ Updates reload during play after the complete worker activates. Settings stay
 saved; drawing and session progress reset. Failed downloads and offline starts
 keep the last complete cached game, then retry. The grown-up menu's build ID
 matches uncached `/version.json`; do not infer a version from the game count.
+A subtle 4-character version code (last 4 characters of the latest git commit)
+is displayed in a light font on the bottom-right corner of the play area.
 After deploying, verify both a fresh browser and an already-cached installation
 on the canonical site. Existing old workers get the repair at their next check.
 
@@ -407,6 +409,7 @@ certificate store import and Microsoft Trusted Signing via
 | "stop key X doing an OS thing" | `src-tauri/src/lockdown/` |
 | "code signing / notarization / desktop releases" | `src-tauri/tauri.conf.json`, `.github/workflows/desktop-release.yml`, `docs/desktop.md` |
 | "the loading screen / logo should do X" | `index.html` (`#splash` markup and CSS), `config.ts` → `splash`, then `splash*.png` |
+| "version code on screen" | `src/scenes/PlayScene.ts`, `src/version.ts`, `vite.config.ts` |
 | "check docs and agent rules in PRs" | `scripts/verify-docs.mjs` + `.github/workflows/ci.yml` |
 
 ## Testing what actually matters

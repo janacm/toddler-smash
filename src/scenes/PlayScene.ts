@@ -21,6 +21,7 @@ import { playSmash, type SmashEvent, type ToyContext } from '../toys'
 import { ThoughtCompanion } from '../companion/thoughtCompanion'
 import { keyIndex, pianoKeyCount } from '../modes/pianoLayout'
 import { getAnimalForPianoKey } from '../modes/pianoChoralLogic'
+import { VERSION_CODE } from '../version'
 
 const isTouchScreen = window.matchMedia('(pointer: coarse)').matches
 const isStandalone =
@@ -85,6 +86,7 @@ export class PlayScene extends Phaser.Scene {
     this.companion = new ThoughtCompanion(this, () => this.context())
 
     this.drawHint()
+    this.drawVersion()
     this.applyMood()
     this.layoutCompanion()
 
@@ -340,6 +342,7 @@ export class PlayScene extends Phaser.Scene {
     this.tweens.timeScale = mood.timeScale
     this.synth.setMood(mood.audio)
     this.hint?.setColor(mood.hintColor)
+    this.versionText?.setColor(mood.hintColor)
     document.body.style.background = '#' + mood.background.top.toString(16).padStart(6, '0')
     this.refresh()
   }
@@ -351,6 +354,7 @@ export class PlayScene extends Phaser.Scene {
     this.layoutSwitcher()
     this.layoutCompanion()
     this.layoutTray()
+    this.layoutVersion()
   }
 
   private layoutTray(): void {
@@ -445,6 +449,30 @@ export class PlayScene extends Phaser.Scene {
       repeat: -1,
       ease: 'Sine.easeInOut',
     })
+  }
+
+  private versionText?: Phaser.GameObjects.Text
+
+  private drawVersion(): void {
+    const insets = safeAreaInsets()
+    const { width, height } = this.scale
+    const mood = currentMood()
+    this.versionText = this.add
+      .text(width - insets.right - 10, height - insets.bottom - 8, VERSION_CODE, {
+        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+        fontSize: '11px',
+        color: mood.hintColor,
+      })
+      .setOrigin(1, 1)
+      .setAlpha(0.5)
+      .setDepth(10)
+  }
+
+  private layoutVersion(): void {
+    if (!this.versionText) return
+    const insets = safeAreaInsets()
+    const { width, height } = this.scale
+    this.versionText.setPosition(width - insets.right - 10, height - insets.bottom - 8)
   }
 
   /**

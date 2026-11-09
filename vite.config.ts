@@ -2,12 +2,28 @@ import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { splashCss, splashScript } from './src/splash'
 import { randomUUID } from 'node:crypto'
+import { execSync } from 'node:child_process'
+
+function resolveGitCommit(): string {
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA
+  if (process.env.COMMIT_REF) return process.env.COMMIT_REF
+  try {
+    return execSync('git rev-parse HEAD', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
+  } catch {
+    return ''
+  }
+}
 
 // Git alone cannot identify local manual deploys containing uncommitted edits.
 const buildId = `${new Date().toISOString()}-${randomUUID().slice(0, 8)}`
+const commitSha = resolveGitCommit()
+const versionCode = commitSha ? commitSha.slice(-4) : 'dev'
 
 export default defineConfig({
-  define: { __BUILD_ID__: JSON.stringify(buildId) },
+  define: {
+    __BUILD_ID__: JSON.stringify(buildId),
+    __VERSION_CODE__: JSON.stringify(versionCode),
+  },
   server: { host: '127.0.0.1', port: 5173 },
   preview: { host: '127.0.0.1', port: 4173 },
   build: { target: 'es2022' },
@@ -15,7 +31,7 @@ export default defineConfig({
     {
       name: 'build-version',
       generateBundle() {
-        this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ buildId }) })
+        this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ buildId, versionCode }) })
       },
     },
     // The loading splash in index.html takes its colours from CONFIG.moods and

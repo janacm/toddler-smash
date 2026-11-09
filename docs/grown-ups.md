@@ -204,8 +204,10 @@ leaves that version running and retries later. There is no update dialog for
 the child to dismiss.
 
 The grown-up menu shows **Build** followed by the running version's unique ID.
-The current published ID is at `/version.json` on the game's website. The old
-offline cache receives this repair when the browser next checks its worker;
+A subtle 4-character version code (the last 4 characters of the git commit) also
+appears in a light font on the bottom-right corner of the play area for quick
+verification. The current published ID is at `/version.json` on the game's website.
+The old offline cache receives this repair when the browser next checks its worker;
 already-open older copies do not gain the new minute-by-minute checks until
 that first update arrives.
 

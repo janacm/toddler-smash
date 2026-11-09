@@ -73,11 +73,15 @@ export async function animalPass({ browser, url, sibling, watch }) {
 
       // Seeded real taps exercise the ordinary weighted rotation, not keyboard shortcuts.
       const startOfTaps = (await state()).spawns
-      for (let i = 0; i < 28; i++) {
+      for (let i = 0; i < 60; i++) {
         const point = touch ? [i % 2 ? 280 : 110, 400 + i % 3 * 70] : [400 + i % 3 * 160, 350 + i % 2 * 150]
         if (touch) await page.touchscreen.tap(...point)
         else await page.mouse.click(...point)
         await page.waitForTimeout(gap)
+        const current = await page.evaluate((start) => window.__animalSpawns.slice(start), startOfTaps)
+        if (current.some((key) => key.startsWith('dinosaur')) && current.some((key) => key.startsWith('shark'))) {
+          break
+        }
       }
       const records = await page.evaluate((start) => window.__animalSpawns.slice(start), startOfTaps)
       assert(records.some((key) => key.startsWith('dinosaur')), `${prefix}: tap rotation includes dinosaurs`)
