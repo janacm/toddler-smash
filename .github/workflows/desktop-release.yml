@@ -15,16 +15,19 @@ permissions:
 
 jobs:
   release:
-    name: Build & Release Desktop (${{ matrix.platform }})
+    name: Build & Release Desktop (${{ matrix.platform }}, ${{ matrix.target }})
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: macos-latest
+            target: aarch64
             args: '--target aarch64-apple-darwin'
           - platform: macos-latest
+            target: x86_64
             args: '--target x86_64-apple-darwin'
           - platform: windows-latest
+            target: x64
             args: ''
     runs-on: ${{ matrix.platform }}
     env:
