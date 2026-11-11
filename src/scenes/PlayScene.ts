@@ -13,6 +13,7 @@ import { currentMood, saveSettings, settings } from '../settings'
 import { ModeSwitcher } from '../switcher'
 import { ParentPanel, type PanelAction, type PanelState } from '../parentPanel'
 import { safeAreaInsets } from '../safeArea'
+import { ExplainerBanner } from '../explainerBanner'
 import { AlbumModel } from '../discovery/albumModel'
 import { DiscoveryTray } from '../discovery/tray'
 import type { BadgeId } from '../discovery/types'
@@ -52,6 +53,9 @@ export class PlayScene extends Phaser.Scene {
   private tray!: DiscoveryTray
   private challenge?: ChallengeController
   private companion?: ThoughtCompanion
+  private explainerBanner!: ExplainerBanner
+  private showExplainers = true
+  private guideGame?: GameId
   private matchingSmash = false
   private lastSmashChar?: string
   private blockedPointers = new Set<number>()
@@ -84,11 +88,13 @@ export class PlayScene extends Phaser.Scene {
     }))
     this.mode = findMode(settings.mode)
     this.companion = new ThoughtCompanion(this, () => this.context())
+    this.explainerBanner = new ExplainerBanner(this)
 
     this.drawHint()
     this.drawVersion()
     this.applyMood()
     this.layoutCompanion()
+    this.syncExplainer()
 
     this.teardownInput = installInput(this.game.canvas.parentElement ?? document.body, {
       onAction: (action) => {
@@ -140,6 +146,7 @@ export class PlayScene extends Phaser.Scene {
       this.teardownInput?.()
       this.challenge?.destroy()
       this.companion?.destroy()
+      this.explainerBanner?.destroy()
       this.tray.destroy()
       this.leaveMode?.()
       window.removeEventListener('touchend', unlockAudio)
@@ -168,6 +175,7 @@ export class PlayScene extends Phaser.Scene {
     }
     const challengeHandled = this.safely(() => this.challenge?.action(action)) ?? false
     this.syncCompanionVisibility()
+    this.syncExplainer()
     if (challengeHandled) return true
 
     if (e.source === 'pointer') {
@@ -355,6 +363,8 @@ export class PlayScene extends Phaser.Scene {
     this.layoutCompanion()
     this.layoutTray()
     this.layoutVersion()
+    this.explainerBanner?.layout()
+    this.syncExplainer()
   }
 
   private layoutTray(): void {
@@ -372,6 +382,7 @@ export class PlayScene extends Phaser.Scene {
     this.leaveMode = this.mode.enter?.(this.context())
     this.challenge = this.createChallenge()
     this.challenge?.pause(this.panel.visible)
+    this.syncExplainer()
   }
 
   private createChallenge(): ChallengeController | undefined {
@@ -483,15 +494,18 @@ export class PlayScene extends Phaser.Scene {
   private toggleParentPanel(): void {
     this.comboTracker.reset()
     if (this.panel.visible) {
+      this.guideGame = undefined
       this.panel.hide()
       this.challenge?.pause(false)
       this.syncCompanionVisibility()
+      this.syncExplainer()
       return
     }
     this.panel.show(this.panelState())
     this.challenge?.pause(true)
     this.tray.cancelDance()
     this.syncCompanionVisibility()
+    this.syncExplainer()
     if (isDesktop) {
       void keyboardLocked().then((on) => {
         this.lockStatus = on
@@ -510,21 +524,32 @@ export class PlayScene extends Phaser.Scene {
       mode: this.mode,
       mood: settings.mood,
       childCanSwitch: settings.childCanSwitch,
+      showExplainers: this.showExplainers,
       isDesktop,
       canFullscreen: !isDesktop && !isStandalone && this.scale.fullscreen.available,
       isFullscreen: this.scale.isFullscreen,
       standalone: isStandalone,
       lockStatus: this.lockStatus,
       desktopUpdate: isDesktop ? getDesktopUpdateState() : undefined,
+      guideGame: this.guideGame,
     }
   }
 
   private panelActionForKey(key: string): PanelAction | undefined {
+    if (this.guideGame) {
+      if (key === '1') return { kind: 'showGuide', game: 'smash' }
+      if (key === '2') return { kind: 'showGuide', game: 'piano' }
+      if (key === '3') return { kind: 'showGuide', game: 'drawing' }
+      if (key === 'g' || key === 'escape') return { kind: 'closeGuide' }
+      return undefined
+    }
     const mode = MODES[Number(key) - 1]
     if (mode) return { kind: 'mode', mode }
     const mood = (Object.keys(CONFIG.moods) as MoodName[]).find((m) => CONFIG.moods[m].panelKey.toLowerCase() === key)
     if (mood) return { kind: 'mood', mood }
     if (key === 'c') return { kind: 'toggleChild' }
+    if (key === 'e') return { kind: 'toggleExplainers' }
+    if (key === 'g') return { kind: 'showGuide', game: this.mode.name as GameId }
     if (key === 'r') return { kind: 'resetProgress' }
     if (key === 'f' && !isDesktop) return { kind: 'fullscreen' }
     if (key === 'u' && isDesktop && getDesktopUpdateState().status === 'ready') return { kind: 'desktopUpdate' }
@@ -545,6 +570,16 @@ export class PlayScene extends Phaser.Scene {
         saveSettings()
         this.layoutSwitcher()
         break
+      case 'toggleExplainers':
+        this.showExplainers = !this.showExplainers
+        this.syncExplainer()
+        break
+      case 'showGuide':
+        this.guideGame = action.game ?? (this.mode.name as GameId)
+        break
+      case 'closeGuide':
+        this.guideGame = undefined
+        break
       case 'resetProgress':
         this.progress.reset()
         this.leaveMode?.()
@@ -556,6 +591,7 @@ export class PlayScene extends Phaser.Scene {
         this.challenge?.destroy()
         this.enterMode()
         this.challenge?.pause(true)
+        this.syncExplainer()
         break
       case 'fullscreen': {
         const toggle = () => {
@@ -576,9 +612,11 @@ export class PlayScene extends Phaser.Scene {
         quitApp()
         return
       case 'close':
+        this.guideGame = undefined
         this.panel.hide()
         this.challenge?.pause(false)
         this.syncCompanionVisibility()
+        this.syncExplainer()
         return
     }
     this.panel.refresh(this.panelState())
@@ -603,5 +641,18 @@ export class PlayScene extends Phaser.Scene {
         : false
     const hidden = this.panel.visible || isPuzzle
     this.companion.setVisible(!hidden)
+  }
+
+  private syncExplainer(): void {
+    if (!this.explainerBanner) return
+    const isGame = this.mode.name === 'smash' || this.mode.name === 'piano' || this.mode.name === 'drawing'
+    if (!isGame) {
+      this.explainerBanner.setVisible(false)
+      return
+    }
+    const gid = this.mode.name as GameId
+    const st = this.progress.state(gid)
+    this.explainerBanner.update(gid, st.view, st.solved, st.entranceStep)
+    this.explainerBanner.setVisible(!this.panel.visible && this.showExplainers)
   }
 }

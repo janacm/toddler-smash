@@ -151,6 +151,11 @@ try {
   await holdEscape()
   await waitForRenderFrame(page)
   await page.screenshot({ path: sibling('panel') })
+  await page.keyboard.press('g')
+  await waitForRenderFrame(page)
+  await page.screenshot({ path: sibling('panel-guide') })
+  await page.keyboard.press('g')
+  await waitForRenderFrame(page)
   await page.keyboard.press('b')
   await page.keyboard.press('1')
   await sleep(300)
@@ -295,7 +300,7 @@ try {
     for (const p of problems) console.error('  -', p)
     process.exitCode = 1
   } else {
-    const names = ['splash', 'splash-bedtime', 'mobile-splash', 'piano', 'drawing', 'drawing-faded', 'panel', 'bedtime', 'combo-daytime', 'combo-bedtime', 'mobile', 'mobile-piano', 'mobile-drawing', 'mobile-panel']
+    const names = ['splash', 'splash-bedtime', 'mobile-splash', 'piano', 'drawing', 'drawing-faded', 'panel', 'panel-guide', 'bedtime', 'combo-daytime', 'combo-bedtime', 'mobile', 'mobile-piano', 'mobile-drawing', 'mobile-panel']
     console.log(`ok — no page errors. screenshots: ${[OUT, ...names.map(sibling)].join(', ')}`)
   }
 } finally {

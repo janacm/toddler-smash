@@ -95,6 +95,8 @@ src/
   gestures.ts        two-finger corner hold (the touch way into the panel)
   switcher.ts        the child's round sub-game buttons, top-right
   parentPanel.ts     the grown-up panel: tappable buttons, scales to fit
+  explainers.ts      pure explainer metadata for all sub-games & levels (unit-tested)
+  explainerBanner.ts aesthetic translucent on-screen explainer banner
   safeArea.ts        notch / home-indicator insets from CSS env()
   splash.ts          loading splash: mood colours + saved-mood script that
                      vite.config.ts injects into index.html; hideSplash
@@ -404,6 +406,7 @@ certificate store import and Microsoft Trusted Signing via
 | "letters should do X" | `src/toys/letterPop.ts` |
 | "stop key X doing a browser thing" | `src/input.ts` |
 | "the grown-up menu should have X" | `src/parentPanel.ts` + `PlayScene.runPanelAction` |
+| "text explainers / level guide" | `src/explainers.ts`, `src/explainerBanner.ts`, `src/parentPanel.ts` |
 | "looks wrong on a phone" | `safeArea.ts`, `config.ts` → `piano`, then `mobile*.png` |
 | "combo / streak feel / celebration" | `config.ts` → `combo`, `PlayScene.ts` |
 | "stop key X doing an OS thing" | `src-tauri/src/lockdown/` |
