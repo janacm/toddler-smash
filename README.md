@@ -130,3 +130,8 @@ sounds.
 See [AGENTS.md](AGENTS.md) for architecture, conventions, and the
 build-and-screenshot verification loop, and
 [docs/requirements.md](docs/requirements.md) for what the game must do.
+
+## License
+
+[MIT](LICENSE) © 2026 janacm
+
