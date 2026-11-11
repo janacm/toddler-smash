@@ -20,6 +20,8 @@ Every option in the menu is also a button you can tap. On a keyboard:
 | **1** | Smash game |
 | **2** | Piano game |
 | **3** | Drawing game |
+| **G** | Level guide: see full text explainers for all 6 levels & powers |
+| **E** | Toggle on-screen text explainers on or off |
 | **D** | Daytime mood |
 | **B** | Bedtime mood |
 | **C** | Show or hide the corner buttons that let the child switch games |
@@ -145,6 +147,21 @@ puzzle. Discovery and difficulty need observation during play; the automated
 checks cannot establish whether a child finds the puzzles engaging. For the
 observational protocol, rubrics, and feedback logging template, see
 [playtesting.md](playtesting.md).
+
+## Text explainers and level guide
+
+An aesthetic, translucent pill banner at the top of the play screen displays
+clear, gentle text explainers for every sub-game, secret firefly entrance,
+puzzle tier/level (levels 1–6), and unlocked creative playground power.
+The banner passes taps straight through so a toddler cannot get stuck.
+
+Grown-ups can also inspect the full level breakdown directly from the
+grown-up menu:
+- Tap **Level Guide (all 6 levels)** (or press **G**) to view an aesthetic card
+  listing every tier, level goal, and creative power for Smash, Piano, and
+  Drawing.
+- Toggle **Explainers on screen** (or press **E**) if you prefer a purely
+  text-free screen for toddlers.
 
 ## Moods
 

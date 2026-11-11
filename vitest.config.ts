@@ -2,6 +2,14 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
+    poolOptions: {
+      forks: {
+        execArgv: ['--localstorage-file=/tmp/vitest-ls'],
+      },
+      threads: {
+        execArgv: ['--localstorage-file=/tmp/vitest-ls'],
+      },
+    },
     include: ['src/**/*.test.ts'],
     coverage: {
       provider: 'v8',
@@ -27,6 +35,7 @@ export default defineConfig({
         'src/desktopUpdates.ts',
         'src/discovery/scratchModel.ts',
         'src/discovery/albumModel.ts',
+        'src/explainers.ts',
         'src/modes/pianoChoralLogic.ts',
         'src/modes/choralEchoQueue.ts',
         'src/companion/thoughtBubbleLogic.ts',
