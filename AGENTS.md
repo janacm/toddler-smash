@@ -449,10 +449,11 @@ and `toys/play.ts`, and add it to the coverage `include` list in
 start with `// @vitest-environment happy-dom` (see `input.test.ts`). Native
 lock logic belongs in `src-tauri/src/lockdown/rules.rs` for the same reason.
 
-CI (`.github/workflows/ci.yml`) runs all of this. Rust tests run on real
-macOS and Windows runners, which is the only place the Windows code gets
-compiled for real. Screenshots and the HTML coverage report are uploaded as
-artifacts.
+CI (`.github/workflows/ci.yml`) runs all of this. Because the repository is
+public and open source (MIT), standard GitHub-hosted runners have unlimited free
+minutes. Rust tests and desktop packaging run on real macOS and Windows runners,
+which is the only place the Windows code gets compiled for real. Screenshots and
+the HTML coverage report are uploaded as artifacts.
 
 If you change mash-tolerance behaviour, raise the key count in
 `scripts/screenshot.mjs` and drop the delay to simulate harder mashing.

@@ -98,6 +98,7 @@ developmental rubrics, pacing benchmarks, and session logging template.
 | # | Requirement | Where | Checked by |
 | --- | --- | --- | --- |
 | P5 | Every pull request must update both documentation (`docs/` or `README.md`) and agent instructions (`AGENTS.md` or `CLAUDE.md`). CI verifies these updates before merging. | `scripts/verify-docs.mjs`, `.github/workflows/ci.yml` | `scripts/verify-docs.test.mjs`, `npm run test:docs` on PRs |
+| P6 | Public open-source repository licensed under MIT. CI runs all test suites and multi-platform desktop matrix builds (Ubuntu, macOS, Windows) on GitHub-hosted public runners with no private account minute limits. | `LICENSE`, `package.json`, `.github/workflows/ci.yml` | license check, CI runs |
 
 ## Out of scope
 

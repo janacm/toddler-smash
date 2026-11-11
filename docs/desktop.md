@@ -108,7 +108,9 @@ macOS distribution requires three components:
 2. **Hardened Runtime & Entitlements**: Configured in `src-tauri/tauri.conf.json` (`hardenedRuntime: true`) with JIT entitlements in `src-tauri/entitlements.plist` (`com.apple.security.cs.allow-jit`, `com.apple.security.cs.allow-unsigned-executable-memory`).
 3. **Apple Notarization & Stapling**: Submitting the built `.app` and `.dmg` to Apple's Notary service (`xcrun notarytool`) and attaching the cryptographic ticket (`xcrun stapler`).
 
-#### GitHub Actions Release Setup
+#### GitHub Actions Setup & Open Source Tier
+
+The repository is open source ([MIT License](../LICENSE)) and publicly hosted on GitHub. Because GitHub Actions provides unlimited free minutes for standard GitHub-hosted runners on public repositories, the multi-platform desktop matrix in `.github/workflows/ci.yml` (`macos-latest` and `windows-latest`) runs on pull requests and pushes without consuming personal monthly minute quotas.
 
 The release workflow `.github/workflows/desktop-release.yml` automates signing and notarization on `macos-latest` runners whenever a release is triggered (via version tags `v*` or manual `workflow_dispatch`). Pull requests and CI validation in `.github/workflows/ci.yml` strictly build unsigned packages with `--no-sign` without accessing signing credentials.
 
