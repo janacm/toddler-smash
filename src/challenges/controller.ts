@@ -11,10 +11,12 @@ import { crossedNodes, challengeLayout, distanceToSegment, hit, moveNode, type B
 import { getPuzzle, type GameId, type Progression } from './model'
 
 const SHAPES = ['circle', 'triangle', 'star'] as const
+const LEVEL_NAMES = ['Level One', 'Level Two', 'Level Three'] as const
 
 /** A bounded picture-only layer inside the existing scene. It never owns progress. */
 export class ChallengeController {
   private graphics: Phaser.GameObjects.Graphics
+  private levelText: Phaser.GameObjects.Text
   private timer: Phaser.Time.TimerEvent
   private cursor = 4
   private keyboard = false
@@ -40,6 +42,17 @@ export class ChallengeController {
     const context = this.ctx()
     this.board = challengeLayout(context.width, context.height, this.game, safeAreaInsets())
     this.graphics = context.scene.add.graphics().setDepth(100)
+    this.levelText = context.scene.add
+      .text(context.width / 2, this.layout.back.y, '', {
+        fontFamily: `'Arial Rounded MT Bold', ui-rounded, 'Nunito', Verdana, sans-serif`,
+        fontSize: '13px',
+        fontStyle: 'bold',
+        color: '#536385',
+        align: 'center',
+      })
+      .setOrigin(0.5)
+      .setDepth(101)
+      .setVisible(false)
     this.timer = context.scene.time.addEvent({ delay: 80, loop: true, callback: () => {
       try { this.draw() } catch { /* A discovery must never stop ordinary play. */ }
     } })
@@ -53,6 +66,7 @@ export class ChallengeController {
   pause(paused: boolean): void {
     this.paused = paused
     this.graphics.setVisible(!paused)
+    this.levelText.setVisible(!paused && this.state.view !== 'free')
     this.pointers.clear()
     this.multiTouch = false
     if (paused) this.demoStarted = -Infinity
@@ -62,6 +76,7 @@ export class ChallengeController {
   destroy(): void {
     this.timer.remove()
     this.graphics.destroy()
+    this.levelText.destroy()
     this.mode.setPlayground?.(false, this.ctx())
     this.mode.setPuzzleActive?.(false)
   }
@@ -313,6 +328,7 @@ export class ChallengeController {
     g.clear()
     ctx.scene.game.canvas.setAttribute('aria-label', `Toddler Smash. ${this.game}. ${state.view}. ${state.solved} puzzles solved.`)
     if (state.view === 'free') {
+      this.levelText.setVisible(false)
       const p = l.perches[state.discovered ? 0 : state.entranceStep]
       if (state.entranceStep > 0) {
         g.lineStyle(2, ink, 0.16)
@@ -322,11 +338,20 @@ export class ChallengeController {
     } else {
       this.button(l.back, 'back', ink, paper)
       this.button(l.replay, state.view === 'playground' ? 'star' : 'replay', ink, paper)
-      // Three flowers disclose depth without scores or level numbers.
-      for (let i = 0; i < 3; i++) {
-        const p = { x: ctx.width / 2 + (i - 1) * 32, y: l.back.y }
-        this.shape(2, p, 10, i <= Math.floor(state.solved / 2) ? ctx.color(i * 2) : ink, i <= Math.floor(state.solved / 2) ? 0.9 : 0.2)
-      }
+
+      const tier = Math.min(2, Math.floor(state.solved / 2))
+      const label = state.view === 'playground' ? 'Playground' : LEVEL_NAMES[tier]
+      this.levelText.setText(label)
+      this.levelText.setColor(night ? '#d9dcff' : '#536385')
+      this.levelText.setPosition(ctx.width / 2, l.back.y)
+      this.levelText.setVisible(!this.paused)
+
+      const pillW = Math.max(90, this.levelText.width + 20)
+      const pillH = 28
+      g.fillStyle(paper, 0.85)
+      g.fillRoundedRect(ctx.width / 2 - pillW / 2, l.back.y - pillH / 2, pillW, pillH, pillH / 2)
+      g.lineStyle(2, ink, 0.25)
+      g.strokeRoundedRect(ctx.width / 2 - pillW / 2, l.back.y - pillH / 2, pillW, pillH, pillH / 2)
       if (state.view === 'playground') {
         for (let i = 0; i < this.garden.length; i++) {
           const p = this.garden[i]
@@ -364,7 +389,7 @@ export class ChallengeController {
             g.lineStyle(7, ctx.color(3), 0.8); g.lineBetween(a.x, a.y, b.x, b.y)
           }
         } else {
-          if (puzzle.kind === 'match') this.shape(puzzle.prompt[0], { x: ctx.width / 2, y: l.promptY }, 30, ink, 0.35)
+          if (puzzle.kind === 'match') this.shape(puzzle.prompt[0], { x: ctx.width / 2, y: l.promptY + 16 }, 30, ink, 0.35)
           else {
             const spacing = Math.min(50, (ctx.width - 130) / (puzzle.prompt.length + (puzzle.kind === 'pattern' ? 2 : 0)))
             const total = puzzle.prompt.length + (puzzle.kind === 'pattern' ? 2 : 0)
@@ -403,7 +428,7 @@ export class ChallengeController {
         }
         for (let i = 0; i < puzzle.answer.length; i++) {
           g.fillStyle(i < state.attempt ? ctx.color(3) : ink, i < state.attempt ? 0.95 : 0.15)
-          g.fillCircle(ctx.width / 2 + (i - (puzzle.answer.length - 1) / 2) * 16, l.replay.y + 37, 4)
+          g.fillCircle(ctx.width / 2 + (i - (puzzle.answer.length - 1) / 2) * 16, puzzle.kind === 'match' ? l.promptY + 54 : l.replay.y + 37, 4)
         }
       }
     }
