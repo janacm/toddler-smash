@@ -184,15 +184,16 @@ The engine automatically plays demonstrations upon entering a round or tapping r
   - If pressed accidentally, does the child show distress? (Note: returning preserves earned rounds;
     re-entering via the portal resumes the current tier immediately).
 
-#### Center Three-Flower Tier Indicator
-- **Affordance**: Three circular floral star glyphs show the current tier:
-  - Tier 1 begins: Flower 1 is already lit.
-  - Tier 1 complete (Round 2): Flower 2 lights up.
-  - Tier 2 complete (Round 4): Flower 3 lights up.
-  - Tier 3 complete (Round 6): The playground unlocks; all three flowers remain lit.
+#### Center Level Indicator
+- **Affordance**: Centered pill badge showing the active tier name ("Level One", "Level Two", "Level Three", or "Playground"):
+  - Replaces earlier three-star glyphs that caused confusion with Smash puzzle shapes (such as alternating star/circle patterns).
+  - Tier 1 (Rounds 1–2): Displays "Level One".
+  - Tier 2 (Rounds 3–4): Displays "Level Two".
+  - Tier 3 (Rounds 5–6): Displays "Level Three".
+  - Tier 3 complete (Round 6): Playground unlocks and displays "Playground".
 - **Observation Focus**:
-  - Do children notice the blooming flowers?
-  - Does the visual progress indicator provide positive reinforcement without numerical scores?
+  - Does the clean text pill reduce confusion during shape matching and pattern levels?
+  - Do parents or older children easily track progression through the authored levels?
 
 #### Multi-Touch Rejection (Drawing Specific)
 - **Affordance Constraint**: In Drawing puzzles, touching with more than one finger simultaneously
@@ -279,8 +280,8 @@ Copy and paste this template when logging live play sessions with children.
 - **Left-Arrow Back Button**:
   - Tapped to exit: [ Intentionally to return to free play | Accidental tap caused surprise | Never tapped ]
   - Recovery after exit: [ Immediately re-entered via portal | Stayed in free play | Switched games ]
-- **Flower Progress Gauge**:
-  - Did the child notice the flowers lighting up?: [ Pointed at flowers | Cheered | Unnoticed ]
+- **Level Progress Indicator**:
+  - Did the child or parent notice the level indicator?: [ Noticed level label | Commented on level | Unnoticed ]
 - **Motor / Input Friction**:
   - Drawing palm/multi-touch resets observed: [ None | 1-2 times | Frequent disruption ]
   - Hitbox misses on choice icons / keys: [ None | Occasional edge tap | Frequent miss ]

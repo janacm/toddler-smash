@@ -109,7 +109,7 @@ src/
   challenges/
     model.ts         session-only per-game discovery and six authored rounds
     layout.ts        shared grid, navigation, hit tests and crossed waypoints
-    controller.ts    picture-only puzzles, demonstrations, cursor and garden
+    controller.ts    picture-only puzzles, demonstrations, level indicators, cursor and garden
     rewards.ts       capped, cancellable Piano echo queue
   discovery/
     types.ts         BadgeId (6 badges), ScratchCardId, definitions
@@ -181,10 +181,12 @@ buttons.
 
 `PlayScene` owns `Progression`; the challenge controller only presents it.
 Three successive firefly selections discover a game's entrance. Two puzzles
-per tier lead through three tiers, then a creative playground. Errors reset
-only the current attempt. A mode switch returns to free play and preserves
-that game's discoveries; reload or New player (panel R) resets all progress.
-Never persist puzzle state in `settings.ts`.
+per tier lead through three tiers, then a creative playground. The center HUD
+displays clear level text ("Level One", "Level Two", "Level Three", or
+"Playground") rather than small floral stars to avoid shape confusion with
+puzzle patterns. Errors reset only the current attempt. A mode switch returns
+to free play and preserves that game's discoveries; reload or New player (panel
+R) resets all progress. Never persist puzzle state in `settings.ts`.
 
 The pure model holds the authored shape, melody and 3×3 Drawing routes.
 Keep recognition there and geometry in `layout.ts`, with unit coverage.
