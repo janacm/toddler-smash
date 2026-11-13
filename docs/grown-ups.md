@@ -150,9 +150,13 @@ observational protocol, rubrics, and feedback logging template, see
 
 ## Text explainers and level guide
 
-An aesthetic, translucent pill banner at the top of the play screen displays
-clear, gentle text explainers for every sub-game, secret firefly entrance,
-puzzle tier/level (levels 1–6), and unlocked creative playground power.
+An aesthetic, translucent pill banner displays clear, gentle text explainers
+for every sub-game, secret firefly entrance, puzzle tier/level (levels 1–6),
+and unlocked creative playground power. All typography is rendered with crisp,
+high-resolution text that remains razor-sharp on Retina and mobile displays.
+On phones and narrow screens, the banner dynamically positions itself in open
+corridors so it never covers switcher buttons, the companion dinosaur, HUD level
+pills, scratch cards, puzzle nodes, or the bottom badge tray.
 The banner passes taps straight through so a toddler cannot get stuck.
 
 Grown-ups can also inspect the full level breakdown directly from the
