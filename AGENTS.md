@@ -54,9 +54,16 @@ switches to Bedtime + Smash and mashes again (`bedtime.png`). Then a 390×844
 touch phone taps around (`mobile.png`), switches to piano (`mobile-piano.png`),
 draws with two fingers (`mobile-drawing.png`) and opens the panel with a real
 two-finger corner hold (`mobile-panel.png`). **Read the screenshots.** A
-visual change cannot be verified from a diff. The script exits
-non-zero if the page logged any console error, so a green run means both "it
-looks like this" and "nothing threw."
+visual change cannot be verified from a diff. **Mobile element obstruction
+verification**: Whenever making visual changes, always verify mobile viewports
+(e.g. iPhone 390×844 portrait) using headless screenshots (`mobile*.png`,
+`mobile-challenge-*.png`) to confirm that visual elements (mode switcher buttons,
+companion dino, level HUD pills, puzzle nodes, scratch cards, discovery tray)
+never cover or block one another. All on-screen text objects in Phaser must use
+high-resolution canvas rendering (`resolution: Math.max(window.devicePixelRatio || 1, 3)`)
+and clean system typography so small labels and explainers remain razor sharp
+and legible on high-DPI displays. The script exits non-zero if the page logged
+any console error, so a green run means both "it looks like this" and "nothing threw."
 
 It also runs `scripts/progression-pass.mjs`: keyboard and touch discovery,
 all six authored puzzles and each reward in all three games, plus Bedtime

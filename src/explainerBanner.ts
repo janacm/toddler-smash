@@ -1,11 +1,17 @@
 import Phaser from 'phaser'
+import { CONFIG } from './config'
 import { currentMood } from './settings'
 import { getCurrentExplainer, type ActiveExplainer } from './explainers'
 import type { GameId } from './challenges/model'
 import { safeAreaInsets } from './safeArea'
 
-const FONT_TITLE = 'Verdana, Geneva, sans-serif'
-const FONT_BADGE = `'Arial Rounded MT Bold', ui-rounded, 'Nunito', Verdana, sans-serif`
+const FONT_SYSTEM = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+const FONT_BADGE = "'Arial Rounded MT Bold', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+
+function getTextResolution(): number {
+  if (typeof window === 'undefined') return 3
+  return Math.max(window.devicePixelRatio || 1, 3)
+}
 
 export class ExplainerBanner {
   private container: Phaser.GameObjects.Container
@@ -25,25 +31,32 @@ export class ExplainerBanner {
     this.bg = scene.add.graphics()
     this.badgeBg = scene.add.graphics()
 
+    const res = getTextResolution()
+
     this.badgeText = scene.add.text(0, 0, '', {
       fontFamily: FONT_BADGE,
-      fontSize: '10px',
+      fontSize: '11px',
+      fontStyle: 'bold',
       color: '#3b4cb8',
       align: 'center',
+      resolution: res,
     }).setOrigin(0.5)
 
     this.titleText = scene.add.text(0, 0, '', {
-      fontFamily: FONT_TITLE,
+      fontFamily: FONT_SYSTEM,
       fontSize: '13px',
+      fontStyle: 'bold',
       color: '#1e293b',
       align: 'center',
+      resolution: res,
     }).setOrigin(0.5)
 
     this.descText = scene.add.text(0, 0, '', {
-      fontFamily: FONT_TITLE,
+      fontFamily: FONT_SYSTEM,
       fontSize: '11px',
       color: '#505c80',
       align: 'center',
+      resolution: res,
     }).setOrigin(0.5)
 
     this.container.add([this.bg, this.badgeBg, this.badgeText, this.titleText, this.descText])
@@ -85,27 +98,45 @@ export class ExplainerBanner {
     const { width, height } = this.scene.scale
     const insets = safeAreaInsets()
     const compact = height < 500
-    const isPortraitPhone = width < 500 && height >= 500
+    const isPortraitPhone = width < 600 && height >= 500
 
     const bannerW = isPortraitPhone
-      ? Math.min(330, width - 40)
+      ? Math.min(340, width - 32)
       : compact
         ? Math.min(420, width * 0.6)
-        : Math.min(460, width * 0.46)
+        : Math.min(480, width * 0.46)
 
-    const bannerH = isPortraitPhone ? 46 : compact ? 40 : 46
+    const bannerH = isPortraitPhone ? 50 : compact ? 40 : 50
 
     let bannerY: number
     if (isPortraitPhone) {
-      if (this.currentView === 'puzzle') {
-        bannerY = this.currentGame === 'piano' ? insets.top + 330 : insets.top + 600
+      if (this.currentGame === 'piano') {
+        // In piano mode (free play, puzzle, or playground):
+        // Switcher buttons sit across the top row (y <= insets.top + 125).
+        // Companion / prompt notes sit in the upper deck (y <= insets.top + 260).
+        // Piano keys occupy the bottom ~40% of the screen, with discovery tray right above them.
+        // Center the banner cleanly in the open corridor between the upper controls and the discovery tray.
+        const pianoTop = height * (1 - CONFIG.piano.heightFrac - 0.04)
+        const trayTop = pianoTop - 18 - 12 - 24
+        const topLimit = insets.top + (this.currentView === 'free' ? 215 : 260)
+        bannerY = Math.round((topLimit + trayTop) / 2)
       } else {
-        bannerY = insets.top + 152
+        // In smash and drawing (free play, puzzle, or playground):
+        // In free play: companion dino sits at x=54, y=insets.top+160 (extends to y=insets.top+215).
+        // In puzzles: 3x3 challenge nodes / scratch card extend down to nodesBottom (~480).
+        // In playground: "Playground" HUD pill & buttons sit at insets.top+152.
+        // Discovery tray is at the bottom (trayTop ~ height - insets.bottom - 52).
+        // Placing the banner in the spacious lower corridor between central content and the bottom tray
+        // guarantees it never covers switcher buttons, companion dino, HUD pills, puzzle nodes, or scratch card!
+        const trayTop = height - insets.bottom - 28 - 24
+        const top = compact ? height * 0.42 : Math.max(insets.top + 230, height * 0.3)
+        const nodesBottom = Math.min(height - insets.bottom - 100, top + Math.min(width, height) * 0.52)
+        bannerY = Math.round((nodesBottom + trayTop) / 2)
       }
     } else if (compact) {
       bannerY = insets.top + 34
     } else {
-      bannerY = insets.top + 62
+      bannerY = insets.top + 64
     }
 
     this.container.setPosition(width / 2, bannerY)
@@ -157,7 +188,7 @@ export class ExplainerBanner {
 
     // Frosted glass background
     const bgFill = night ? 0x141a33 : 0xffffff
-    const bgAlpha = night ? 0.92 : 0.92
+    const bgAlpha = night ? 0.94 : 0.94
     this.bg.fillStyle(bgFill, bgAlpha)
     this.bg.fillRoundedRect(-halfW, -halfH, w, h, 16)
 
@@ -171,7 +202,7 @@ export class ExplainerBanner {
     this.badgeBg.clear()
     const badgeW = Math.min(w - 24, this.badgeText.width + 16)
     const badgeH = 16
-    const badgeY = -halfH + 11
+    const badgeY = -halfH + 12
 
     const badgeFill = night ? 0x312e81 : 0xe0e7ff
     this.badgeBg.fillStyle(badgeFill, night ? 0.75 : 0.85)
@@ -180,8 +211,8 @@ export class ExplainerBanner {
     this.badgeText.setPosition(0, badgeY)
 
     // Content lines
-    const titleY = -halfH + 24
-    const descY = -halfH + 36
+    const titleY = -halfH + 28
+    const descY = -halfH + 42
 
     // On compact screens, show a single aesthetic line
     if (h <= 42) {
@@ -192,8 +223,8 @@ export class ExplainerBanner {
     } else {
       this.badgeText.setVisible(true)
       this.badgeBg.setVisible(true)
-      this.titleText.setPosition(0, titleY).setFontSize(12)
-      this.descText.setPosition(0, descY).setFontSize(10.5)
+      this.titleText.setPosition(0, titleY).setFontSize(13)
+      this.descText.setPosition(0, descY).setFontSize(11)
     }
   }
 }

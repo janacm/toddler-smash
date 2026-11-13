@@ -122,7 +122,14 @@ export class ParentPanel {
 
     const text = (str: string, size: number, color: string, at = y) => {
       const t = scene.add
-        .text(0, at, str, { fontFamily: FONT, fontSize: `${size}px`, color, align: 'center', lineSpacing: 4 })
+        .text(0, at, str, {
+          fontFamily: FONT,
+          fontSize: `${size}px`,
+          color,
+          align: 'center',
+          lineSpacing: 4,
+          resolution: Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2),
+        })
         .setOrigin(0.5, 0)
       c.add(t)
       return t
@@ -133,7 +140,12 @@ export class ParentPanel {
       g.fillStyle(selected ? COLORS.selected : COLORS.button, 1)
       g.fillRoundedRect(x, y, w, BUTTON_H, 12)
       const t = scene.add
-        .text(x + w / 2, y + BUTTON_H / 2, label, { fontFamily: FONT, fontSize, color: COLORS.text })
+        .text(x + w / 2, y + BUTTON_H / 2, label, {
+          fontFamily: FONT,
+          fontSize,
+          color: COLORS.text,
+          resolution: Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2),
+        })
         .setOrigin(0.5)
       c.add([g, t])
       this.buttons.push({ action, x, y, w, h: BUTTON_H })
@@ -178,6 +190,7 @@ export class ParentPanel {
         color: '#b8c5ff',
         align: 'center',
         wordWrap: { width: inner - 20 },
+        resolution: Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2),
       })
       .setOrigin(0.5)
     c.add(prevT)
@@ -279,6 +292,7 @@ export class ParentPanel {
           align,
           lineSpacing: 3,
           wordWrap: { width: inner - 28 },
+          resolution: Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2),
         })
         .setOrigin(align === 'center' ? 0.5 : 0, 0)
       c.add(t)
@@ -290,7 +304,12 @@ export class ParentPanel {
       g.fillStyle(selected ? COLORS.selected : COLORS.button, 1)
       g.fillRoundedRect(x, y, w, 44, 12)
       const t = scene.add
-        .text(x + w / 2, y + 22, label, { fontFamily: FONT, fontSize, color: COLORS.text })
+        .text(x + w / 2, y + 22, label, {
+          fontFamily: FONT,
+          fontSize,
+          color: COLORS.text,
+          resolution: Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2),
+        })
         .setOrigin(0.5)
       c.add([g, t])
       this.buttons.push({ action, x, y, w, h: 44 })

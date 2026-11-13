@@ -44,11 +44,12 @@ export class ChallengeController {
     this.graphics = context.scene.add.graphics().setDepth(100)
     this.levelText = context.scene.add
       .text(context.width / 2, this.layout.back.y, '', {
-        fontFamily: `'Arial Rounded MT Bold', ui-rounded, 'Nunito', Verdana, sans-serif`,
+        fontFamily: `'Arial Rounded MT Bold', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`,
         fontSize: '13px',
         fontStyle: 'bold',
         color: '#536385',
         align: 'center',
+        resolution: Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 3),
       })
       .setOrigin(0.5)
       .setDepth(101)
