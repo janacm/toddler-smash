@@ -108,6 +108,7 @@ src/
   explainers.ts      pure explainer metadata for all sub-games & levels (unit-tested)
   explainerBanner.ts aesthetic translucent on-screen explainer banner
   explainerBannerLayout.ts pure mobile corridor calculation (unit-tested)
+  hints.ts           pure idle hint timing & shake/bounce/arrow math (unit-tested)
   safeArea.ts        notch / home-indicator insets from CSS env()
   splash.ts          loading splash: mood colours + saved-mood script that
                      vite.config.ts injects into index.html; hideSplash
@@ -420,6 +421,7 @@ certificate store import and Microsoft Trusted Signing via
 | "stop key X doing a browser thing" | `src/input.ts` |
 | "the grown-up menu should have X" | `src/parentPanel.ts` + `PlayScene.runPanelAction` |
 | "text explainers / level guide" | `src/explainers.ts`, `src/explainerBanner.ts`, `src/explainerBannerLayout.ts`, `src/parentPanel.ts` |
+| "idle hint timing / firefly shake / arrows" | `src/config.ts` → `hints`, `src/hints.ts`, `src/challenges/controller.ts` |
 | "looks wrong on a phone" | `safeArea.ts`, `config.ts` → `piano`, then `mobile*.png` |
 | "combo / streak feel / celebration" | `config.ts` → `combo`, `PlayScene.ts` |
 | "stop key X doing an OS thing" | `src-tauri/src/lockdown/` |

@@ -457,6 +457,8 @@ export class PlayScene extends Phaser.Scene {
     this.tweens.add({
       targets: this.hint,
       alpha: 0.35,
+      y: height * 0.3 - 8,
+      scale: 1.04,
       duration: 1400,
       yoyo: true,
       repeat: -1,
