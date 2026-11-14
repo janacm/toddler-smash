@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { CONFIG } from '../config'
+import { computeIdleHint } from '../hints'
 import type { PlayAction } from '../input'
 import type { Mode } from '../modes/types'
 import { keyIndex, pianoKeyCount } from '../modes/pianoLayout'
@@ -28,6 +29,8 @@ export class ChallengeController {
   private lastFeedback = -Infinity
   private lastPlant = -Infinity
   private lastToy = -Infinity
+  private lastFireflyPress = 0
+  private lastPuzzleInput = 0
   private pulse?: { point: Point; at: number }
   private garden: Point[] = []
   private pointers = new Map<number, Point>()
@@ -41,6 +44,8 @@ export class ChallengeController {
     private mode: Mode,
   ) {
     const context = this.ctx()
+    this.lastFireflyPress = context.scene.time.now
+    this.lastPuzzleInput = context.scene.time.now
     this.board = challengeLayout(context.width, context.height, this.game, safeAreaInsets())
     this.graphics = context.scene.add.graphics().setDepth(100)
     this.levelText = context.scene.add
@@ -72,7 +77,12 @@ export class ChallengeController {
     this.pointers.clear()
     this.multiTouch = false
     if (paused) this.demoStarted = -Infinity
-    else this.draw()
+    else {
+      const now = this.ctx().scene.time.now
+      this.lastFireflyPress = now
+      this.lastPuzzleInput = now
+      this.draw()
+    }
   }
 
   destroy(): void {
@@ -190,6 +200,7 @@ export class ChallengeController {
       const found = hit(point, target, layout.radius * 1.25)
       this.progress.follow(this.game, found)
       if (found) {
+        this.lastFireflyPress = this.ctx().scene.time.now
         this.feedback(point)
         if (this.state.view !== 'free') {
           this.ctx().pool.clear()
@@ -249,6 +260,7 @@ export class ChallengeController {
   }
 
   private answer(value: number): void {
+    this.lastPuzzleInput = this.ctx().scene.time.now
     const result = this.progress.answer(this.game, value)
     if (result === 'wrong' && this.game === 'drawing') this.cursor = this.puzzle.answer[0]
     if (result === 'correct') this.feedback(this.game === 'drawing' ? this.layout.nodes[value] : this.layout.choices[value])
@@ -260,6 +272,7 @@ export class ChallengeController {
   }
 
   private roundChanged(): void {
+    this.lastPuzzleInput = this.ctx().scene.time.now
     this.cursor = this.game === 'drawing' && this.state.view === 'puzzle' ? this.puzzle.answer[0] : 4
     this.control = undefined
     this.pointers.clear()
@@ -270,6 +283,7 @@ export class ChallengeController {
   }
 
   private replay(): void {
+    this.lastPuzzleInput = this.ctx().scene.time.now
     if (this.state.view !== 'free') this.feedback(this.layout.replay)
     if (this.state.view === 'puzzle') {
       this.progress.resetAttempt(this.game)
@@ -281,6 +295,7 @@ export class ChallengeController {
   }
 
   private back(): void {
+    this.lastFireflyPress = this.ctx().scene.time.now
     this.feedback(this.layout.back)
     this.progress.back(this.game)
     this.mode.setPlayground?.(false, this.ctx())
@@ -327,6 +342,7 @@ export class ChallengeController {
     const ink = night ? 0xd9dcff : 0x536385
     const paper = night ? 0x1d2447 : 0xffffff
     const now = ctx.scene.time.now
+    const motionScale = night ? 0.65 : 1
     g.clear()
     ctx.scene.game.canvas.setAttribute('aria-label', `Toddler Smash. ${this.game}. ${state.view}. ${state.solved} puzzles solved.`)
     if (state.view === 'free') {
@@ -336,7 +352,23 @@ export class ChallengeController {
         g.lineStyle(2, ink, 0.16)
         g.lineBetween(l.perches[state.entranceStep - 1].x, l.perches[state.entranceStep - 1].y, p.x, p.y)
       }
-      this.firefly(p, 0.82 + Math.sin(now / 650) * 0.13, state.discovered)
+      const fireflyHint = computeIdleHint(now - this.lastFireflyPress)
+      const fp = {
+        x: p.x + fireflyHint.shakeX * 7 * motionScale,
+        y: p.y + fireflyHint.bounceY * 9 * motionScale,
+      }
+      if (fireflyHint.burst > 0) {
+        g.lineStyle(3, ctx.color(2), (1 - fireflyHint.pulse) * 0.65)
+        g.strokeCircle(fp.x, fp.y, 34 + fireflyHint.pulse * 22)
+      }
+      this.firefly(fp, Math.min(1, 0.82 + Math.sin(now / 650) * 0.13 + fireflyHint.burst * 0.15), state.discovered)
+      if (fireflyHint.active) {
+        const above = fp.y > 110
+        const tip = above
+          ? { x: fp.x, y: fp.y - 40 + fireflyHint.arrowBob * 6 * motionScale }
+          : { x: fp.x, y: fp.y + 44 - fireflyHint.arrowBob * 6 * motionScale }
+        this.arrow(tip, { x: 0, y: above ? 1 : -1 }, 20, ctx.color(2), 0.9, paper)
+      }
     } else {
       this.button(l.back, 'back', ink, paper)
       this.button(l.replay, state.view === 'playground' ? 'star' : 'replay', ink, paper)
@@ -366,6 +398,11 @@ export class ChallengeController {
         const stepMs = CONFIG.challenges.demoStepMs / currentMood().timeScale
         const demo = Math.floor((now - this.demoStarted) / stepMs)
         const showing = demo >= 0 && demo < puzzle.prompt.length
+        const demoEnd = this.demoStarted + puzzle.prompt.length * stepMs
+        const idleBase = Number.isFinite(demoEnd) ? Math.max(this.lastPuzzleInput, demoEnd) : this.lastPuzzleInput
+        const puzzleIdleMs = now - idleBase
+        const puzzleHint = !showing ? computeIdleHint(puzzleIdleMs) : computeIdleHint(0)
+        const hintTarget = puzzle.answer[state.attempt]
         if (showing && demo !== this.demoIndex) {
           this.demoIndex = demo
           const value = puzzle.prompt[demo]
@@ -389,6 +426,25 @@ export class ChallengeController {
           for (let i = 1; i < state.attempt; i++) {
             const a = l.nodes[puzzle.answer[i - 1]], b = l.nodes[puzzle.answer[i]]
             g.lineStyle(7, ctx.color(3), 0.8); g.lineBetween(a.x, a.y, b.x, b.y)
+          }
+          if (puzzleHint.active && hintTarget !== undefined) {
+            if (state.attempt === 0) {
+              const targetNode = l.nodes[hintTarget]
+              if (puzzleHint.burst > 0) {
+                g.lineStyle(3, ctx.color(1), (1 - puzzleHint.pulse) * 0.7)
+                g.strokeCircle(targetNode.x, targetNode.y, l.radius * 0.85 + puzzleHint.pulse * 18)
+              }
+              this.arrow({ x: targetNode.x, y: targetNode.y - l.radius - 6 + puzzleHint.arrowBob * 6 * motionScale }, { x: 0, y: 1 }, 20, ctx.color(1), 0.9, paper)
+            } else {
+              const from = l.nodes[puzzle.answer[state.attempt - 1]]
+              const to = l.nodes[hintTarget]
+              const glideT = ((puzzleIdleMs - CONFIG.hints.idleDelayMs) % 1400) / 1400
+              const gp = { x: from.x + (to.x - from.x) * glideT, y: from.y + (to.y - from.y) * glideT }
+              const dx = to.x - from.x, dy = to.y - from.y
+              const len = Math.hypot(dx, dy) || 1
+              g.fillStyle(ctx.color(3), 0.85); g.fillCircle(gp.x, gp.y, 7)
+              this.arrow(gp, { x: dx / len, y: dy / len }, 18, ctx.color(3), 0.9, paper)
+            }
           }
         } else {
           if (puzzle.kind === 'match') this.shape(puzzle.prompt[0], { x: ctx.width / 2, y: l.promptY + 16 }, 30, ink, 0.35)
@@ -415,16 +471,35 @@ export class ChallengeController {
             }
           }
           if (this.game === 'smash') for (let i = 0; i < 3; i++) {
-            const p = l.choices[i]
+            const isTarget = puzzleHint.active && i === hintTarget
+            const p = {
+              x: l.choices[i].x + (isTarget ? puzzleHint.shakeX * 6 * motionScale : 0),
+              y: l.choices[i].y + (isTarget ? puzzleHint.bounceY * 10 * motionScale : 0),
+            }
+            if (isTarget && puzzleHint.burst > 0) {
+              g.lineStyle(3, ctx.color(i * 2), (1 - puzzleHint.pulse) * 0.7)
+              g.strokeCircle(p.x, p.y, l.radius * 1.35 + puzzleHint.pulse * 18)
+            }
             g.fillStyle(paper, 0.8); g.fillCircle(p.x, p.y, l.radius * 1.35)
             this.shape(i, p, l.radius * 0.8, ctx.color(i * 2), 0.95)
+            if (isTarget) {
+              this.arrow({ x: p.x, y: p.y - l.radius * 1.45 + puzzleHint.arrowBob * 6 * motionScale }, { x: 0, y: 1 }, 20, ctx.color(i * 2), 0.9, paper)
+            }
           }
           else {
             const n = pianoKeyCount(ctx.width)
             const keys = this.noteSymbols(n)
             for (let i = 0; i < 3; i++) {
-              const p = { x: (keys[i] + 0.5) * ctx.width / n, y: ctx.height * 0.61 }
-              this.shape(2, p, 12, paper, showing && puzzle.prompt[demo] === i ? 1 : 0.48)
+              const isTarget = puzzleHint.active && i === hintTarget
+              const p = {
+                x: (keys[i] + 0.5) * ctx.width / n,
+                y: ctx.height * 0.61 + (isTarget ? puzzleHint.bounceY * 10 * motionScale : 0),
+              }
+              const alpha = showing && puzzle.prompt[demo] === i ? 1 : isTarget ? Math.min(1, 0.72 + puzzleHint.burst * 0.28) : 0.48
+              this.shape(2, p, 12, paper, alpha)
+              if (isTarget) {
+                this.arrow({ x: p.x, y: p.y - 20 + puzzleHint.arrowBob * 6 * motionScale }, { x: 0, y: 1 }, 20, ctx.color(keys[i]), 0.9, paper)
+              }
             }
           }
         }
@@ -474,6 +549,23 @@ export class ChallengeController {
     g.fillStyle(ctx.color(2), alpha); g.fillEllipse(p.x, p.y + 5, 24, 30)
     g.fillStyle(0xffffff, alpha); g.fillCircle(p.x - 5, p.y - 4, 5); g.fillCircle(p.x + 5, p.y - 4, 5)
     g.fillStyle(0x35415c, alpha); g.fillCircle(p.x - 4, p.y - 4, 2); g.fillCircle(p.x + 4, p.y - 4, 2)
+  }
+
+  private arrow(tip: Point, dir: Point, size: number, color: number, alpha: number, paper: number): void {
+    const g = this.graphics
+    const tail = { x: tip.x - dir.x * size, y: tip.y - dir.y * size }
+    const wingBase = { x: tip.x - dir.x * size * 0.48, y: tip.y - dir.y * size * 0.48 }
+    const perp = { x: -dir.y * size * 0.42, y: dir.x * size * 0.42 }
+    const left = { x: wingBase.x + perp.x, y: wingBase.y + perp.y }
+    const right = { x: wingBase.x - perp.x, y: wingBase.y - perp.y }
+    g.lineStyle(7, paper, alpha * 0.75)
+    g.lineBetween(tail.x, tail.y, tip.x, tip.y)
+    g.lineBetween(left.x, left.y, tip.x, tip.y)
+    g.lineBetween(right.x, right.y, tip.x, tip.y)
+    g.lineStyle(4, color, alpha)
+    g.lineBetween(tail.x, tail.y, tip.x, tip.y)
+    g.lineBetween(left.x, left.y, tip.x, tip.y)
+    g.lineBetween(right.x, right.y, tip.x, tip.y)
   }
 
   private shape(value: number, p: Point, r: number, color: number, alpha: number): void {

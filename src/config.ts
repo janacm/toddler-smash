@@ -86,6 +86,16 @@ export const CONFIG = {
     feedbackIntervalMs: 90,
   },
 
+  /** Idle visual hints (firefly shake, bouncing elements, animated arrows). */
+  hints: {
+    /** How long without target interaction before animated hints begin. */
+    idleDelayMs: 5000,
+    /** How often the shake/bounce burst repeats while idle. */
+    intervalMs: 3200,
+    /** Duration of each shake/bounce burst. */
+    burstMs: 750,
+  },
+
   /** Sago Mini-style non-punitive pictorial thought bubbles. */
   thoughtBubble: {
     idleBobMs: 1600,
