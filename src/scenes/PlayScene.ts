@@ -23,6 +23,7 @@ import { ThoughtCompanion } from '../companion/thoughtCompanion'
 import { keyIndex, pianoKeyCount } from '../modes/pianoLayout'
 import { getAnimalForPianoKey } from '../modes/pianoChoralLogic'
 import { VERSION_CODE } from '../version'
+import { SYSTEM_FONT, textResolution } from '../textResolution'
 
 const isTouchScreen = window.matchMedia('(pointer: coarse)').matches
 const isStandalone =
@@ -445,9 +446,10 @@ export class PlayScene extends Phaser.Scene {
     const { width, height } = this.scale
     this.hint = this.add
       .text(width / 2, height * 0.3, isTouchScreen ? 'touch anything' : 'press anything', {
-        fontFamily: 'Verdana, Geneva, sans-serif',
+        fontFamily: SYSTEM_FONT,
         fontSize: `${Math.round(Math.min(38, width / 11))}px`,
         color: currentMood().hintColor,
+        resolution: textResolution(),
       })
       .setOrigin(0.5)
       .setDepth(-500)
@@ -473,6 +475,7 @@ export class PlayScene extends Phaser.Scene {
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
         fontSize: '11px',
         color: mood.hintColor,
+        resolution: textResolution(),
       })
       .setOrigin(1, 1)
       .setAlpha(0.5)

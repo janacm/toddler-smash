@@ -4,14 +4,9 @@ import { getCurrentExplainer, type ActiveExplainer } from './explainers'
 import type { GameId } from './challenges/model'
 import { explainerBannerPlacement } from './explainerBannerLayout'
 import { safeAreaInsets } from './safeArea'
+import { SYSTEM_FONT, textResolution } from './textResolution'
 
-const FONT_SYSTEM = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
 const FONT_BADGE = "'Arial Rounded MT Bold', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-
-function getTextResolution(): number {
-  if (typeof window === 'undefined') return 3
-  return Math.max(window.devicePixelRatio || 1, 3)
-}
 
 export class ExplainerBanner {
   private container: Phaser.GameObjects.Container
@@ -31,7 +26,7 @@ export class ExplainerBanner {
     this.bg = scene.add.graphics()
     this.badgeBg = scene.add.graphics()
 
-    const res = getTextResolution()
+    const res = textResolution()
 
     this.badgeText = scene.add.text(0, 0, '', {
       fontFamily: FONT_BADGE,
@@ -43,7 +38,7 @@ export class ExplainerBanner {
     }).setOrigin(0.5)
 
     this.titleText = scene.add.text(0, 0, '', {
-      fontFamily: FONT_SYSTEM,
+      fontFamily: SYSTEM_FONT,
       fontSize: '13px',
       fontStyle: 'bold',
       color: '#1e293b',
@@ -52,7 +47,7 @@ export class ExplainerBanner {
     }).setOrigin(0.5)
 
     this.descText = scene.add.text(0, 0, '', {
-      fontFamily: FONT_SYSTEM,
+      fontFamily: SYSTEM_FONT,
       fontSize: '11px',
       color: '#505c80',
       align: 'center',

@@ -59,11 +59,14 @@ verification**: Whenever making visual changes, always verify mobile viewports
 (e.g. iPhone 390×844 portrait) using headless screenshots (`mobile*.png`,
 `mobile-challenge-*.png`) to confirm that visual elements (mode switcher buttons,
 companion dino, level HUD pills, puzzle nodes, scratch cards, discovery tray)
-never cover or block one another. All on-screen text objects in Phaser must use
-high-resolution canvas rendering (`resolution: Math.max(window.devicePixelRatio || 1, 3)`)
-and clean system typography so small labels and explainers remain razor sharp
-and legible on high-DPI displays. The script exits non-zero if the page logged
-any console error, so a green run means both "it looks like this" and "nothing threw."
+never cover or block one another. All Phaser text objects must use the shared
+`textResolution()` helper in `src/textResolution.ts` (at least 3x canvas
+resolution) and clean system typography so small labels and explainers remain
+razor sharp on high-DPI displays. `src/main.ts` sizes the WebGL canvas backing
+store to device pixels while keeping its CSS size and game layout in CSS pixels;
+keep the camera zoom and scroll adjustment in sync during resize. The script
+exits non-zero if the page logged any console error, so a green run means both
+"it looks like this" and "nothing threw."
 
 It also runs `scripts/progression-pass.mjs`: keyboard and touch discovery,
 all six authored puzzles and each reward in all three games, plus Bedtime

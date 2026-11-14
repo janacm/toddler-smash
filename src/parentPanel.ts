@@ -5,6 +5,7 @@ import { BUILD_ID } from './version'
 import type { DesktopUpdateState } from './desktopUpdates'
 import type { GameId } from './challenges/model'
 import { getSubGameExplainer, getCurrentExplainer } from './explainers'
+import { textResolution } from './textResolution'
 
 export type PanelAction =
   | { kind: 'mode'; mode: Mode }
@@ -128,7 +129,7 @@ export class ParentPanel {
           color,
           align: 'center',
           lineSpacing: 4,
-          resolution: Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 3),
+          resolution: textResolution(),
         })
         .setOrigin(0.5, 0)
       c.add(t)
@@ -144,7 +145,7 @@ export class ParentPanel {
           fontFamily: FONT,
           fontSize,
           color: COLORS.text,
-          resolution: Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 3),
+          resolution: textResolution(),
         })
         .setOrigin(0.5)
       c.add([g, t])
@@ -190,7 +191,7 @@ export class ParentPanel {
         color: '#b8c5ff',
         align: 'center',
         wordWrap: { width: inner - 20 },
-        resolution: Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 3),
+        resolution: textResolution(),
       })
       .setOrigin(0.5)
     c.add(prevT)
@@ -292,7 +293,7 @@ export class ParentPanel {
           align,
           lineSpacing: 3,
           wordWrap: { width: inner - 28 },
-          resolution: Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 3),
+          resolution: textResolution(),
         })
         .setOrigin(align === 'center' ? 0.5 : 0, 0)
       c.add(t)
@@ -308,7 +309,7 @@ export class ParentPanel {
           fontFamily: FONT,
           fontSize,
           color: COLORS.text,
-          resolution: Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 3),
+          resolution: textResolution(),
         })
         .setOrigin(0.5)
       c.add([g, t])
