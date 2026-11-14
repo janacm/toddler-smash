@@ -37,6 +37,7 @@ export default defineConfig({
         'src/discovery/albumModel.ts',
         'src/explainers.ts',
         'src/explainerBannerLayout.ts',
+        'src/hints.ts',
         'src/modes/pianoChoralLogic.ts',
         'src/modes/choralEchoQueue.ts',
         'src/companion/thoughtBubbleLogic.ts',

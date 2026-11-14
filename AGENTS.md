@@ -420,7 +420,6 @@ certificate store import and Microsoft Trusted Signing via
 | "letters should do X" | `src/toys/letterPop.ts` |
 | "stop key X doing a browser thing" | `src/input.ts` |
 | "the grown-up menu should have X" | `src/parentPanel.ts` + `PlayScene.runPanelAction` |
-<<<<<<< Updated upstream
 | "text explainers / level guide" | `src/explainers.ts`, `src/explainerBanner.ts`, `src/explainerBannerLayout.ts`, `src/parentPanel.ts` |
 | "idle hint timing / firefly shake / arrows" | `src/config.ts` → `hints`, `src/hints.ts`, `src/challenges/controller.ts` |
 | "looks wrong on a phone" | `safeArea.ts`, `config.ts` → `piano`, then `mobile*.png` |

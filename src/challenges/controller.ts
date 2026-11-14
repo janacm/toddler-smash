@@ -96,6 +96,7 @@ export class ChallengeController {
   /** True means a picture control supplied the feedback, rather than a normal toy. */
   action({ event: e, key }: PlayAction): boolean {
     if (this.paused) return false
+    if (this.state.view === 'puzzle') this.lastPuzzleInput = this.ctx().scene.time.now
     if (key === 'Backspace' && this.state.view !== 'free') {
       this.back()
       return true
@@ -169,6 +170,7 @@ export class ChallengeController {
       return
     }
     if (this.paused || this.state.view !== 'puzzle' || this.game !== 'drawing') return
+    this.lastPuzzleInput = this.ctx().scene.time.now
     const before = this.pointers.get(e.pointerId)
     this.pointers.set(e.pointerId, e)
     if (!before || this.multiTouch) return
@@ -438,7 +440,8 @@ export class ChallengeController {
             } else {
               const from = l.nodes[puzzle.answer[state.attempt - 1]]
               const to = l.nodes[hintTarget]
-              const glideT = ((puzzleIdleMs - CONFIG.hints.idleDelayMs) % 1400) / 1400
+              const glidePeriodMs = 1400 / currentMood().timeScale
+              const glideT = ((puzzleIdleMs - CONFIG.hints.idleDelayMs) % glidePeriodMs) / glidePeriodMs
               const gp = { x: from.x + (to.x - from.x) * glideT, y: from.y + (to.y - from.y) * glideT }
               const dx = to.x - from.x, dy = to.y - from.y
               const len = Math.hypot(dx, dy) || 1
