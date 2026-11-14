@@ -9,6 +9,7 @@ import { playSmash, type SmashEvent, type ToyContext } from '../toys'
 import type { StrokeEvent } from '../toys/types'
 import { crossedNodes, challengeLayout, distanceToSegment, hit, moveNode, type BoardLayout, type Point } from './layout'
 import { getPuzzle, type GameId, type Progression } from './model'
+import { textResolution } from '../textResolution'
 
 const SHAPES = ['circle', 'triangle', 'star'] as const
 const LEVEL_NAMES = ['Level One', 'Level Two', 'Level Three'] as const
@@ -49,7 +50,7 @@ export class ChallengeController {
         fontStyle: 'bold',
         color: '#536385',
         align: 'center',
-        resolution: Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 3),
+        resolution: textResolution(),
       })
       .setOrigin(0.5)
       .setDepth(101)

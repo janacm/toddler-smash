@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { CONFIG } from '../config'
+import { SYSTEM_FONT, textResolution } from '../textResolution'
 import { EchoQueue } from '../challenges/rewards'
 import { currentMood } from '../settings'
 import { RainbowRun } from '../discovery/albumModel'
@@ -150,10 +151,11 @@ function buildKeys(ctx: ToyContext): () => void {
     const img = ctx.scene.add.image(x, restY, 'pianoKey').setDisplaySize(keyW, keyH).setTint(ctx.color(i)).setDepth(-100)
     const label = ctx.scene.add
       .text(x, labelY, String((i + 1) % 10), {
-        fontFamily: 'Verdana, Geneva, sans-serif',
+        fontFamily: SYSTEM_FONT,
         fontStyle: 'bold',
         fontSize: `${Math.round(Math.min(keyW * 0.4, 40))}px`,
         color: '#ffffff',
+        resolution: textResolution(),
       })
       .setOrigin(0.5)
       .setAlpha(0.85)

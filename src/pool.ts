@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { CONFIG } from './config'
+import { SYSTEM_FONT, textResolution } from './textResolution'
 
 /**
  * A hard-capped ring of sprites.
@@ -107,8 +108,9 @@ export class TextPool {
 
     if (this.ring.length < TextPool.MAX) {
       txt = this.scene.add.text(x, y, content, {
-        fontFamily: 'Verdana, Geneva, sans-serif',
+        fontFamily: SYSTEM_FONT,
         fontStyle: 'bold',
+        resolution: textResolution(),
       })
       txt.setOrigin(0.5)
       this.ring.push(txt)
