@@ -12,6 +12,8 @@ export interface BoardLayout {
   radius: number
 }
 
+export const PERCH_NODES = [0, 2, 6] as const
+
 /** Shared by the renderer, hit testing, keyboard pen, and browser checks. */
 export function challengeLayout(
   width: number, height: number, game: GameId,
@@ -29,7 +31,7 @@ export function challengeLayout(
     y: top + Math.floor(i / 3) * Math.max(60, bottom - top) / 2,
   }))
   const controlY = compact ? 128 : inset.top + 152
-  const perches = [nodes[0], nodes[2], nodes[6]]
+  const perches = PERCH_NODES.map(node => nodes[node])
   if (game === 'drawing' && height >= width * 1.45) {
     const card = cardRect(width, height, SCRATCH_CARD_BOTTOM_INSET)
     // Portrait drawing cards span the board's width. Keep the animated

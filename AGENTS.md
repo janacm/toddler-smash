@@ -85,7 +85,8 @@ with a bounded timeout and release held input in `finally`; `holdForPanel` asser
 that the elapsed hold time meets the 3-second hold requirement minus a tolerance
 margin. Keep scene observation in browser-test setup rather than adding a production
 debug API. Shared TypeScript helpers imported by these Node scripts use
-explicit `.ts` paths for runtime imports.
+explicit `.ts` paths for runtime imports. The progression pass taps
+`layout.perches` for the firefly and `layout.nodes` for puzzle waypoints.
 
 The same run exercises `scripts/animal-pass.mjs`: D/S animal shortcuts,
 ordinary mouse and touch encounters, Bedtime styling, held-key repeats,

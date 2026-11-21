@@ -8,7 +8,7 @@ import { safeAreaInsets } from '../safeArea'
 import { currentMood } from '../settings'
 import { playSmash, type SmashEvent, type ToyContext } from '../toys'
 import type { StrokeEvent } from '../toys/types'
-import { crossedNodes, challengeLayout, distanceToSegment, hit, moveNode, type BoardLayout, type Point } from './layout'
+import { crossedNodes, challengeLayout, distanceToSegment, hit, moveNode, PERCH_NODES, type BoardLayout, type Point } from './layout'
 import { getPuzzle, type GameId, type Progression } from './model'
 import { textResolution } from '../textResolution'
 
@@ -254,6 +254,10 @@ export class ChallengeController {
   private noteSymbols(n: number): number[] { return [0, Math.floor((n - 1) / 2), n - 1] }
 
   private cursorPoint(): Point {
+    if (this.state.view === 'free') {
+      const perch = PERCH_NODES.findIndex(node => node === this.cursor)
+      if (perch >= 0) return this.layout.perches[perch]
+    }
     if (this.game === 'piano' && this.state.view !== 'free') {
       const ctx = this.ctx(), n = pianoKeyCount(ctx.width)
       return { x: (this.noteSymbols(n)[this.cursor % 3] + 0.5) * ctx.width / n, y: ctx.height * 0.75 }
