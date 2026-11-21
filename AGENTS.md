@@ -84,7 +84,8 @@ turning a later R press into New player. Wait for `panel.visible` to change
 with a bounded timeout and release held input in `finally`; `holdForPanel` asserts
 that the elapsed hold time meets the 3-second hold requirement minus a tolerance
 margin. Keep scene observation in browser-test setup rather than adding a production
-debug API.
+debug API. Shared TypeScript helpers imported by these Node scripts use
+explicit `.ts` paths for runtime imports.
 
 The same run exercises `scripts/animal-pass.mjs`: D/S animal shortcuts,
 ordinary mouse and touch encounters, Bedtime styling, held-key repeats,

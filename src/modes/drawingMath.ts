@@ -1,4 +1,4 @@
-import { CONFIG } from '../config'
+import { CONFIG } from '../config.ts'
 
 /** Brush width in pixels for a screen. */
 export function brushPx(width: number, height: number, drawing = CONFIG.drawing): number {

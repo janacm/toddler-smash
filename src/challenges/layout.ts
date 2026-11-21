@@ -1,5 +1,5 @@
 import type { GameId } from './model'
-import { cardRect, SCRATCH_CARD_BOTTOM_INSET } from '../modes/drawingMath'
+import { cardRect, SCRATCH_CARD_BOTTOM_INSET } from '../modes/drawingMath.ts'
 
 export interface Point { x: number; y: number }
 export interface BoardLayout {
