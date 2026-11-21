@@ -1,12 +1,12 @@
 import Phaser from 'phaser'
+import { buildScratchScenes } from './scratchScenes'
 
 export const ILLUSTRATION_WIDTH = 520
 export const ILLUSTRATION_HEIGHT = 380
 
 /**
  * Procedural scratch-off illustrations and cover texture.
- * All artwork is generated in code at boot into Phaser textures.
- * Zero image files.
+ * The original cards and scratch cover are drawn into textures at boot.
  */
 export function buildIllustrations(scene: Phaser.Scene): void {
   const g = scene.make.graphics({ x: 0, y: 0 }, false)
@@ -27,6 +27,7 @@ export function buildIllustrations(scene: Phaser.Scene): void {
   g.generateTexture('scratch-cover', ILLUSTRATION_WIDTH, ILLUSTRATION_HEIGHT)
 
   g.destroy()
+  buildScratchScenes(scene, ILLUSTRATION_WIDTH, ILLUSTRATION_HEIGHT)
 }
 
 function buildDinoIllustration(g: Phaser.GameObjects.Graphics): void {

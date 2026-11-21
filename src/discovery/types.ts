@@ -11,7 +11,14 @@ export const BADGE_IDS = [
 
 export type BadgeId = (typeof BADGE_IDS)[number]
 
-export const SCRATCH_CARD_IDS = ['dino', 'shark', 'sky'] as const
+export const SCENE_CARD_IDS = [
+  'fox', 'rocket', 'octopus', 'unicorn', 'penguin',
+  'train', 'butterfly', 'turtle', 'robot', 'dragon',
+] as const
+
+export type SceneCardId = (typeof SCENE_CARD_IDS)[number]
+
+export const SCRATCH_CARD_IDS = [...SCENE_CARD_IDS, 'dino', 'shark', 'sky'] as const
 export type ScratchCardId = (typeof SCRATCH_CARD_IDS)[number]
 
 export interface BadgeDefinition {

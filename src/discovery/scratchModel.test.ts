@@ -87,7 +87,7 @@ describe('ScratchCardModel', () => {
   it('initializes with default playlist and starts on first card', () => {
     const model = new ScratchCardModel()
     expect(model.playlist).toEqual(SCRATCH_CARD_IDS)
-    expect(model.cardId).toBe('dino')
+    expect(model.cardId).toBe('fox')
     expect(model.currentIndex).toBe(0)
     expect(model.coverage).toBe(0)
     expect(model.isComplete()).toBe(false)

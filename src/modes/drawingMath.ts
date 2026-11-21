@@ -41,6 +41,8 @@ export interface CardRect {
   height: number
 }
 
+export const SCRATCH_CARD_BOTTOM_INSET = 72
+
 /** Card placement and size centered in available canvas area. */
 export function cardRect(viewWidth: number, viewHeight: number, bottomInset = 0): CardRect {
   const availableHeight = Math.max(100, viewHeight - bottomInset)

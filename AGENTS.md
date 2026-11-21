@@ -98,7 +98,7 @@ src/
   config.ts          all tunable numbers, including moods — try here first
   settings.ts        current mode / mood / corner buttons, saved to localStorage
   audio.ts           WebAudio synth, voice-capped, pentatonic; blip + piano voices
-  textures.ts        every shape drawn at runtime; no image files
+  textures.ts        procedural game shapes and texture setup
   animalTextures.ts  procedural dinosaur/shark faces, footprints and bubbles
   pool.ts            SpritePool + TextPool — the hard caps
   input.ts           logical PlayAction before cosmetic limits; shortcut defense
@@ -127,7 +127,8 @@ src/
     types.ts         BadgeId (6 badges), ScratchCardId, definitions
     scratchModel.ts  pure ScratchGrid coverage math & ScratchCardModel playlist
     albumModel.ts    pure AlbumModel badge collection & RainbowRun detector
-    illustrations.ts procedural dinosaur, shark, and night sky illustrations
+    illustrations.ts original procedural cards and scratch cover
+    scratchScenes.ts new card compositions using local, licensed SVG art
     scratchCard.ts   mystery scratch card, mask erasure, auto-bloom celebration
     tray.ts          bottom dock, breathing stamp slots, interactive victory dance
   modes/             sub-games
@@ -275,8 +276,9 @@ Breaking these breaks the actual requirement, so don't "clean them up":
   non-reader can find. The grown-up panel (hold Escape 3s, or hold the
   top-left and bottom-right corners 3s on touch) is the one exception and
   it's deliberately hard to reach by accident.
-- **No image or audio files.** Everything is drawn or synthesized in code, so an
-  agent can read and change every asset. Adding a `.png` breaks that property.
+- **Draw or synthesize game assets in code.** Scratch-card illustrations may
+  use reviewed, licensed SVGs under `src/discovery/art/`. Keep them bundled
+  for offline play and record their source and license in `docs/scratch-art.md`.
 - **Errors are swallowed globally** (`src/main.ts`). Keep it that way. A stack
   trace on screen is a failure of the core requirement.
 - **In the desktop app, the grown-up panel's Q is the only way out.** Window

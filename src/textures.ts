@@ -4,7 +4,7 @@ import { buildIllustrations } from './discovery/illustrations'
 
 /**
  * All artwork is drawn at runtime with Phaser's Graphics API and baked into
- * textures once at boot. No image files anywhere in the repo.
+ * textures once at boot. Drawing also composes its bundled scratch-card art.
  *
  * That is a deliberate harness choice: an agent can change what the game looks
  * like by editing drawing code it can actually read, instead of needing to

@@ -6,12 +6,15 @@ import { ILLUSTRATION_HEIGHT, ILLUSTRATION_WIDTH } from './illustrations'
 import type { ScratchCardModel } from './scratchModel'
 import type { BadgeId, ScratchCardId } from './types'
 
-function badgeForCard(id: ScratchCardId): BadgeId {
+function badgeForCard(id: ScratchCardId): BadgeId | undefined {
   switch (id) {
+    case 'fox':
     case 'dino':
       return 'scratchDino'
+    case 'octopus':
     case 'shark':
       return 'scratchShark'
+    case 'rocket':
     case 'sky':
       return 'scratchSky'
   }
@@ -187,7 +190,8 @@ export class ScratchCard {
     })
 
     // 5. Unlock card badge
-    ctx.discover?.(badgeForCard(currentCard))
+    const badge = badgeForCard(currentCard)
+    if (badge) ctx.discover?.(badge)
 
     // 6. Advance after pause
     this.celebrationTimer = this.scene.time.delayedCall(CONFIG.discovery.cardPauseMs, () => {

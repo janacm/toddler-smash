@@ -1,4 +1,5 @@
 import type { GameId } from './model'
+import { cardRect, SCRATCH_CARD_BOTTOM_INSET } from '../modes/drawingMath'
 
 export interface Point { x: number; y: number }
 export interface BoardLayout {
@@ -28,10 +29,19 @@ export function challengeLayout(
     y: top + Math.floor(i / 3) * Math.max(60, bottom - top) / 2,
   }))
   const controlY = compact ? 128 : inset.top + 152
+  const perches = [nodes[0], nodes[2], nodes[6]]
+  if (game === 'drawing' && height >= width * 1.45) {
+    const card = cardRect(width, height, SCRATCH_CARD_BOTTOM_INSET)
+    // Portrait drawing cards span the board's width. Keep the animated
+    // entrance targets and their tap areas clear of the scratch surface.
+    perches[0] = { x: left, y: card.y - 55 }
+    perches[1] = { x: right, y: card.y - 55 }
+    perches[2] = { x: left, y: card.y + card.height + 65 }
+  }
   return {
     nodes,
     choices: [nodes[3], nodes[4], nodes[5]],
-    perches: [nodes[0], nodes[2], nodes[6]],
+    perches,
     back: { x: inset.left + 40, y: controlY },
     replay: { x: width - inset.right - 40, y: controlY },
     promptY: compact ? 125 : top - 55,
