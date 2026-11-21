@@ -40,11 +40,14 @@ seconds**) and choose Full screen.
   the key under them, and taps play the key they land on.
 - **Drawing**: finger-paint rainbow lines that hum as they go; keys stamp
   letters and shapes. Old drawing fades, so there's nothing to clear.
+- **Dance**: an articulated human dancer on a glowing stage who jumps, spins,
+  waves, claps, kicks, does the robot, and boogies when you press keys, tap, or
+  drag.
 
 Each runs in a **Daytime** mood (bright and calm) or a **Bedtime** mood
 (starry navy sky, pastels, slow motion, soft low notes). In the grown-up menu,
-press **1**/**2**/**3** to pick a game, **D**/**B** to pick a mood, and **C** to
-show or hide the round corner buttons that let the child switch games
+press **1**/**2**/**3**/**4** to pick a game, **D**/**B** to pick a mood, and
+**C** to show or hide the round corner buttons that let the child switch games
 themselves. Choices are remembered. The full parent guide, including what to
 set up before playtime, is in [docs/grown-ups.md](docs/grown-ups.md).
 
@@ -59,6 +62,9 @@ Each game has two authored puzzles in each of three tiers:
   capped at four pending echoes.
 - **Drawing:** trace straight paths, bent paths, then closed shapes on a 3×3
   grid. Earn mirrored rainbow strokes and stickers.
+- **Dance:** silhouette matching, alternating patterns, then three-step dance
+  routines. Complete all six to bring two synchronized backup dancers onto the
+  stage.
 
 No timers or written instructions. Incorrect answers restart the current
 attempt; the back picture or Backspace returns to free play. Arrows move a

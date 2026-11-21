@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { challengeLayout, crossedNodes, distanceToSegment, hit, moveNode } from './layout'
 import type { GameId } from './model'
 
-const games: readonly GameId[] = ['smash', 'piano', 'drawing']
+const games: readonly GameId[] = ['smash', 'piano', 'drawing', 'dance']
 
 describe('challengeLayout', () => {
   it.each(games)('gives %s the same row-major grid used by choices and entrance perches', game => {

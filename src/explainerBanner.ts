@@ -2,7 +2,8 @@ import Phaser from 'phaser'
 import { currentMood } from './settings'
 import { getCurrentExplainer, type ActiveExplainer } from './explainers'
 import type { GameId } from './challenges/model'
-import { explainerBannerPlacement } from './explainerBannerLayout'
+import { resolveBannerLayout } from './explainerBannerLayout'
+import { MODES } from './modes'
 import { safeAreaInsets } from './safeArea'
 import { SYSTEM_FONT, textResolution } from './textResolution'
 
@@ -93,32 +94,11 @@ export class ExplainerBanner {
     if (!this.isVisible || !this.currentKey) return
     const { width, height } = this.scene.scale
     const insets = safeAreaInsets()
-    const compact = height < 500
-    const isPortraitPhone = width < 600 && height >= 500
+    const placed = resolveBannerLayout(width, height, this.currentGame, this.currentView, insets, MODES.length)
 
-    const bannerW = isPortraitPhone
-      ? Math.min(340, width - 32)
-      : compact
-        ? Math.min(420, width * 0.6)
-        : Math.min(480, width * 0.46)
-
-    const bannerH = isPortraitPhone ? 50 : compact ? 40 : 50
-
-    let bannerY: number
-    if (isPortraitPhone) {
-      const placement = explainerBannerPlacement(width, height, this.currentGame, this.currentView, insets)
-      bannerY = placement.y
-      this.container.setVisible(this.isVisible && placement.visible)
-    } else if (compact) {
-      bannerY = insets.top + 34
-      this.container.setVisible(this.isVisible)
-    } else {
-      bannerY = insets.top + 64
-      this.container.setVisible(this.isVisible)
-    }
-
-    this.container.setPosition(width / 2, bannerY)
-    this.drawGraphics(bannerW, bannerH)
+    this.container.setVisible(this.isVisible && placed.visible)
+    this.container.setPosition(placed.x, placed.y)
+    this.drawGraphics(placed.width, placed.height)
   }
 
   destroy(): void {

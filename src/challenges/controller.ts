@@ -221,7 +221,7 @@ export class ChallengeController {
       this.draw()
       return virtual
     }
-    if (this.game === 'smash') {
+    if (this.game === 'smash' || this.game === 'dance') {
       const i = layout.choices.findIndex((p) => hit(point, p, layout.radius * 1.3))
       this.answer(i)
       this.feedback(point)
@@ -266,6 +266,9 @@ export class ChallengeController {
     const result = this.progress.answer(this.game, value)
     if (result === 'wrong' && this.game === 'drawing') this.cursor = this.puzzle.answer[0]
     if (result === 'correct') this.feedback(this.game === 'drawing' ? this.layout.nodes[value] : this.layout.choices[value])
+    if (this.game === 'dance' && value >= 0 && (result === 'correct' || result === 'round' || result === 'unlock')) {
+      this.mode.replayNote?.(value, this.ctx())
+    }
     if (result === 'round' || result === 'unlock') {
       this.feedback(this.layout.nodes[4])
       this.roundChanged()
@@ -409,6 +412,7 @@ export class ChallengeController {
           this.demoIndex = demo
           const value = puzzle.prompt[demo]
           if (this.game === 'piano') this.mode.replayNote?.(this.noteSymbols(pianoKeyCount(ctx.width))[value], ctx)
+          else if (this.game === 'dance') this.mode.replayNote?.(value, ctx)
           else ctx.synth.play(value, 'blip', 0.5)
         }
         if (this.game === 'drawing') {
@@ -473,7 +477,7 @@ export class ChallengeController {
               else { g.lineStyle(2, ink, 0.22); g.strokeCircle(p.x, p.y, 12) }
             }
           }
-          if (this.game === 'smash') for (let i = 0; i < 3; i++) {
+          if (this.game === 'smash' || this.game === 'dance') for (let i = 0; i < 3; i++) {
             const isTarget = puzzleHint.active && i === hintTarget
             const p = {
               x: l.choices[i].x + (isTarget ? puzzleHint.shakeX * 6 * motionScale : 0),

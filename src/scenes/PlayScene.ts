@@ -388,7 +388,7 @@ export class PlayScene extends Phaser.Scene {
 
   private createChallenge(): ChallengeController | undefined {
     const name = this.mode.name
-    if (name === 'smash' || name === 'piano' || name === 'drawing') {
+    if (name === 'smash' || name === 'piano' || name === 'drawing' || name === 'dance') {
       return this.safely(() => new ChallengeController(this.progress, name, () => this.context(), this.mode))
     }
     return undefined
@@ -398,7 +398,7 @@ export class PlayScene extends Phaser.Scene {
     const insets = safeAreaInsets()
     this.switcher.layout({
       width: this.scale.width,
-      inset: { top: insets.top, right: insets.right },
+      inset: { top: insets.top, right: insets.right, left: insets.left },
       current: this.mode,
       visible: settings.childCanSwitch,
       night: currentMood().night,
@@ -545,6 +545,7 @@ export class PlayScene extends Phaser.Scene {
       if (key === '1') return { kind: 'showGuide', game: 'smash' }
       if (key === '2') return { kind: 'showGuide', game: 'piano' }
       if (key === '3') return { kind: 'showGuide', game: 'drawing' }
+      if (key === '4') return { kind: 'showGuide', game: 'dance' }
       if (key === 'g' || key === 'escape') return { kind: 'closeGuide' }
       return undefined
     }
@@ -641,7 +642,7 @@ export class PlayScene extends Phaser.Scene {
   private syncCompanionVisibility(): void {
     if (!this.companion) return
     const isPuzzle =
-      this.mode.name === 'smash' || this.mode.name === 'piano' || this.mode.name === 'drawing'
+      this.mode.name === 'smash' || this.mode.name === 'piano' || this.mode.name === 'drawing' || this.mode.name === 'dance'
         ? this.progress.state(this.mode.name as GameId).view === 'puzzle'
         : false
     const hidden = this.panel.visible || isPuzzle
@@ -650,7 +651,7 @@ export class PlayScene extends Phaser.Scene {
 
   private syncExplainer(): void {
     if (!this.explainerBanner) return
-    const isGame = this.mode.name === 'smash' || this.mode.name === 'piano' || this.mode.name === 'drawing'
+    const isGame = this.mode.name === 'smash' || this.mode.name === 'piano' || this.mode.name === 'drawing' || this.mode.name === 'dance'
     if (!isGame) {
       this.explainerBanner.setVisible(false)
       return

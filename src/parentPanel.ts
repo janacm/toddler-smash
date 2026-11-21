@@ -325,11 +325,11 @@ export class ParentPanel {
     y += 38
 
     // Game tabs
-    const tabW = (inner - GAP * 2) / 3
-    const allGames: GameId[] = ['smash', 'piano', 'drawing']
+    const allGames: GameId[] = ['smash', 'piano', 'drawing', 'dance']
+    const tabW = (inner - GAP * (allGames.length - 1)) / allGames.length
     allGames.forEach((gid, i) => {
       const ginfo = getSubGameExplainer(gid)
-      button(`${ginfo.icon} ${ginfo.name}`, { kind: 'showGuide', game: gid }, left + i * (tabW + GAP), tabW, gid === gameId, '15px')
+      button(`${ginfo.icon} ${ginfo.name}`, { kind: 'showGuide', game: gid }, left + i * (tabW + GAP), tabW, gid === gameId, '14px')
     })
     y += 44 + 12
 
@@ -343,34 +343,23 @@ export class ParentPanel {
     y += 10
 
     // Tier 1
-    text(`★ ${exp.levels[0].tierName}`, 12, '#93c5fd', 'left')
-    y += 18
-    text(`• Level 1: ${exp.levels[0].title} — ${exp.levels[0].instruction}`, 11, COLORS.text, 'left')
-    y += 16
-    text(`• Level 2: ${exp.levels[1].title} — ${exp.levels[1].instruction}`, 11, COLORS.text, 'left')
-    y += 20
+    y += text(`★ ${exp.levels[0].tierName}`, 12, '#93c5fd', 'left').height + 4
+    y += text(`• Level 1: ${exp.levels[0].title} — ${exp.levels[0].instruction}`, 11, COLORS.text, 'left').height + 4
+    y += text(`• Level 2: ${exp.levels[1].title} — ${exp.levels[1].instruction}`, 11, COLORS.text, 'left').height + 8
 
     // Tier 2
-    text(`★ ${exp.levels[2].tierName}`, 12, '#93c5fd', 'left')
-    y += 18
-    text(`• Level 3: ${exp.levels[2].title} — ${exp.levels[2].instruction}`, 11, COLORS.text, 'left')
-    y += 16
-    text(`• Level 4: ${exp.levels[3].title} — ${exp.levels[3].instruction}`, 11, COLORS.text, 'left')
-    y += 20
+    y += text(`★ ${exp.levels[2].tierName}`, 12, '#93c5fd', 'left').height + 4
+    y += text(`• Level 3: ${exp.levels[2].title} — ${exp.levels[2].instruction}`, 11, COLORS.text, 'left').height + 4
+    y += text(`• Level 4: ${exp.levels[3].title} — ${exp.levels[3].instruction}`, 11, COLORS.text, 'left').height + 8
 
     // Tier 3
-    text(`★ ${exp.levels[4].tierName}`, 12, '#93c5fd', 'left')
-    y += 18
-    text(`• Level 5: ${exp.levels[4].title} — ${exp.levels[4].instruction}`, 11, COLORS.text, 'left')
-    y += 16
-    text(`• Level 6: ${exp.levels[5].title} — ${exp.levels[5].instruction}`, 11, COLORS.text, 'left')
-    y += 20
+    y += text(`★ ${exp.levels[4].tierName}`, 12, '#93c5fd', 'left').height + 4
+    y += text(`• Level 5: ${exp.levels[4].title} — ${exp.levels[4].instruction}`, 11, COLORS.text, 'left').height + 4
+    y += text(`• Level 6: ${exp.levels[5].title} — ${exp.levels[5].instruction}`, 11, COLORS.text, 'left').height + 8
 
     // Creative Power
-    text(`✨ Creative Power: ${exp.playground.title}`, 12, '#fde047', 'left')
-    y += 18
-    text(`• ${exp.playground.power} — ${exp.playground.instruction}`, 11, COLORS.text, 'left')
-    y += 20
+    y += text(`✨ Creative Power: ${exp.playground.title}`, 12, '#fde047', 'left').height + 4
+    y += text(`• ${exp.playground.power} — ${exp.playground.instruction}`, 11, COLORS.text, 'left').height + 8
 
     cardBg.fillStyle(0x161c2e, 0.92)
     cardBg.fillRoundedRect(left, cardY, inner, y - cardY, 12)
@@ -382,7 +371,7 @@ export class ParentPanel {
     button('Back to Grown-up menu', { kind: 'closeGuide' }, left, inner, false, '16px')
     y += 44 + GAP
 
-    y += text('Keys: 1 Smash · 2 Piano · 3 Drawing · G / Esc back', 12, COLORS.muted).height + PAD
+    y += text('Keys: 1 Smash · 2 Piano · 3 Drawing · 4 Dance · G / Esc back', 12, COLORS.muted).height + PAD
 
     bg.fillStyle(COLORS.panel, 0.97)
     bg.fillRoundedRect(-PANEL_W / 2, 0, PANEL_W, y, 20)

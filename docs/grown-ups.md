@@ -20,6 +20,7 @@ Every option in the menu is also a button you can tap. On a keyboard:
 | **1** | Smash game |
 | **2** | Piano game |
 | **3** | Drawing game |
+| **4** | Dance game |
 | **G** | Level guide: see full text explainers for all 6 levels & powers |
 | **E** | Toggle on-screen text explainers on or off |
 | **D** | Daytime mood |
@@ -75,13 +76,21 @@ an auto-bloom celebration: the mask dissolves, stars burst, a pentatonic fanfare
 plays, and a discovery badge unlocks into the child's album before cycling to the
 next mystery card.
 
+**Dance.** A friendly human dancer stands on a glowing dance floor stage. Every
+tap, click, drag, or key press makes them perform joyful moves—jumping, disco
+pointing, spinning, waving, clapping, doing the robot, kicking, and boogieing—to
+pentatonic beats with glowing floor tiles and bursting shapes. Dragging a finger
+leads the dancer to lean and reach toward it. Key shortcuts (**J** jump, **D**
+disco, **S** spin, **W** wave, **C** clap, **R** robot, **K** kick, **B** boogie,
+plus **1–7**) trigger specific signature moves.
+
 **The thought-bubble companion.** A sweet little baby dinosaur sits in the
 top-left corner with a soft thought bubble showing a picture: a shape or animal
-in Smash, a note or animal key in Piano, or a colour in Drawing. If the child
-happens to match it, the companion does a joyful backflip, eats the icon, and
-showers sparkles with a happy chime. If they ignore it, nothing happens: there
-are no timers, no scores, and no sad faces, and the thought quietly changes on
-its own after a while.
+in Smash, a note or animal key in Piano, a colour in Drawing, or a shape or
+colour in Dance. If the child happens to match it, the companion does a joyful
+backflip, eats the icon, and showers sparkles with a happy chime. If they ignore
+it, nothing happens: there are no timers, no scores, and no sad faces, and the
+thought quietly changes on its own after a while.
 
 Every note is on the same five-note scale, so there are no wrong notes, and
 mashing still sounds like music.
@@ -117,6 +126,7 @@ Each game has three tiers, with two puzzles in each tier:
 | Smash | Match a silhouette | Continue an alternating pattern | Remember three shapes | Place stars that connect into a garden |
 | Piano | Copy two notes | Copy three notes | Copy four notes | Each played note can receive a quiet echo |
 | Drawing | Connect a straight path | Follow a bent path | Close a shape | Paint mirrored rainbow strokes and stickers |
+| Dance | Match a silhouette | Continue an alternating pattern | Remember three moves | Two synchronized backup dancers join the stage |
 
 Watch and listen to the demonstration, or start playing immediately. The
 curved-arrow picture replays it. An incorrect answer quietly restarts the
@@ -163,8 +173,8 @@ The banner passes taps straight through so a toddler cannot get stuck.
 Grown-ups can also inspect the full level breakdown directly from the
 grown-up menu:
 - Tap **Level Guide (all 6 levels)** (or press **G**) to view an aesthetic card
-  listing every tier, level goal, and creative power for Smash, Piano, and
-  Drawing.
+  listing every tier, level goal, and creative power for Smash, Piano,
+  Drawing, and Dance.
 - Toggle **Explainers on screen** (or press **E**) if you prefer a purely
   text-free screen for toddlers.
 
@@ -183,10 +193,10 @@ Bedtime.
 ## Letting the child switch games
 
 With the corner buttons on (the default), each game has its own round picture
-button in the top-right corner: a star for Smash, a little piano for Piano,
-and a crayon for Drawing. Tapping or clicking one switches games; the current
-game's button is the bigger one. Games aren't inside each other, so every
-game is always one tap away.
+button in the top-right corner: a star for Smash, a little piano for Piano, a
+crayon for Drawing, and a dancing figure for Dance. Tapping or clicking one
+switches games; the current game's button is the bigger one. Games aren't
+inside each other, so every game is always one tap away.
 
 They only respond to taps and clicks, not keys, so mashing the keyboard won't
 flip games back and forth. If they're switching too often, or you want them on
