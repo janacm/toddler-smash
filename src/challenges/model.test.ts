@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { getPuzzle, Progression, type GameId } from './model'
 
-const games: readonly GameId[] = ['smash', 'piano', 'drawing']
+const games: readonly GameId[] = ['smash', 'piano', 'drawing', 'dance']
 
 function discover(progress: Progression, game: GameId): void {
   for (let i = 0; i < 3; i++) progress.follow(game, true)
@@ -27,6 +27,7 @@ describe('authored puzzles', () => {
     expect([0, 2, 4].map(round => getPuzzle('piano', round).answer.length)).toEqual([2, 3, 4])
     expect([0, 2, 4].map(round => getPuzzle('drawing', round).answer.length)).toEqual([3, 4, 9])
     expect([0, 2, 4].map(round => getPuzzle('smash', round).kind)).toEqual(['match', 'pattern', 'memory'])
+    expect([0, 2, 4].map(round => getPuzzle('dance', round).kind)).toEqual(['match', 'pattern', 'memory'])
   })
 
   it('clamps rounds outside the range and uses whole round indexes', () => {

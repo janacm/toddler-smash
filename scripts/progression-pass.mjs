@@ -4,7 +4,7 @@ import { getPuzzle } from '../src/challenges/model.ts'
 import { challengeLayout, moveNode } from '../src/challenges/layout.ts'
 import { holdEscape, observeGame } from './browser-helpers.mjs'
 
-const GAMES = ['smash', 'piano', 'drawing']
+const GAMES = ['smash', 'piano', 'drawing', 'dance']
 const DESKTOP = { width: 1280, height: 800 }
 const PHONE = { width: 390, height: 844 }
 
@@ -129,7 +129,7 @@ export async function progressionPass({ browser, url, sibling, watch }) {
     }
     const solve = async (solved) => {
       const puzzle = getPuzzle(game, solved)
-      if (game === 'smash') for (const symbol of puzzle.answer) await shape(symbol)
+      if (game === 'smash' || game === 'dance') for (const symbol of puzzle.answer) await shape(symbol)
       else if (game === 'piano') {
         for (const symbol of puzzle.answer) {
           if (!touch && solved === 0) {
@@ -174,8 +174,8 @@ export async function progressionPass({ browser, url, sibling, watch }) {
       }
       await state('puzzle', 0)
 
-      if (game === 'smash') {
-        await shape(2)
+      if (game === 'smash' || game === 'dance') {
+        await shape(game === 'dance' ? 1 : 2)
         await state('puzzle', 0)
       } else if (game === 'piano') {
         await pianoSymbol(0)
@@ -231,6 +231,13 @@ export async function progressionPass({ browser, url, sibling, watch }) {
       } else if (game === 'piano') {
         for (const note of [0, 1, 2, 0, 1, 2]) await pianoSymbol(note)
         await page.waitForTimeout(660)
+      } else if (game === 'dance') {
+        for (const [i, k] of ['j', 'd', 's', 'w'].entries()) {
+          if (touch) await tap({ x: 90 + i * 70, y: 260 })
+          else await press(k)
+          await page.waitForTimeout(CONFIG.moods[mood].minSpawnIntervalMs + 80)
+        }
+        await page.waitForTimeout(140)
       } else if (touch) {
         const cdp = await context.newCDPSession(page)
         await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 85, y: 340, id: 0 }] })
@@ -254,8 +261,12 @@ export async function progressionPass({ browser, url, sibling, watch }) {
       const switchGame = async (name) => {
         const { width } = dimensions()
         const index = GAMES.indexOf(name)
+        const narrow = width < 520
+        const radius = narrow ? 34 : 46
+        const spacing = narrow ? 86 : 108
+        const margin = narrow ? 20 : 26
         // These centres come from ModeSwitcher.layout; switching is pointer-only during play.
-        await tap({ x: width - 26 - 46 - (GAMES.length - 1 - index) * 108, y: 26 + 46 })
+        await tap({ x: width - margin - radius - (GAMES.length - 1 - index) * spacing, y: 26 + radius })
       }
       await switchGame(other)
       await state('free', 0, other)

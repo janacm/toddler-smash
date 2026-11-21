@@ -25,6 +25,7 @@ export default defineConfig({
         'src/settings.ts',
         'src/splash.ts',
         'src/modes/drawingMath.ts',
+        'src/modes/danceLogic.ts',
         'src/modes/pianoLayout.ts',
         'src/toys/play.ts',
         'src/toys/schemaMath.ts',

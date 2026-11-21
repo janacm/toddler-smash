@@ -49,11 +49,12 @@ npm run test:rust  # desktop keyboard-lock rules (cargo test)
 (`splash.png`, `splash-bedtime.png`, `mobile-splash.png`) and checks it goes
 away once the game loads. Then it mashes Smash in Daytime (`latest.png`), taps the child's piano
 button and plays it (`piano.png`), scribbles in Drawing (`drawing.png`, and
-`drawing-faded.png` 6s later), opens the grown-up panel (`panel.png`), then
+`drawing-faded.png` 6s later), taps Dance and makes the human dancer move
+(`dance.png`), opens the grown-up panel (`panel.png`), then
 switches to Bedtime + Smash and mashes again (`bedtime.png`). Then a 390×844
 touch phone taps around (`mobile.png`), switches to piano (`mobile-piano.png`),
-draws with two fingers (`mobile-drawing.png`) and opens the panel with a real
-two-finger corner hold (`mobile-panel.png`). **Read the screenshots.** A
+draws with two fingers (`mobile-drawing.png`), dances (`mobile-dance.png`),
+and opens the panel with a real two-finger corner hold (`mobile-panel.png`). **Read the screenshots.** A
 visual change cannot be verified from a diff. **Mobile element obstruction
 verification**: Whenever making visual changes, always verify mobile viewports
 (e.g. iPhone 390×844 portrait) using headless screenshots (`mobile*.png`,
@@ -69,7 +70,7 @@ exits non-zero if the page logged any console error, so a green run means both
 "it looks like this" and "nothing threw."
 
 It also runs `scripts/progression-pass.mjs`: keyboard and touch discovery,
-all six authored puzzles and each reward in all three games, plus Bedtime
+all six authored puzzles and each reward in all four games, plus Bedtime
 Piano. Read `challenge-*.png`, `mobile-challenge-*.png` and
 `bedtime-challenge-piano-*.png`. That pass checks replay, wrong attempts,
 multi-touch rejection, game switching, resize, mood changes, New player and
@@ -139,6 +140,8 @@ src/
     choralEchoQueue.ts   capped, cancellable 3-note choral response queue
     drawing.ts       finger painting on a slowly fading RenderTexture
     drawingMath.ts   pure stroke / brush / pitch helpers (unit-tested)
+    dance.ts         articulated human dancer on a glowing stage
+    danceLogic.ts    pure move selection, limb kinematics and poses (unit-tested)
   toys/
     types.ts         SmashEvent, Toy, ToyContext
     index.ts         TOYS registry (Smash's toys) + playSmash
@@ -415,6 +418,7 @@ certificate store import and Microsoft Trusted Signing via
 | "bedtime should be darker / slower" | `config.ts` → `moods.bedtime` |
 | "a new sub-game" | new file in `src/modes/` |
 | "the piano should do X" | `src/modes/piano.ts` |
+| "the dancer should do X" | `src/modes/dance.ts`, `src/modes/danceLogic.ts` |
 | "thicker brush / drawing fades slower" | `config.ts` → `drawing` |
 | "new effect when you press a key" | new file in `src/toys/` |
 | "letters should do X" | `src/toys/letterPop.ts` |

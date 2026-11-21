@@ -109,6 +109,34 @@ export function buildTextures(scene: Phaser.Scene): void {
   g.fillPoints(crayon, true)
   g.generateTexture('iconCrayon', SIZE, SIZE)
 
+  // A dancing human silhouette: the picture on the child's dance button.
+  reset()
+  g.fillCircle(64, 24, 13)
+  g.lineStyle(22, 0xffffff, 1)
+  g.lineBetween(64, 46, 62, 76)
+  g.fillCircle(64, 46, 11)
+  g.fillCircle(62, 76, 11)
+  // Arms: one waving high, one swinging out
+  g.lineStyle(11, 0xffffff, 1)
+  g.lineBetween(54, 48, 36, 56)
+  g.lineBetween(36, 56, 24, 40)
+  g.fillCircle(36, 56, 5.5)
+  g.fillCircle(24, 40, 6.5)
+  g.lineBetween(72, 46, 90, 34)
+  g.lineBetween(90, 34, 102, 18)
+  g.fillCircle(90, 34, 5.5)
+  g.fillCircle(102, 18, 6.5)
+  // Legs: one stepping, one kicking out
+  g.lineBetween(55, 78, 46, 98)
+  g.lineBetween(46, 98, 38, 114)
+  g.fillCircle(46, 98, 5.5)
+  g.fillCircle(38, 114, 6.5)
+  g.lineBetween(69, 78, 88, 92)
+  g.lineBetween(88, 92, 104, 102)
+  g.fillCircle(88, 92, 5.5)
+  g.fillCircle(104, 102, 6.5)
+  g.generateTexture('iconDancer', SIZE, SIZE)
+
   // Plain white, stretched over the whole drawing to fade it.
   reset()
   g.fillRect(0, 0, 4, 4)

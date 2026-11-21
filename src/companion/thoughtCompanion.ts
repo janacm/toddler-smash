@@ -23,7 +23,7 @@ export class ThoughtCompanion {
   private bubble: Phaser.GameObjects.Image
   private icon: Phaser.GameObjects.Image
   private target: ThoughtTarget | null = null
-  private gameMode: 'smash' | 'piano' | 'drawing' = 'smash'
+  private gameMode: 'smash' | 'piano' | 'drawing' | 'dance' = 'smash'
   private autoCycleTimer?: ReturnType<typeof setTimeout>
   private respawnTimer?: ReturnType<typeof setTimeout>
   private celebrating = false
@@ -51,8 +51,8 @@ export class ThoughtCompanion {
   }
 
   setGameMode(mode: string): void {
-    const validMode: 'smash' | 'piano' | 'drawing' =
-      mode === 'piano' || mode === 'drawing' ? mode : 'smash'
+    const validMode: 'smash' | 'piano' | 'drawing' | 'dance' =
+      mode === 'piano' || mode === 'drawing' || mode === 'dance' ? mode : 'smash'
     if (this.gameMode !== validMode) {
       this.gameMode = validMode
       if (!this.celebrating) {

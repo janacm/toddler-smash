@@ -1,5 +1,5 @@
 /** Session-only discoveries. This module deliberately has no browser dependencies. */
-export type GameId = 'smash' | 'piano' | 'drawing'
+export type GameId = 'smash' | 'piano' | 'drawing' | 'dance'
 
 export interface Progress {
   discovered: boolean
@@ -46,6 +46,14 @@ const PUZZLES: Record<GameId, readonly Puzzle[]> = {
     { kind: 'path', prompt: [0, 1, 2, 5, 8, 7, 6, 3, 0], answer: [0, 1, 2, 5, 8, 7, 6, 3, 0], choices: nodes },
     { kind: 'path', prompt: [2, 1, 0, 3, 6, 7, 8, 5, 2], answer: [2, 1, 0, 3, 6, 7, 8, 5, 2], choices: nodes },
   ],
+  dance: [
+    { kind: 'match', prompt: [2], answer: [2], choices: shapes },
+    { kind: 'match', prompt: [0], answer: [0], choices: shapes },
+    { kind: 'pattern', prompt: [1, 2, 1, 2], answer: [1, 2], choices: shapes },
+    { kind: 'pattern', prompt: [2, 1, 2, 1], answer: [2, 1], choices: shapes },
+    { kind: 'memory', prompt: [1, 0, 2], answer: [1, 0, 2], choices: shapes },
+    { kind: 'memory', prompt: [0, 1, 2], answer: [0, 1, 2], choices: shapes },
+  ],
 }
 
 /** Completed games retain their last puzzle for presentation; they cannot solve it again. */
@@ -60,7 +68,7 @@ function freshProgress(): Progress {
 
 export class Progression {
   private games: Record<GameId, Progress> = {
-    smash: freshProgress(), piano: freshProgress(), drawing: freshProgress(),
+    smash: freshProgress(), piano: freshProgress(), drawing: freshProgress(), dance: freshProgress(),
   }
 
   state(game: GameId): Readonly<Progress> {
@@ -125,6 +133,6 @@ export class Progression {
   }
 
   reset(): void {
-    this.games = { smash: freshProgress(), piano: freshProgress(), drawing: freshProgress() }
+    this.games = { smash: freshProgress(), piano: freshProgress(), drawing: freshProgress(), dance: freshProgress() }
   }
 }

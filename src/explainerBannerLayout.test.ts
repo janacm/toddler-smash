@@ -6,7 +6,7 @@ const IPHONE_INSETS = { top: 47, right: 0, bottom: 34, left: 0 }
 
 describe('explainer banner mobile placement', () => {
   it('fits the complete banner between the game board and tray on tall phones', () => {
-    for (const game of ['smash', 'piano', 'drawing'] as const) {
+    for (const game of ['smash', 'piano', 'drawing', 'dance'] as const) {
       const placement = explainerBannerPlacement(390, 844, game, 'puzzle', IPHONE_INSETS)
 
       expect(placement.visible, game).toBe(true)

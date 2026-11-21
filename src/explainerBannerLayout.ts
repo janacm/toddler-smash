@@ -42,9 +42,9 @@ export function explainerBannerPlacement(
   } else {
     const board = challengeLayout(width, height, game, insets)
     const bottomNode = board.nodes[6]
-    // Smash choices use 1.35× nodes. Drawing highlights can reach the node
+    // Smash & Dance choices use 1.35× nodes. Drawing highlights can reach the node
     // radius; reserve another 8px for the keyboard focus ring.
-    const nodeExtent = game === 'smash' ? board.radius * 1.35 : board.radius + 8
+    const nodeExtent = game === 'smash' || game === 'dance' ? board.radius * 1.35 : board.radius + 8
     clearFrom = bottomNode.y + nodeExtent
   }
 

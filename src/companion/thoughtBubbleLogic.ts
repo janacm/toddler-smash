@@ -67,10 +67,11 @@ export function checkThoughtMatch(target: ThoughtTarget, action: ThoughtMatchEve
  * - Smash: shape or animal ('dinosaur' | 'shark')
  * - Piano: note or animal ('frog' | 'kitten' | 'bird' | 'puppy')
  * - Drawing: colour only
+ * - Dance: shape or colour
  */
 export function pickNextThoughtTarget(
   prevTarget: ThoughtTarget | null,
-  game: 'smash' | 'piano' | 'drawing',
+  game: 'smash' | 'piano' | 'drawing' | 'dance',
   paletteLength: number,
   rng: () => number,
 ): ThoughtTarget {
@@ -89,6 +90,13 @@ export function pickNextThoughtTarget(
       }
     } else if (game === 'drawing') {
       candidate = { kind: 'color', colorIndex: Math.floor(rng() * safePaletteLen) }
+    } else if (game === 'dance') {
+      if (roll < 0.5) {
+        const shapeIdx = Math.floor(rng() * SHAPES_LIST.length)
+        candidate = { kind: 'shape', shape: SHAPES_LIST[shapeIdx] }
+      } else {
+        candidate = { kind: 'color', colorIndex: Math.floor(rng() * safePaletteLen) }
+      }
     } else {
       // Smash mode: shape or animal
       if (roll < 0.6) {

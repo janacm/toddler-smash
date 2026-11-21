@@ -100,10 +100,12 @@ try {
   await sleep(180)
   await page.screenshot({ path: sibling('combo-daytime') })
 
-  // The child's buttons sit top-right, 108px apart, in `MODES` order: smash,
-  // piano, drawing. Bump MODE_COUNT when a sub-game is added.
-  const MODE_COUNT = 3
-  const button = (i, w) => [w - 26 - 46 - (MODE_COUNT - 1 - i) * 108, 26 + 46]
+  // The child's buttons sit top-right, in `MODES` order: smash, piano, drawing,
+  // dance. Bump MODE_COUNT when a sub-game is added.
+  const MODE_COUNT = 4
+  const button = (i, w) => w < 520
+    ? [w - 20 - 34 - (MODE_COUNT - 1 - i) * 86, 26 + 34]
+    : [w - 26 - 46 - (MODE_COUNT - 1 - i) * 108, 26 + 46]
 
   // Tap the piano button and play across it.
   await page.mouse.click(...button(1, 1280))
@@ -146,6 +148,18 @@ try {
   await page.screenshot({ path: sibling('drawing') })
   await sleep(6000)
   await page.screenshot({ path: sibling('drawing-faded') })
+
+  // Dance: tap the dance button, press keys and drag to make the human dance.
+  await page.mouse.click(...button(3, 1280))
+  await sleep(300)
+  for (const k of 'DANCE123'.split('')) {
+    await page.keyboard.press(k)
+    await sleep(140)
+  }
+  await scribble([[420, 420], [860, 460]])
+  await page.keyboard.press('j')
+  await sleep(180)
+  await page.screenshot({ path: sibling('dance') })
 
   // Grown-up panel: hold Escape, switch to Bedtime + Smash, hide it, mash.
   await holdEscape()
@@ -236,6 +250,20 @@ try {
     await sleep(400)
     await phone.screenshot({ path: sibling('mobile-drawing') })
 
+    await phone.touchscreen.tap(...button(3, W))
+    await sleep(350)
+    for (const [x, y] of [[90, 260], [300, 260], [195, 250]]) {
+      await phone.touchscreen.tap(x, y)
+      await sleep(160)
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 80, y: 420, id: 0 }] })
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 310, y: 380, id: 0 }] })
+    await sleep(160)
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    await phone.touchscreen.tap(195, 240)
+    await sleep(160)
+    await phone.screenshot({ path: sibling('mobile-dance') })
+
     const holdCorners = async () => {
       await holdForPanel(phone, () => cdp.send('Input.dispatchTouchEvent', {
         type: 'touchStart',
@@ -300,7 +328,7 @@ try {
     for (const p of problems) console.error('  -', p)
     process.exitCode = 1
   } else {
-    const names = ['splash', 'splash-bedtime', 'mobile-splash', 'piano', 'drawing', 'drawing-faded', 'panel', 'panel-guide', 'bedtime', 'combo-daytime', 'combo-bedtime', 'mobile', 'mobile-piano', 'mobile-drawing', 'mobile-panel']
+    const names = ['splash', 'splash-bedtime', 'mobile-splash', 'piano', 'drawing', 'drawing-faded', 'dance', 'panel', 'panel-guide', 'bedtime', 'combo-daytime', 'combo-bedtime', 'mobile', 'mobile-piano', 'mobile-drawing', 'mobile-dance', 'mobile-panel']
     console.log(`ok — no page errors. screenshots: ${[OUT, ...names.map(sibling)].join(', ')}`)
   }
 } finally {

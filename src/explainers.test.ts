@@ -8,9 +8,9 @@ import {
 import type { GameId } from './challenges/model'
 
 describe('SUB_GAME_EXPLAINERS', () => {
-  const games: GameId[] = ['smash', 'piano', 'drawing']
+  const games: GameId[] = ['smash', 'piano', 'drawing', 'dance']
 
-  it('has entries for all three sub-games', () => {
+  it('has entries for all four sub-games', () => {
     for (const g of games) {
       expect(SUB_GAME_EXPLAINERS[g]).toBeDefined()
       expect(SUB_GAME_EXPLAINERS[g].name).toBeTruthy()
@@ -92,5 +92,9 @@ describe('getCurrentExplainer', () => {
     const exp2 = getCurrentExplainer('drawing', 'free', 6)
     expect(exp2.badge).toBe('CREATIVE POWER')
     expect(exp2.title).toBe('Drawing · Kaleidoscope Mirror')
+
+    const exp3 = getCurrentExplainer('dance', 'playground', 6)
+    expect(exp3.badge).toBe('CREATIVE POWER')
+    expect(exp3.title).toBe('Dance · Dance Crew')
   })
 })

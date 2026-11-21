@@ -100,10 +100,11 @@ export class ExplainerBanner {
       ? Math.min(340, width - 32)
       : compact
         ? Math.min(420, width * 0.6)
-        : Math.min(480, width * 0.46)
+        : Math.min(380, width * 0.38)
 
     const bannerH = isPortraitPhone ? 50 : compact ? 40 : 50
 
+    let bannerX = width / 2
     let bannerY: number
     if (isPortraitPhone) {
       const placement = explainerBannerPlacement(width, height, this.currentGame, this.currentView, insets)
@@ -113,11 +114,12 @@ export class ExplainerBanner {
       bannerY = insets.top + 34
       this.container.setVisible(this.isVisible)
     } else {
+      bannerX = Math.min(width / 2, width - insets.right - 452 - bannerW / 2)
       bannerY = insets.top + 64
       this.container.setVisible(this.isVisible)
     }
 
-    this.container.setPosition(width / 2, bannerY)
+    this.container.setPosition(bannerX, bannerY)
     this.drawGraphics(bannerW, bannerH)
   }
 

@@ -152,6 +152,16 @@ describe('pickNextThoughtTarget', () => {
     expect((target as { colorIndex: number }).colorIndex).toBeLessThan(8)
   })
 
+  it('generates shape or colour for dance mode', () => {
+    const rngShape = () => 0.2 // roll < 0.5 -> shape
+    const targetShape = pickNextThoughtTarget(null, 'dance', 8, rngShape)
+    expect(targetShape.kind).toBe('shape')
+
+    const rngColor = () => 0.7 // roll >= 0.5 -> color
+    const targetColor = pickNextThoughtTarget(null, 'dance', 8, rngColor)
+    expect(targetColor.kind).toBe('color')
+  })
+
   it('avoids consecutive identical targets', () => {
     let call = 0
     // First candidate matches prev, second candidate differs

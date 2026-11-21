@@ -7,11 +7,16 @@ interface Button {
   icon: Phaser.GameObjects.Image
   x: number
   y: number
+  radius: number
 }
 
 const RADIUS = 46
 const SPACING = 108
 const MARGIN = 26
+const NARROW_WIDTH = 520
+const NARROW_RADIUS = 34
+const NARROW_SPACING = 86
+const NARROW_MARGIN = 20
 
 /**
  * The child's way to change sub-game: one big round picture button per mode in
@@ -39,32 +44,37 @@ export class ModeSwitcher {
     this.clear()
     if (!opts.visible) return
 
+    const narrow = opts.width < NARROW_WIDTH
+    const radius = narrow ? NARROW_RADIUS : RADIUS
+    const spacing = narrow ? NARROW_SPACING : SPACING
+    const margin = narrow ? NARROW_MARGIN : MARGIN
+
     this.modes.forEach((mode, i) => {
-      const x = opts.width - opts.inset.right - MARGIN - RADIUS - (this.modes.length - 1 - i) * SPACING
-      const y = opts.inset.top + MARGIN + RADIUS
+      const x = opts.width - opts.inset.right - margin - radius - (this.modes.length - 1 - i) * spacing
+      const y = opts.inset.top + MARGIN + radius
       const selected = mode === opts.current
       const scale = selected ? 1 : 0.8
 
       const base = this.scene.add
         .image(x, y, 'circle')
-        .setDisplaySize(RADIUS * 2 * scale, RADIUS * 2 * scale)
+        .setDisplaySize(radius * 2 * scale, radius * 2 * scale)
         .setTint(opts.night ? 0x2a2f5a : 0xffffff)
         .setAlpha(selected ? 0.95 : 0.7)
         .setDepth(5000)
       const icon = this.scene.add
         .image(x, y, mode.icon)
-        .setDisplaySize(RADIUS * 1.2 * scale, RADIUS * 1.2 * scale)
+        .setDisplaySize(radius * 1.2 * scale, radius * 1.2 * scale)
         .setTint(opts.color(i * 3))
         .setAlpha(selected ? 1 : 0.75)
         .setDepth(5001)
 
-      this.buttons.push({ mode, base, icon, x, y })
+      this.buttons.push({ mode, base, icon, x, y, radius })
     })
   }
 
   /** The mode whose button contains (x, y), if any. */
   hit(x: number, y: number): Mode | undefined {
-    return this.buttons.find((b) => Phaser.Math.Distance.Between(x, y, b.x, b.y) <= RADIUS * 1.15)?.mode
+    return this.buttons.find((b) => Phaser.Math.Distance.Between(x, y, b.x, b.y) <= b.radius * 1.15)?.mode
   }
 
   /** A little wiggle, for tapping the button of the game already running. */
