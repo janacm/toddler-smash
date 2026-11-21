@@ -24,6 +24,7 @@ export default defineConfig({
         'src/input.ts',
         'src/settings.ts',
         'src/splash.ts',
+        'src/switcherLayout.ts',
         'src/modes/drawingMath.ts',
         'src/modes/danceLogic.ts',
         'src/modes/pianoLayout.ts',

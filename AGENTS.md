@@ -105,6 +105,7 @@ src/
   input.ts           logical PlayAction before cosmetic limits; shortcut defense
   gestures.ts        two-finger corner hold (the touch way into the panel)
   switcher.ts        the child's round sub-game buttons, top-right
+  switcherLayout.ts  pure responsive button geometry & safe-area fit (unit-tested)
   parentPanel.ts     the grown-up panel: tappable buttons, scales to fit
   explainers.ts      pure explainer metadata for all sub-games & levels (unit-tested)
   explainerBanner.ts aesthetic translucent on-screen explainer banner

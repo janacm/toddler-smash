@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import type { Mode } from './modes'
+import { computeSwitcherLayout } from './switcherLayout'
 
 interface Button {
   mode: Mode
@@ -9,14 +10,6 @@ interface Button {
   y: number
   radius: number
 }
-
-const RADIUS = 46
-const SPACING = 108
-const MARGIN = 26
-const NARROW_WIDTH = 520
-const NARROW_RADIUS = 34
-const NARROW_SPACING = 86
-const NARROW_MARGIN = 20
 
 /**
  * The child's way to change sub-game: one big round picture button per mode in
@@ -35,7 +28,7 @@ export class ModeSwitcher {
   layout(opts: {
     width: number
     /** Safe-area insets, so buttons stay clear of a notch or rounded corner. */
-    inset: { top: number; right: number }
+    inset: { top: number; right: number; left?: number }
     current: Mode
     visible: boolean
     night: boolean
@@ -44,14 +37,10 @@ export class ModeSwitcher {
     this.clear()
     if (!opts.visible) return
 
-    const narrow = opts.width < NARROW_WIDTH
-    const radius = narrow ? NARROW_RADIUS : RADIUS
-    const spacing = narrow ? NARROW_SPACING : SPACING
-    const margin = narrow ? NARROW_MARGIN : MARGIN
+    const { radius, y, centers } = computeSwitcherLayout(opts.width, this.modes.length, opts.inset)
 
     this.modes.forEach((mode, i) => {
-      const x = opts.width - opts.inset.right - margin - radius - (this.modes.length - 1 - i) * spacing
-      const y = opts.inset.top + MARGIN + radius
+      const x = centers[i]
       const selected = mode === opts.current
       const scale = selected ? 1 : 0.8
 

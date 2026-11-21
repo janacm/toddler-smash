@@ -398,7 +398,7 @@ export class PlayScene extends Phaser.Scene {
     const insets = safeAreaInsets()
     this.switcher.layout({
       width: this.scale.width,
-      inset: { top: insets.top, right: insets.right },
+      inset: { top: insets.top, right: insets.right, left: insets.left },
       current: this.mode,
       visible: settings.childCanSwitch,
       night: currentMood().night,
