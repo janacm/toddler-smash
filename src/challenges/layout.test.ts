@@ -1,3 +1,4 @@
+import { cardRect, SCRATCH_CARD_BOTTOM_INSET } from '../modes/drawingMath'
 import { describe, expect, it } from 'vitest'
 import { challengeLayout, crossedNodes, distanceToSegment, hit, moveNode } from './layout'
 import type { GameId } from './model'
@@ -51,6 +52,11 @@ describe('challengeLayout', () => {
     expect(layout.back).toEqual({ x: 47, y: 196 })
     expect(layout.replay).toEqual({ x: 337, y: 196 })
     expect(layout.nodes[0].y).toBeGreaterThanOrEqual(inset.top + 230)
+    const card = cardRect(390, 844, SCRATCH_CARD_BOTTOM_INSET)
+    for (const perch of layout.perches) {
+      const hitRadius = layout.radius * 1.25
+      expect(perch.y + hitRadius <= card.y || perch.y - hitRadius >= card.y + card.height).toBe(true)
+    }
     for (const node of layout.nodes) {
       expect(node.x - layout.radius).toBeGreaterThan(inset.left)
       expect(node.x + layout.radius).toBeLessThan(390 - inset.right)

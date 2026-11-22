@@ -15,6 +15,7 @@ import { ParentPanel, type PanelAction, type PanelState } from '../parentPanel'
 import { safeAreaInsets } from '../safeArea'
 import { ExplainerBanner } from '../explainerBanner'
 import { AlbumModel } from '../discovery/albumModel'
+import { preloadScratchArt } from '../discovery/scratchScenes'
 import { DiscoveryTray } from '../discovery/tray'
 import type { BadgeId } from '../discovery/types'
 import { MODES, findMode, type Mode } from '../modes'
@@ -64,6 +65,10 @@ export class PlayScene extends Phaser.Scene {
 
   constructor() {
     super('play')
+  }
+
+  preload(): void {
+    preloadScratchArt(this)
   }
 
   create(): void {

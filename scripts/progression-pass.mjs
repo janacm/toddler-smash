@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { CONFIG } from '../src/config.ts'
 import { getPuzzle } from '../src/challenges/model.ts'
-import { challengeLayout, moveNode } from '../src/challenges/layout.ts'
+import { challengeLayout, moveNode, PERCH_NODES } from '../src/challenges/layout.ts'
 import { holdEscape, observeGame } from './browser-helpers.mjs'
 
 const GAMES = ['smash', 'piano', 'drawing', 'dance']
@@ -74,8 +74,8 @@ export async function progressionPass({ browser, url, sibling, watch }) {
     }
     const enter = async (discovered = false) => {
       cursor = 4
-      for (const node of discovered ? [0] : [0, 2, 6]) {
-        if (touch) await tap(layout().nodes[node])
+      for (const [step, node] of (discovered ? PERCH_NODES.slice(0, 1) : PERCH_NODES).entries()) {
+        if (touch) await tap(layout().perches[step])
         else {
           await moveTo(node)
           await press('Space')

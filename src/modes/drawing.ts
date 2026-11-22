@@ -4,7 +4,7 @@ import { SHAPE_KEYS } from '../textures'
 import { ScratchCard } from '../discovery/scratchCard'
 import { ScratchCardModel } from '../discovery/scratchModel'
 import type { SmashEvent, StrokeEvent, Toy, ToyContext } from '../toys/types'
-import { brushPx, noteForY, strokePoints } from './drawingMath'
+import { brushPx, noteForY, SCRATCH_CARD_BOTTOM_INSET, strokePoints } from './drawingMath'
 import type { Mode } from './types'
 
 /**
@@ -196,7 +196,7 @@ function enter(ctx: ToyContext): () => void {
   const rt = ctx.scene.add.renderTexture(0, 0, width, height).setOrigin(0).setDepth(-200)
   canvas = rt
 
-  card = new ScratchCard(ctx, scratchCardModel, 72, wasCelebrating)
+  card = new ScratchCard(ctx, scratchCardModel, SCRATCH_CARD_BOTTOM_INSET, wasCelebrating)
   wasCelebrating = false
 
   const fade = ctx.scene.time.addEvent({

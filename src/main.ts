@@ -51,8 +51,6 @@ const game = new Phaser.Game({
   disableContextMenu: true,
 })
 
-game.events.once(Phaser.Core.Events.POST_RENDER, hideSplash)
-
 /**
  * Phaser's scale manager sizes the canvas in CSS pixels. On a Retina screen
  * that makes the browser enlarge a 1x WebGL surface, softening every label.
@@ -90,9 +88,14 @@ function resizeForDevicePixels(): void {
   }
 }
 
-// Wait until the Scale Manager and the scene camera have completed their
-// initial sizing. Register afterward so this resize runs after Phaser's own.
-game.events.once(Phaser.Core.Events.POST_RENDER, () => {
+// Loading frames run before the play camera is active. Wait for the first
+// gameplay frame to size that camera and retire the splash.
+function finishBoot(): void {
+  if (!game.scene.isActive('play')) return
+  game.events.off(Phaser.Core.Events.POST_RENDER, finishBoot)
   resizeForDevicePixels()
   game.scale.on(Phaser.Scale.Events.RESIZE, resizeForDevicePixels)
-})
+  hideSplash()
+}
+
+game.events.on(Phaser.Core.Events.POST_RENDER, finishBoot)

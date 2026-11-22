@@ -1,4 +1,4 @@
-import { CONFIG } from '../config'
+import { CONFIG } from '../config.ts'
 
 /** Brush width in pixels for a screen. */
 export function brushPx(width: number, height: number, drawing = CONFIG.drawing): number {
@@ -40,6 +40,8 @@ export interface CardRect {
   width: number
   height: number
 }
+
+export const SCRATCH_CARD_BOTTOM_INSET = 72
 
 /** Card placement and size centered in available canvas area. */
 export function cardRect(viewWidth: number, viewHeight: number, bottomInset = 0): CardRect {

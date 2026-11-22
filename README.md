@@ -128,10 +128,9 @@ discovery and the target pacing of roughly 20–40 seconds per tier.
 ## Extending it
 
 Every visual effect is a self-contained "toy" in `src/toys/`. Adding one is a
-new file plus one line in the registry. All artwork is drawn in code and all
-sound is synthesized — there are no binary assets anywhere in the repo, which
-means an AI agent can read and modify every part of how the game looks and
-sounds.
+new file plus one line in the registry. The game draws its effects in code
+and synthesizes its sound. Drawing’s [scratch cards](docs/scratch-art.md)
+combine code-drawn scenery with bundled, editable vector illustrations.
 
 See [AGENTS.md](AGENTS.md) for architecture, conventions, and the
 build-and-screenshot verification loop, and

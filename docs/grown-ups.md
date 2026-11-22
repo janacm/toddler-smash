@@ -69,12 +69,13 @@ away over about half a minute, so the screen never fills up and there's
 nothing to clear.
 
 Drawing also features a mystery scratch-off card in the center of the canvas.
+There are 13 pictures to uncover, including a fox in the woods, a rocket in
+space, a penguin on the ice, and a dragon by a castle. All pictures work
+offline. See [art credits](scratch-art.md).
 As small fingers scribble across the pearlescent coating, the mask rubs away to
-reveal a secret illustration (a friendly dinosaur in a glade, an ocean reef
-shark, or a starlit night sky). Clearing about three-quarters of the card triggers
-an auto-bloom celebration: the mask dissolves, stars burst, a pentatonic fanfare
-plays, and a discovery badge unlocks into the child's album before cycling to the
-next mystery card.
+reveal the illustration. When about three-quarters of the card is clear, the
+rest of the mask dissolves, stars burst, and a short tune plays. Some pictures
+unlock a badge in the child's album. The next card appears automatically.
 
 **Dance.** A friendly human dancer stands on a glowing dance floor stage. Every
 tap, click, drag, or key press makes them perform joyful moves—jumping, disco
@@ -102,7 +103,7 @@ in Piano) displays the child's collection of discovered stamps:
 - **Dinosaur**: Unlocked by meeting a dinosaur (or pressing D in Smash).
 - **Shark**: Unlocked by meeting a reef shark (or pressing S in Smash).
 - **Rainbow**: Unlocked by playing a 5-note pentatonic run on the Piano.
-- **Leaf, Wave, Moon**: Unlocked by unmasking each mystery scratch card in Drawing.
+- **Leaf, Wave, Moon**: Unlocked by revealing woodland, ocean, and space or night-sky cards in Drawing.
 
 Empty slots are faint silhouette discs that never intercept taps or get in the
 way of play. Unlocked badges become animated breathing stamps. Tapping any
